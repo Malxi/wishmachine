@@ -23,6 +23,10 @@ node scripts/wishmachine.js check --profile all --target recap --id P1-V1-C1
 node scripts/wishmachine.js check --profile custom --target chapter --id P1-V1-C1
 ```
 
+Outline quality also checks item acquisition/usage, resource-ledger arithmetic,
+event-character references, storyline references, repeated event types, pacing
+runs, and missing location transitions.
+
 Output:
 
 ```json

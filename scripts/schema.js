@@ -327,6 +327,20 @@ function qualityFindings(project, target, id) {
               findings.push(finding('quality.outline.unknown_storyline', 'medium', `${chapter.id} advances unknown storyline ${name}`, chapter.id));
             }
           }
+          for (const entry of chapter.resource_ledger || []) {
+            if (typeof entry?.start !== 'number' || typeof entry?.delta !== 'number' || typeof entry?.end !== 'number') {
+              findings.push(finding('quality.outline.resource_ledger', 'medium', `${chapter.id} resource_ledger entry for ${entry?.item || 'item'} needs numeric start/delta/end`, chapter.id));
+            } else if (entry.start + entry.delta !== entry.end) {
+              findings.push(finding('quality.outline.resource_ledger', 'high', `${chapter.id} resource_ledger arithmetic is wrong for ${entry.item || 'item'}: ${entry.start} + ${entry.delta} != ${entry.end}`, chapter.id));
+            }
+          }
+          if (index > 0) {
+            const previous = chapters[index - 1];
+            if (previous.location && chapter.location && previous.location !== chapter.location &&
+              !String(chapter.timeline?.transition || '').trim()) {
+              findings.push(finding('quality.outline.transition', 'low', `${previous.id} -> ${chapter.id} changes location without a timeline.transition`, chapter.id, 'Explain the move or add a transition beat.'));
+            }
+          }
           if (index >= 2) {
             const previous = chapters.slice(index - 2, index + 1);
             if (previous.every((item) => String(item.pacing || '').toLowerCase().startsWith('fast'))) {

@@ -108,9 +108,34 @@ export function drawIdeas(options = {}) {
   }
   const rng = mulberry32(hashSeed(`${seed}:${type}:${options.genre || ''}`));
   let results;
-  if (type === 'namecard' || type === 'name' || type === 'cast') {
+  if (type === 'worldpack') {
+    const packs = [];
+    for (let packIndex = 0; packIndex < count; packIndex += 1) {
+      const premise = pick(rng, PREMISES);
+      const resources = pickMany(rng, RESOURCES, 2);
+      const scenarios = pickMany(rng, SCENARIOS, 2);
+      const cast = namecards(rng, seed + packIndex, Math.min(4, count));
+      const packId = `worldpack-${seed}-${String(packIndex + 1).padStart(2, '0')}`;
+      packs.push({
+        id: packId,
+        pack_id: packId,
+        premise: {
+          title: premise.title,
+          statement: premise.statement,
+          surface_rule: premise.surface_rule,
+          hidden_truth: premise.hidden_truth,
+          scarcity: premise.scarcity,
+          central_conflict: premise.conflict,
+        },
+        resources: resources.map((item, index) => ({ id: `${packId}-resource-${index + 1}`, ...item })),
+        scenarios: scenarios.map((item, index) => ({ id: `${packId}-scenario-${index + 1}`, ...item })),
+        cast,
+      });
+    }
+    results = packs;
+  } else if (type === 'namecard' || type === 'name' || type === 'cast') {
     results = namecards(rng, seed, count);
-  } else if (type === 'premise' || type === 'engine' || type === 'worldpack' || type === 'axiom') {
+  } else if (type === 'premise' || type === 'engine' || type === 'axiom') {
     results = pickMany(rng, PREMISES, Math.min(count, PREMISES.length)).map((item, index) => ({
       id: resultId('premise', seed, index),
       title: item.title,

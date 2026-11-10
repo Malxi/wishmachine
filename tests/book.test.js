@@ -132,6 +132,27 @@ test('item usage before acquisition is blocking', () => {
   assert.ok(check.findings.some((item) => item.rule_id === 'quality.outline.item_usage'));
 });
 
+test('resource ledger arithmetic is checked', () => {
+  const dir = tempDir();
+  initProject({ name: 'ledger test', dir, parts: 1, volumes: 1, chapter: 2 });
+  const project = loadProject(dir);
+  const badOutline = JSON.parse(JSON.stringify(outline));
+  badOutline.parts[0].volumes = [badOutline.parts[0].volumes[0]];
+  badOutline.parts[0].volumes[0].chapters[1].resource_ledger = [{ item: '氧气', start: 10, delta: -3, end: 9, reason: '泄漏' }];
+  writeArtifact(project, { section: 'outline', mode: 'replace', apply: true, content: JSON.stringify(badOutline) });
+  const check = checkProject(loadProject(dir), { profile: 'all', target: 'outline' });
+  assert.ok(check.findings.some((item) => item.rule_id === 'quality.outline.resource_ledger' && item.severity === 'high'));
+});
+
+test('worldpack bundles premise, resources and scenarios', () => {
+  const pack = drawIdeas({ type: 'worldpack', genre: '科幻', count: 1, seed: 42 });
+  assert.equal(pack.count, 1);
+  assert.ok(pack.results[0].premise.title);
+  assert.ok(pack.results[0].resources.length >= 1);
+  assert.ok(pack.results[0].scenarios.length >= 1);
+  assert.ok(pack.results[0].cast.length >= 1);
+});
+
 test('ideas are deterministic', () => {
   const a = drawIdeas({ type: 'namecard', genre: '科幻', count: 5, seed: 42 });
   const b = drawIdeas({ type: 'namecard', genre: '科幻', count: 5, seed: 42 });
