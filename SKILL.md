@@ -1,0 +1,98 @@
+---
+name: wishmachine
+display_name: 许愿机
+display_name_en: Wishmachine
+description: 管理小说项目、运行确定性检查、抽取创作参考，并加载写作工作流。
+description_zh: 管理小说项目、运行确定性检查、抽取创作参考，并加载写作工作流。
+description_en: Manage novel projects, run deterministic checks, draw reference ideas, and load writing workflows.
+examples_zh:
+  - "创建一个 3 卷 × 5 章的科幻小说项目"
+  - "检查大纲的阻塞问题"
+  - "抽 12 个科幻角色名卡"
+examples_en:
+  - "Create a 3-volume × 5-chapter science-fiction project"
+  - "Check the outline for blocking findings"
+  - "Draw 12 science-fiction name cards"
+version: 0.1.0
+author: Malxi
+---
+
+# 许愿机 Wishmachine
+
+WorkBuddy 是创作者。Wishmachine 只负责项目状态、确定性检查和参考抽卡，不调用
+任何模型，也不生成正文。
+
+在 Skill 根目录执行：
+
+```bash
+node scripts/wishmachine.js version
+```
+
+或安装 npm 包后使用 `wishmachine`。
+
+## 1. 管理小说
+
+```bash
+node scripts/wishmachine.js book init "我的书" --dir my-book --parts 1 --volumes 3 --chapter 5 --genre 科幻
+node scripts/wishmachine.js book status --dir my-book --json
+node scripts/wishmachine.js book read outline --dir my-book --view index
+node scripts/wishmachine.js book read setup --dir my-book
+```
+
+写入完整 artifact：
+
+```bash
+node scripts/wishmachine.js book write setup --dir my-book --mode replace --apply < setup.json
+node scripts/wishmachine.js book write outline --dir my-book --mode replace --apply < outline.json
+node scripts/wishmachine.js book write chapter --dir my-book --id P1-V1-C1 --mode replace --apply < chapter.md
+```
+
+默认 dry-run；只有 `--apply` 写盘。写入前会运行确定性检查。
+
+## 2. 检查
+
+```bash
+node scripts/wishmachine.js check --dir my-book --profile all --target outline --max-findings 20
+node scripts/wishmachine.js check --dir my-book --profile schema --target setup
+```
+
+Profile：
+
+```text
+quality   结构/引用/ID/章节数量等确定性规则
+schema    setup/outline 的 JSON 形状
+custom    .wishmachine/rules/*.json（兼容 .novelgen/rules）
+all       quality + schema
+```
+
+输出 `findings`，每条包含 `rule_id`、`severity`、`target_id`、`issue`、
+`suggestion`。
+
+## 3. 抽卡
+
+```bash
+node scripts/wishmachine.js ideas draw --type namecard --genre 科幻 --count 12 --seed 42
+node scripts/wishmachine.js ideas draw --type premise --genre 科幻 --count 3 --seed 7
+node scripts/wishmachine.js ideas types
+```
+
+抽卡是确定性的；保留 seed 可复现。
+
+## 4. 读取指导
+
+```bash
+node scripts/wishmachine.js gen workflow list
+node scripts/wishmachine.js gen workflow read outline
+node scripts/wishmachine.js gen reference list
+node scripts/wishmachine.js gen reference read outline-schema
+```
+
+第一次写 setup 前读 `setup-schema`；第一次写 outline 前读 `outline-schema`。
+
+## 边界
+
+- 不生成 setup/outline/正文。
+- 不调用 LLM。
+- 不包含 RPG 模拟；`check --profile rpg` 会明确报未实现。
+- 不做 MCP；只提供 CLI，方便作为 Skill 的 `scripts/` 直接运行。
+- 不直接编辑项目文件；写入走 `book write`。

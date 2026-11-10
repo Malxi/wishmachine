@@ -1,0 +1,21 @@
+{
+  "name": "wishmachine",
+  "version": "0.1.0",
+  "description": "Deterministic novel project management, checks, idea draws and guides for WorkBuddy.",
+  "type": "module",
+  "license": "MIT",
+  "bin": {
+    "wishmachine": "scripts/wishmachine.js"
+  },
+  "files": [
+    "scripts",
+    "references",
+    "SKILL.md"
+  ],
+  "scripts": {
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

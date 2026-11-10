@@ -1,0 +1,268 @@
+import { loadProject, initProject, projectStatus, readSection, writeArtifact } from './project.js';import { checkProject } from './schema.js';
+import { drawIdeas, ideasTypes } from './ideas.js';
+import { listWorkflows, readWorkflow, listReferences, readReference, listSkills, readSkill } from './guides.js';
+
+const VERSION = '0.1.0';
+const BOOLEAN_FLAGS = new Set(['apply', 'json', 'help', 'h', 'dry-run', 'force']);
+const COMMANDS = new Set(['book', 'check', 'ideas', 'gen', 'version', 'help']);
+
+function parseArgs(argv) {
+  const flags = {};
+  const positionals = [];
+  for (let i = 0; i < argv.length; i += 1) {
+    const token = argv[i];
+    if (token === '--') {
+      positionals.push(...argv.slice(i + 1));
+      break;
+    }
+    if (token.startsWith('--')) {
+      const body = token.slice(2);
+      const eq = body.indexOf('=');
+      if (eq >= 0) {
+        flags[body.slice(0, eq)] = body.slice(eq + 1);
+        continue;
+      }
+      if (BOOLEAN_FLAGS.has(body)) {
+        if (argv[i + 1] === 'true' || argv[i + 1] === 'false') {
+          flags[body] = argv[i + 1];
+          i += 1;
+        } else {
+          flags[body] = true;
+        }
+        continue;
+      }
+      const next = argv[i + 1];
+      if (next !== undefined && !next.startsWith('--')) {
+        flags[body] = next;
+        i += 1;
+      } else {
+        flags[body] = true;
+      }
+      continue;
+    }
+    if (token.startsWith('-') && token.length > 1) {
+      flags[token.slice(1)] = true;
+      continue;
+    }
+    positionals.push(token);
+  }
+  return { flags, positionals };
+}
+
+function boolFlag(flags, name) {
+  const value = flags[name];
+  return value === true || value === 'true';
+}
+
+function stringFlag(flags, name, fallback = '') {
+  const value = flags[name];
+  return value === undefined || value === true ? fallback : String(value);
+}
+
+function intFlag(flags, name, fallback = 0) {
+  const value = Number(flags[name]);
+  return Number.isFinite(value) ? value : fallback;
+}
+
+function print(value) {
+  process.stdout.write(`${JSON.stringify(value, null, 2)}\n`);
+}
+
+function fail(message) {
+  const error = new Error(message);
+  error.isWishmachine = true;
+  throw error;
+}
+
+async function stdinText() {
+  const chunks = [];
+  for await (const chunk of process.stdin) {
+    chunks.push(typeof chunk === 'string' ? chunk : chunk.toString('utf8'));
+  }
+  return chunks.join('');
+}
+
+function help() {
+  return `wishmachine ${VERSION}
+
+Commands:
+  book init <name> [--dir <dir>] [--parts 1] [--volumes 1] [--chapter 20] [--genre ...]
+  book status [--dir <dir>] [--json]
+  book read <setup|outline|craft|chapter|recap|context|logs> [--id <id>] [--view index|full]
+  book write <setup|outline|craft|chapter|recap> [--mode replace|patch] [--apply] [--id <id>]
+  check [--profile quality|schema|custom|all] [--target setup|outline|chapter] [--id <id>]
+  ideas draw --type namecard|premise|resource|scenario ... [--count 5] [--seed 42]
+  ideas types
+  gen workflow list|read <name>
+  gen skill list|read <name>
+  gen reference list|read <name>
+  version
+`;
+}
+
+async function runBook(args, flags) {
+  const sub = args[0];
+  if (sub === 'init') {
+    const name = args[1];
+    if (!name) fail('book init requires a name');
+    const result = initProject({
+      name,
+      dir: stringFlag(flags, 'dir', ''),
+      parts: intFlag(flags, 'parts', 1),
+      volumes: intFlag(flags, 'volumes', 1),
+      chapter: intFlag(flags, 'chapter', 20),
+      genre: stringFlag(flags, 'genre', ''),
+      language: stringFlag(flags, 'language', 'zh'),
+    });
+    print({ ok: true, action: 'init', name, projectDir: result.dir, structure: result.config.structure });
+    return 0;
+  }
+  if (sub === 'status') {
+    const project = loadProject(stringFlag(flags, 'dir', ''));
+    const status = projectStatus(project);
+    if (boolFlag(flags, 'json')) {
+      print(status);
+    } else {
+      const written = status.chapters.filter((c) => c.written).length;
+      process.stdout.write(`Project: ${status.name} (${status.root})\n`);
+      process.stdout.write(`Setup: ${status.setup}\n`);
+      process.stdout.write(`Structure: ${status.structure.target_parts} parts / ${status.structure.target_volumes} volumes / ${status.structure.target_chapters} chapters per volume, ${written} written\n`);
+      process.stdout.write(`Next: ${status.next.stage}${status.next.targetId ? ` ${status.next.targetId}` : ''}${status.next.reason ? ` (${status.next.reason})` : ''}\n`);
+    }
+    return 0;
+  }
+  if (sub === 'read') {
+    const section = args[1];
+    if (!section) fail('book read requires a section');
+    const project = loadProject(stringFlag(flags, 'dir', ''));
+    print(readSection(project, section, {
+      id: stringFlag(flags, 'id', ''),
+      view: stringFlag(flags, 'view', 'brief'),
+    }));
+    return 0;
+  }
+  if (sub === 'write') {
+    const section = args[1];
+    if (!section) fail('book write requires a section');
+    const project = loadProject(stringFlag(flags, 'dir', ''));
+    const content = await stdinText();
+    const result = writeArtifact(project, {
+      section,
+      mode: stringFlag(flags, 'mode', 'replace'),
+      apply: boolFlag(flags, 'apply'),
+      target: stringFlag(flags, 'target', ''),
+      id: stringFlag(flags, 'id', ''),
+      maxIssues: intFlag(flags, 'max-issues', 0),
+      content,
+    });
+    print(result);
+    return result.ok ? 0 : 1;
+  }
+  fail(`unknown book subcommand: ${sub}`);
+}
+
+function runCheck(flags) {
+  const project = loadProject(stringFlag(flags, 'dir', ''));
+  const target = stringFlag(flags, 'target', 'outline');
+  if (target === 'setup' || target === 'outline') {
+    // Fine.
+  } else if (target !== 'chapter') {
+    fail(`unsupported check target: ${target}`);
+  }
+  const result = checkProject(project, {
+    profile: stringFlag(flags, 'profile', 'all'),
+    target,
+    id: stringFlag(flags, 'id', ''),
+    minSeverity: stringFlag(flags, 'min-severity', ''),
+    maxFindings: intFlag(flags, 'max-findings', 0),
+  });
+  print(result);
+  return 0;
+}
+
+function runIdeas(args, flags) {
+  const sub = args[0] || 'draw';
+  if (sub === 'types') {
+    print({ ok: true, section: 'ideas', count: ideasTypes().length, results: ideasTypes() });
+    return 0;
+  }
+  if (sub !== 'draw') fail(`unknown ideas subcommand: ${sub}`);
+  print(drawIdeas({
+    type: stringFlag(flags, 'type', 'namecard'),
+    genre: stringFlag(flags, 'genre', ''),
+    count: intFlag(flags, 'count', 5),
+    seed: intFlag(flags, 'seed', 0),
+    source: stringFlag(flags, 'source', ''),
+    category: stringFlag(flags, 'category', ''),
+    level: stringFlag(flags, 'level', 'axiom'),
+    mode: stringFlag(flags, 'mode', 'balanced'),
+  }));
+  return 0;
+}
+
+function runGen(args) {
+  const group = args[0];
+  const sub = args[1] || 'list';
+  const name = args[2];
+  if (group === 'workflow') {
+    if (sub === 'list') {
+      print({ ok: true, section: 'workflow', count: listWorkflows().length, results: listWorkflows() });
+      return 0;
+    }
+    if (sub === 'read') {
+      if (!name) fail('gen workflow read requires a name');
+      print({ ok: true, section: 'workflow', count: 1, results: [{ name, content: readWorkflow(name) }] });
+      return 0;
+    }
+  }
+  if (group === 'skill') {
+    if (sub === 'list') {
+      print({ ok: true, section: 'skill', count: listSkills().length, results: listSkills() });
+      return 0;
+    }
+    if (sub === 'read') {
+      if (!name) fail('gen skill read requires a name');
+      print({ ok: true, section: 'skill', count: 1, results: [{ name, content: readSkill(name) }] });
+      return 0;
+    }
+  }
+  if (group === 'reference') {
+    if (sub === 'list') {
+      print({ ok: true, section: 'reference', count: listReferences().length, results: listReferences() });
+      return 0;
+    }
+    if (sub === 'read') {
+      if (!name) fail('gen reference read requires a name');
+      print({ ok: true, section: 'reference', count: 1, results: [{ name, content: readReference(name) }] });
+      return 0;
+    }
+  }
+  fail(`unknown gen command: ${args.join(' ')}`);
+}
+
+export async function main(argv = process.argv.slice(2)) {
+  const { flags, positionals } = parseArgs(argv);
+  if (boolFlag(flags, 'help') || boolFlag(flags, 'h')) {
+    process.stdout.write(help());
+    return 0;
+  }
+  const command = positionals[0];
+  if (!command) {
+    process.stdout.write(help());
+    return 0;
+  }
+  if (!COMMANDS.has(command)) fail(`unknown command: ${command}`);
+  if (command === 'version') {
+    process.stdout.write(`wishmachine ${VERSION}\n`);
+    return 0;
+  }
+  if (command === 'help') {
+    process.stdout.write(help());
+    return 0;
+  }
+  if (command === 'book') return runBook(positionals.slice(1), flags);
+  if (command === 'check') return runCheck(flags);
+  if (command === 'ideas') return runIdeas(positionals.slice(1), flags);
+  if (command === 'gen') return runGen(positionals.slice(1));
+  fail(`unhandled command: ${command}`);
+}
