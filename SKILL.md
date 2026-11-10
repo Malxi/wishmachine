@@ -1,10 +1,10 @@
 ---
 name: wishmachine
-display_name: 许愿机
-display_name_en: Wishmachine
-description: 管理小说项目、运行确定性检查、抽取创作参考，并加载写作工作流。
-description_zh: 管理小说项目、运行确定性检查、抽取创作参考，并加载写作工作流。
-description_en: Manage novel projects, run deterministic checks, draw reference ideas, and load writing workflows.
+display_name: 小说许愿机
+display_name_en: Novel Wish Machine
+description: 这是一台许愿机，将你的奇思妙想变成小说，包含完整的小说创作流程，创作检查，丰富的创作参考等
+description_zh: 这是一台许愿机，将你的奇思妙想变成小说，包含完整的小说创作流程，创作检查，丰富的创作参考等
+description_en: A wish machine that turns your ideas into a novel, with a complete writing workflow, deterministic checks, and rich creative references.
 examples_zh:
   - "创建一个 3 卷 × 5 章的科幻小说项目"
   - "检查大纲的阻塞问题"
@@ -17,9 +17,9 @@ version: 0.1.0
 author: Malxi
 ---
 
-# 许愿机 Wishmachine
+# 小说许愿机
 
-WorkBuddy 是创作者。Wishmachine 只负责项目状态、确定性检查和参考抽卡，不调用
+WorkBuddy 是创作者。小说许愿机只负责项目状态、确定性检查和参考抽卡，不调用
 任何模型，也不生成正文。
 
 在 Skill 根目录执行：

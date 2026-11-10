@@ -1,6 +1,6 @@
-# Wishmachine
+# 小说许愿机 Wishmachine
 
-许愿机（Wishmachine）是 Novelgen 的**确定性核心移植版**：
+小说许愿机是一台把你的奇思妙想变成小说的工具，包含完整的小说创作流程、确定性检查、丰富的创作参考和工作流指导。
 
 - 保留：book manage / ideas / check / skills / references / workflows
 - 去掉：所有内置 AI 生成、LLM 调用、RPG 模拟
