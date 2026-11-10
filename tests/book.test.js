@@ -84,6 +84,54 @@ test('chapter write and read', () => {
   assert.ok(content.content.includes('第一章'));
 });
 
+test('craft and recap schema checks', () => {
+  const dir = tempDir();
+  initProject({ name: 'craft test', dir, parts: 1, volumes: 1, chapter: 1 });
+  let project = loadProject(dir);
+  const craft = {
+    name: '孟启明',
+    appearance: '瘦削，手指有旧伤。',
+    personality: ['冷静', '固执'],
+    background: '在第一次救援失败后，把所有遇难者姓名写进私人日志。',
+    motivation: '把下一次伤亡数字压到最低。',
+    role_in_story: 'protagonist',
+  };
+  const craftResult = writeArtifact(project, { section: 'craft', target: 'character', mode: 'replace', apply: true, content: JSON.stringify(craft) });
+  assert.equal(craftResult.applied, true);
+  project = loadProject(dir);
+  assert.equal(checkProject(project, { profile: 'all', target: 'craft', id: 'character' }).ok, true);
+
+  const recap = {
+    chapter_id: 'P1-V1-C1', title: '封锁令', location: '砚港', time: '封锁前夜',
+    present: ['孟启明'], plot_beats: ['发现名单时间戳异常'], decisions: ['决定登船'],
+    reveals: ['名单早于虫潮预警'], unresolved: ['谁改了名单'], promises: [],
+    items: ['名单副本'], status: ['警觉'], last_line: '他把名单折进内袋。', cliffhanger: '',
+  };
+  const recapResult = writeArtifact(project, { section: 'recap', id: 'P1-V1-C1', mode: 'replace', apply: true, content: JSON.stringify(recap) });
+  assert.equal(recapResult.applied, true);
+  assert.equal(checkProject(loadProject(dir), { profile: 'all', target: 'recap', id: 'P1-V1-C1' }).ok, true);
+});
+
+test('item usage before acquisition is blocking', () => {
+  const dir = tempDir();
+  initProject({ name: 'item test', dir, parts: 1, volumes: 1, chapter: 2 });
+  const project = loadProject(dir);
+  const badOutline = JSON.parse(JSON.stringify(outline));
+  badOutline.parts[0].volumes = [badOutline.parts[0].volumes[0]];
+  badOutline.parts[0].volumes[0].chapters[0].events = [{
+    type: 'item', characters: ['孟启明'], subject: '救援绳', change: 'use',
+    actor: '孟启明', action: 'use', target: '救援绳', target_type: 'item',
+  }];
+  badOutline.parts[0].volumes[0].chapters[1].events = [{
+    type: 'item', characters: ['孟启明'], subject: '救援绳', change: 'get',
+    actor: '孟启明', action: 'acquire', target: '救援绳', target_type: 'item',
+  }];
+  writeArtifact(project, { section: 'outline', mode: 'replace', apply: true, content: JSON.stringify(badOutline) });
+  const check = checkProject(loadProject(dir), { profile: 'all', target: 'outline' });
+  assert.equal(check.blocking, true);
+  assert.ok(check.findings.some((item) => item.rule_id === 'quality.outline.item_usage'));
+});
+
 test('ideas are deterministic', () => {
   const a = drawIdeas({ type: 'namecard', genre: '科幻', count: 5, seed: 42 });
   const b = drawIdeas({ type: 'namecard', genre: '科幻', count: 5, seed: 42 });

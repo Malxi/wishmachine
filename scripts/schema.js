@@ -9,6 +9,72 @@ export function finding(ruleId, severity, issue, targetId = '', suggestion = '')
   return { rule_id: ruleId, severity: normalized, target_id: targetId, issue, suggestion };
 }
 
+export function validateCraft(craft, kind) {
+  const findings = [];
+  const key = String(kind || 'character');
+  if (!craft || typeof craft !== 'object' || Array.isArray(craft)) {
+    return [finding('schema.craft.object', 'critical', `${key} craft must be a JSON object`)];
+  }
+  if (typeof craft.name !== 'string' || !craft.name.trim()) {
+    findings.push(finding('schema.craft.name', 'high', `${key}.name must be a non-empty string`, craft.name || ''));
+  }
+  const requireString = (field, severity = 'high') => {
+    if (typeof craft[field] !== 'string' || !craft[field].trim()) {
+      findings.push(finding(`schema.craft.${field}`, severity, `${key}.${field} must be a non-empty string`, craft.name || ''));
+    }
+  };
+  const requireArray = (field, severity = 'high') => {
+    if (!Array.isArray(craft[field]) || craft[field].some((v) => typeof v !== 'string')) {
+      findings.push(finding(`schema.craft.${field}`, severity, `${key}.${field} must be an array of strings`, craft.name || ''));
+    }
+  };
+  if (key === 'character') {
+    requireString('appearance');
+    requireString('background');
+    requireString('motivation');
+    requireString('role_in_story');
+    requireArray('personality');
+  } else if (key === 'item') {
+    requireString('type');
+    requireString('description');
+    requireString('appearance');
+    requireString('function');
+    requireString('significance');
+  } else if (key === 'location') {
+    requireString('type');
+    requireString('description');
+    requireString('appearance');
+    requireString('atmosphere');
+    requireString('significance');
+  } else if (key === 'organization') {
+    requireString('type');
+    requireString('description');
+    requireArray('goals');
+    requireString('significance');
+  } else {
+    findings.push(finding('schema.craft.kind', 'high', `unsupported craft kind: ${key}; valid: character, item, location, organization`));
+  }
+  return findings;
+}
+
+export function validateRecap(recap) {
+  const findings = [];
+  if (!recap || typeof recap !== 'object' || Array.isArray(recap)) {
+    return [finding('schema.recap.object', 'critical', 'recap must be a JSON object')];
+  }
+  for (const field of ['chapter_id', 'title', 'location', 'time', 'last_line']) {
+    if (typeof recap[field] !== 'string' || !recap[field].trim()) {
+      findings.push(finding(`schema.recap.${field}`, 'high', `recap.${field} must be a non-empty string`, recap.chapter_id || ''));
+    }
+  }
+  for (const field of ['present', 'plot_beats', 'decisions', 'reveals', 'unresolved', 'promises', 'items', 'status']) {
+    if (!Array.isArray(recap[field]) || recap[field].some((v) => typeof v !== 'string')) {
+      findings.push(finding(`schema.recap.${field}`, field === 'plot_beats' ? 'high' : 'medium', `recap.${field} must be an array of strings`, recap.chapter_id || ''));
+    }
+  }
+  return findings;
+}
+
 export function validateSetup(setup) {
   const findings = [];
   if (!setup || typeof setup !== 'object' || Array.isArray(setup)) {
@@ -169,6 +235,27 @@ function qualityFindings(project, target, id) {
     }
     return findings;
   }
+  if (target === 'craft') {
+    const kind = id || 'character';
+    const craft = readJson(path.join(project.dir, 'story', 'craft', `${kind}.json`));
+    if (kind === 'character') {
+      if (String(craft.background || '').trim().length < 20) {
+        findings.push(finding('quality.craft.background', 'medium', 'character background is too thin', craft.name || kind));
+      }
+      if (String(craft.motivation || '').trim().length < 10) {
+        findings.push(finding('quality.craft.motivation', 'medium', 'character motivation is too thin', craft.name || kind));
+      }
+    }
+    return findings;
+  }
+  if (target === 'recap') {
+    if (!id) throw new Error('recap check requires --id');
+    const recap = readJson(path.join(project.dir, 'story', 'recaps', `${id}.json`));
+    if (!(recap.plot_beats || []).length) {
+      findings.push(finding('quality.recap.plot_beats', 'medium', 'recap has no plot beats', id));
+    }
+    return findings;
+  }
   if (target === 'outline') {
     const outline = readJson(path.join(project.dir, 'story', 'compose', 'outline.json'));
     const setupFile = path.join(project.dir, 'story', 'setup', 'story_setup.json');
@@ -187,6 +274,13 @@ function qualityFindings(project, target, id) {
       }
     }
     const names = new Set();
+    const itemState = new Map();
+    const knownItems = new Set([
+      ...((setup?.world_resources || []).map((item) => item.name)),
+      ...((setup?.premises || []).map((item) => item.name)),
+    ].filter(Boolean));
+    const castNames = new Set((setup?.core_cast || []).map((c) => c.name).filter(Boolean));
+    const storylineNames = new Set((setup?.storylines || []).map((s) => s.name).filter(Boolean));
     for (const part of outline.parts || []) {
       for (const volume of part.volumes || []) {
         const eventTypes = {};
@@ -196,7 +290,12 @@ function qualityFindings(project, target, id) {
           if (chapter.id && !/^P\d+-V\d+-C\d+$/.test(chapter.id)) {
             findings.push(finding('quality.outline.chapter_id', 'low', `chapter id ${chapter.id} does not use P1-V1-C1 form`, chapter.id));
           }
-          for (const name of chapter.characters || []) names.add(name);
+          for (const name of chapter.characters || []) {
+            names.add(name);
+            if (castNames.size > 0 && !castNames.has(name)) {
+              findings.push(finding('quality.outline.unknown_character', 'low', `${chapter.id} uses unknown character ${name}`, chapter.id));
+            }
+          }
           if ((chapter.characters || []).length === 0) {
             findings.push(finding('quality.outline.characters', 'medium', `${chapter.id} has no characters`, chapter.id));
           }
@@ -206,6 +305,27 @@ function qualityFindings(project, target, id) {
           for (const event of chapter.events || []) {
             const type = event.type || event.action;
             if (type) eventTypes[type] = (eventTypes[type] || 0) + 1;
+            for (const name of event.characters || []) {
+              if (!(chapter.characters || []).includes(name)) {
+                findings.push(finding('quality.outline.event_character', 'medium', `${chapter.id} event uses ${name}, who is not in chapter.characters`, chapter.id));
+              }
+            }
+            const targetType = String(event.target_type || '').toLowerCase();
+            const target = String(event.target || event.subject || '').trim();
+            const action = String(event.action || event.change || '').toLowerCase();
+            if (target && (targetType === 'item' || type === 'item')) {
+              if (['acquire', 'get', 'pickup', 'receive', 'gain'].includes(action)) {
+                itemState.set(target, true);
+              } else if (['use', 'consume', 'equip', 'spend'].includes(action) && !itemState.get(target) && !knownItems.has(target)) {
+                findings.push(finding('quality.outline.item_usage', 'high', `${chapter.id} uses item ${target} before it is acquired`, chapter.id, 'Add an acquire event earlier or remove the item usage.'));
+              }
+            }
+          }
+          for (const advance of chapter.storyline_advances || []) {
+            const name = advance.storyline_name;
+            if (name && storylineNames.size > 0 && !storylineNames.has(name)) {
+              findings.push(finding('quality.outline.unknown_storyline', 'medium', `${chapter.id} advances unknown storyline ${name}`, chapter.id));
+            }
           }
           if (index >= 2) {
             const previous = chapters.slice(index - 2, index + 1);
@@ -270,6 +390,14 @@ function customFindings(project, target, id) {
     if (!id) throw new Error('chapter custom check requires --id');
     text = readText(path.join(project.dir, 'chapters', `${id}.md`));
   }
+  if (target === 'craft') {
+    const kind = id || 'character';
+    text = readText(path.join(project.dir, 'story', 'craft', `${kind}.json`));
+  }
+  if (target === 'recap') {
+    if (!id) throw new Error('recap custom check requires --id');
+    text = readText(path.join(project.dir, 'story', 'recaps', `${id}.json`));
+  }
   for (const rule of customRules(project)) {
     const ruleTarget = String(rule.target || 'all');
     if (ruleTarget !== 'all' && ruleTarget !== target) continue;
@@ -308,6 +436,16 @@ export function checkProject(project, options = {}) {
   } else if (target === 'chapter') {
     if (profile === 'schema') throw new Error('schema check supports setup or outline');
     findings.push(...qualityFindings(project, target, id));
+  } else if (target === 'craft') {
+    const kind = id || 'character';
+    const craft = readJson(path.join(project.dir, 'story', 'craft', `${kind}.json`));
+    if (profile === 'schema' || profile === 'all') findings.push(...validateCraft(craft, kind));
+    if (profile === 'quality' || profile === 'all') findings.push(...qualityFindings(project, target, kind));
+  } else if (target === 'recap') {
+    if (!id) throw new Error('recap check requires --id');
+    const recap = readJson(path.join(project.dir, 'story', 'recaps', `${id}.json`));
+    if (profile === 'schema' || profile === 'all') findings.push(...validateRecap(recap));
+    if (profile === 'quality' || profile === 'all') findings.push(...qualityFindings(project, target, id));
   } else {
     throw new Error(`unsupported check target: ${target}`);
   }

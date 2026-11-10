@@ -164,9 +164,7 @@ async function runBook(args, flags) {
 function runCheck(flags) {
   const project = loadProject(stringFlag(flags, 'dir', ''));
   const target = stringFlag(flags, 'target', 'outline');
-  if (target === 'setup' || target === 'outline') {
-    // Fine.
-  } else if (target !== 'chapter') {
+  if (!['setup', 'outline', 'craft', 'recap', 'chapter'].includes(target)) {
     fail(`unsupported check target: ${target}`);
   }
   const result = checkProject(project, {

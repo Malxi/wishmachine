@@ -18,6 +18,8 @@ Common flags:
 ```bash
 node scripts/wishmachine.js check --profile all --target outline --max-findings 20
 node scripts/wishmachine.js check --profile schema --target setup
+node scripts/wishmachine.js check --profile all --target craft --id character
+node scripts/wishmachine.js check --profile all --target recap --id P1-V1-C1
 node scripts/wishmachine.js check --profile custom --target chapter --id P1-V1-C1
 ```
 

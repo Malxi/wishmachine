@@ -4,7 +4,7 @@ import {
   ensureDir, readJson, readText, writeJsonAtomic, writeTextAtomic,
   resolveProjectDir, nowIso, stamp, deepMerge, safeSegment, parseJson,
 } from './util.js';
-import { validateSetup, validateOutline, checkProject, outlineIndex } from './schema.js';
+import { validateSetup, validateOutline, validateCraft, validateRecap, checkProject, outlineIndex } from './schema.js';
 
 export function initProject(options) {
   const name = String(options.name || '').trim();
@@ -200,8 +200,13 @@ function outlineMarkdown(outline) {
   return lines.join('\n');
 }
 
-function shapeCheck(section, candidate, config) {
-  const findings = section === 'setup' ? validateSetup(candidate) : validateOutline(candidate, config);
+function shapeCheck(section, candidate, config, kind) {
+  let findings;
+  if (section === 'setup') findings = validateSetup(candidate);
+  else if (section === 'outline') findings = validateOutline(candidate, config);
+  else if (section === 'craft') findings = validateCraft(candidate, kind || 'character');
+  else if (section === 'recap') findings = validateRecap(candidate);
+  else findings = [];
   const summary = { total: findings.length, critical: 0, high: 0, medium: 0, low: 0 };
   for (const f of findings) summary[f.severity] += 1;
   return {
@@ -276,7 +281,9 @@ export function writeArtifact(project, options) {
     throw new Error(`unsupported write section: ${section}`);
   }
 
-  const shape = isJson && (section === 'setup' || section === 'outline') ? shapeCheck(section, candidate, project.config) : null;
+  const shape = isJson && ['setup', 'outline', 'craft', 'recap'].includes(section)
+    ? shapeCheck(section, candidate, project.config, options.target || 'character')
+    : null;
   const check = shape || (section === 'chapter' ? {
     ok: true, blocking: false, profile: 'schema', target: 'chapter', id,
     summary: { total: 0, critical: 0, high: 0, medium: 0, low: 0 }, findings: [],
@@ -304,8 +311,13 @@ export function writeArtifact(project, options) {
   const config = readJson(path.join(project.dir, 'novel.json'));
   config.updated_at = nowIso();
   writeJsonAtomic(path.join(project.dir, 'novel.json'), config);
-  const after = (section === 'setup' || section === 'outline')
-    ? checkProject({ ...project, config }, { profile: 'all', target: section, maxFindings: options.maxIssues || 0 })
+  const after = ['setup', 'outline', 'craft', 'recap'].includes(section)
+    ? checkProject({ ...project, config }, {
+      profile: 'all',
+      target: section,
+      id: section === 'craft' ? (options.target || 'character') : id,
+      maxFindings: options.maxIssues || 0,
+    })
     : null;
   return { ok: true, applied: true, dry_run: false, section, id, changed: true, check: after || check };
 }
