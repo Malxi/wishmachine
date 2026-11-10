@@ -171,10 +171,28 @@ function qualityFindings(project, target, id) {
   }
   if (target === 'outline') {
     const outline = readJson(path.join(project.dir, 'story', 'compose', 'outline.json'));
+    const setupFile = path.join(project.dir, 'story', 'setup', 'story_setup.json');
+    const setup = fs.existsSync(setupFile) ? readJson(setupFile) : null;
+    if (setup) {
+      const protagonist = (setup.core_cast || []).find((c) => c.role === 'protagonist');
+      if (!protagonist) {
+        findings.push(finding('quality.setup.protagonist', 'medium', 'setup has no protagonist in core_cast', 'setup'));
+      } else {
+        if (!protagonist.story_function) {
+          findings.push(finding('quality.character.background', 'medium', 'protagonist has no story_function/background anchor', protagonist.id || protagonist.name || 'protagonist'));
+        }
+        if (!protagonist.relationship_to_lead && !protagonist.relationship_arc) {
+          findings.push(finding('quality.character.motivation', 'medium', 'protagonist has no relationship or motivation anchor', protagonist.id || protagonist.name || 'protagonist'));
+        }
+      }
+    }
     const names = new Set();
     for (const part of outline.parts || []) {
       for (const volume of part.volumes || []) {
-        for (const chapter of volume.chapters || []) {
+        const eventTypes = {};
+        const chapters = volume.chapters || [];
+        for (let index = 0; index < chapters.length; index += 1) {
+          const chapter = chapters[index];
           if (chapter.id && !/^P\d+-V\d+-C\d+$/.test(chapter.id)) {
             findings.push(finding('quality.outline.chapter_id', 'low', `chapter id ${chapter.id} does not use P1-V1-C1 form`, chapter.id));
           }
@@ -184,6 +202,21 @@ function qualityFindings(project, target, id) {
           }
           if ((chapter.events || []).length === 0) {
             findings.push(finding('quality.outline.events', 'medium', `${chapter.id} has no events`, chapter.id));
+          }
+          for (const event of chapter.events || []) {
+            const type = event.type || event.action;
+            if (type) eventTypes[type] = (eventTypes[type] || 0) + 1;
+          }
+          if (index >= 2) {
+            const previous = chapters.slice(index - 2, index + 1);
+            if (previous.every((item) => String(item.pacing || '').toLowerCase().startsWith('fast'))) {
+              findings.push(finding('quality.outline.pacing', 'medium', `${previous[0].id}..${chapter.id} is three consecutive fast chapters`, chapter.id, 'Insert a slower chapter or a breather scene.'));
+            }
+          }
+        }
+        for (const [type, count] of Object.entries(eventTypes)) {
+          if (count > 3) {
+            findings.push(finding('quality.outline.event_repetition', 'medium', `event type '${type}' is used ${count} times in ${volume.id}`, volume.id, 'Vary the event types across the volume.'));
           }
         }
       }
