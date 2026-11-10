@@ -29,7 +29,7 @@ wishmachine version
 ```text
 SKILL.md                    WorkBuddy Skill 入口
 scripts/wishmachine.js      CLI 入口
-scripts/lib/                全部源码
+scripts/                全部源码
 references/                 schema、检查说明、workflow
 tests/                      node:test
 ```

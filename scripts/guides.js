@@ -2,22 +2,23 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { listMarkdown, readMarkdown, readText, firstHeading } from './util.js';
 
-export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const REFERENCES_DIR = path.join(ROOT, 'references');
-export const WORKFLOWS_DIR = path.join(REFERENCES_DIR, 'workflows');
+export const WORKFLOW_PREFIX = 'workflow-';
 export const SKILL_FILE = path.join(ROOT, 'SKILL.md');
 
 export function listWorkflows() {
-  return listMarkdown(WORKFLOWS_DIR);
+  return listMarkdown(REFERENCES_DIR)
+    .filter((item) => item.name.startsWith(WORKFLOW_PREFIX))
+    .map((item) => ({ name: item.name.slice(WORKFLOW_PREFIX.length), description: item.description }));
 }
 
 export function readWorkflow(name) {
-  return readMarkdown(WORKFLOWS_DIR, name);
+  return readMarkdown(REFERENCES_DIR, `${WORKFLOW_PREFIX}${name}`);
 }
 
 export function listReferences() {
-  const list = listMarkdown(REFERENCES_DIR);
-  return list.filter((item) => item.name !== 'workflows');
+  return listMarkdown(REFERENCES_DIR).filter((item) => !item.name.startsWith(WORKFLOW_PREFIX));
 }
 
 export function readReference(name) {

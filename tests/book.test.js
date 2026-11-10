@@ -3,10 +3,10 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { initProject, loadProject, projectStatus, writeArtifact, readSection } from '../scripts/lib/project.js';
-import { checkProject } from '../scripts/lib/schema.js';
-import { drawIdeas } from '../scripts/lib/ideas.js';
-import { listWorkflows, readWorkflow, listReferences, readReference } from '../scripts/lib/guides.js';
+import { initProject, loadProject, projectStatus, writeArtifact, readSection } from '../scripts/project.js';
+import { checkProject } from '../scripts/schema.js';
+import { drawIdeas } from '../scripts/ideas.js';
+import { listWorkflows, readWorkflow, listReferences, readReference } from '../scripts/guides.js';
 
 function tempDir() {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'wishmachine-test-'));

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { main } from './lib/cli.js';
+import { main } from './cli.js';
 
 try {
   const code = await main();
