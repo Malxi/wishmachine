@@ -275,6 +275,7 @@ function qualityFindings(project, target, id) {
     }
     const names = new Set();
     const itemState = new Map();
+    const plantedMysteries = new Set();
     const knownItems = new Set([
       ...((setup?.world_resources || []).map((item) => item.name)),
       ...((setup?.premises || []).map((item) => item.name)),
@@ -339,6 +340,19 @@ function qualityFindings(project, target, id) {
             if (previous.location && chapter.location && previous.location !== chapter.location &&
               !String(chapter.timeline?.transition || '').trim()) {
               findings.push(finding('quality.outline.transition', 'low', `${previous.id} -> ${chapter.id} changes location without a timeline.transition`, chapter.id, 'Explain the move or add a transition beat.'));
+            }
+          }
+          for (const planted of chapter.mysteries?.planted || []) {
+            if (planted.id) {
+              if (plantedMysteries.has(planted.id)) {
+                findings.push(finding('quality.outline.mystery_duplicate', 'low', `${chapter.id} re-plants mystery ${planted.id}`, chapter.id));
+              }
+              plantedMysteries.add(planted.id);
+            }
+          }
+          for (const resolved of chapter.mysteries?.resolved || []) {
+            if (resolved.id && !plantedMysteries.has(resolved.id)) {
+              findings.push(finding('quality.outline.mystery_resolution', 'medium', `${chapter.id} resolves mystery ${resolved.id} before it is planted`, chapter.id));
             }
           }
           if (index >= 2) {
