@@ -1,10 +1,10 @@
-import { loadProject, initProject, projectStatus, readSection, writeArtifact } from './project.js';import { checkProject } from './schema.js';
+import { loadProject, initProject, projectStatus, projectState, readSection, writeArtifact } from './project.js';import { checkProject } from './schema.js';
 import { drawIdeas, ideasTypes } from './ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference, listSkills, readSkill } from './guides.js';
 
-const VERSION = '0.1.3';
+const VERSION = '0.1.4';
 const BOOLEAN_FLAGS = new Set(['apply', 'json', 'help', 'h', 'dry-run', 'force']);
-const COMMANDS = new Set(['book', 'check', 'ideas', 'gen', 'version', 'help']);
+const COMMANDS = new Set(['book', 'check', 'ideas', 'gen', 'state', 'version', 'help']);
 
 function parseArgs(argv) {
   const flags = {};
@@ -88,6 +88,7 @@ function help() {
 Commands:
   book init <name> [--dir <dir>] [--parts 1] [--volumes 1] [--chapter 20] [--genre ...]
   book status [--dir <dir>] [--json]
+  state [--dir <dir>] [--view brief|full]
   book read <setup|outline|craft|chapter|recap|context|logs> [--id <id>] [--view index|full]
   book write <setup|outline|craft|chapter|recap> [--mode replace|patch] [--apply] [--id <id>]
   check [--profile quality|schema|custom|all] [--target setup|outline|chapter] [--id <id>]
@@ -129,6 +130,11 @@ async function runBook(args, flags) {
       process.stdout.write(`Structure: ${status.structure.target_parts} parts / ${status.structure.target_volumes} volumes / ${status.structure.target_chapters} chapters per volume, ${written} written\n`);
       process.stdout.write(`Next: ${status.next.stage}${status.next.targetId ? ` ${status.next.targetId}` : ''}${status.next.reason ? ` (${status.next.reason})` : ''}\n`);
     }
+    return 0;
+  }
+  if (sub === 'state') {
+    const project = loadProject(stringFlag(flags, 'dir', ''));
+    print(projectState(project, { view: stringFlag(flags, 'view', 'brief') }));
     return 0;
   }
   if (sub === 'read') {
@@ -259,6 +265,11 @@ export async function main(argv = process.argv.slice(2)) {
     return 0;
   }
   if (command === 'book') return runBook(positionals.slice(1), flags);
+  if (command === 'state') {
+    const project = loadProject(stringFlag(flags, 'dir', ''));
+    print(projectState(project, { view: stringFlag(flags, 'view', 'brief') }));
+    return 0;
+  }
   if (command === 'check') return runCheck(flags);
   if (command === 'ideas') return runIdeas(positionals.slice(1), flags);
   if (command === 'gen') return runGen(positionals.slice(1));

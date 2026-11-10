@@ -29,6 +29,12 @@ test('CLI init, status and ideas', () => {
   assert.equal(init.ok, true);
   const status = JSON.parse(run(['book', 'status', '--dir', dir, '--json']));
   assert.equal(status.setup, false);
+  const state = JSON.parse(run(['state', '--dir', dir, '--view', 'brief']));
+  assert.equal(state.ok, true);
+  assert.equal(state.state.project.name, 'CLI 测试');
+  assert.equal(state.state.setup.present, false);
+  const bookState = JSON.parse(run(['book', 'state', '--dir', dir]));
+  assert.equal(bookState.state.project.root, dir);
   const ideas = JSON.parse(run(['ideas', 'draw', '--type', 'namecard', '--genre', '科幻', '--count', '2', '--seed', '7']));
   assert.equal(ideas.count, 2);
   assert.equal(ideas.results.length, 2);

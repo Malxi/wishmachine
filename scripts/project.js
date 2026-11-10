@@ -102,6 +102,58 @@ export function projectStatus(project) {
   };
 }
 
+export function projectState(project, options = {}) {
+  const status = projectStatus(project);
+  const setupFile = path.join(project.dir, 'story', 'setup', 'story_setup.json');
+  const outlineFile = path.join(project.dir, 'story', 'compose', 'outline.json');
+  const setup = fs.existsSync(setupFile) ? readJson(setupFile) : null;
+  const outline = fs.existsSync(outlineFile) ? readJson(outlineFile) : null;
+  const craftDir = path.join(project.dir, 'story', 'craft');
+  const recapDir = path.join(project.dir, 'story', 'recaps');
+  const files = (dir) => fs.existsSync(dir)
+    ? fs.readdirSync(dir).filter((name) => name.endsWith('.json')).sort().map((name) => ({
+      name: name.slice(0, -5),
+      size: fs.statSync(path.join(dir, name)).size,
+    }))
+    : [];
+  const view = options.view === 'full' ? 'full' : 'brief';
+  const clip = (text, max) => {
+    const value = String(text || '');
+    return value.length > max ? `${value.slice(0, max)}…` : value;
+  };
+  const state = {
+    project: {
+      name: status.name,
+      root: status.root,
+      language: project.config.language || '',
+      structure: status.structure,
+    },
+    setup: setup ? {
+      present: true,
+      project_name: setup.project_name || status.name,
+      genres: setup.genres || [],
+      premise: clip(setup.premise, 300),
+      theme: clip(setup.theme, 180),
+      cast: (setup.core_cast || []).map((item) => ({ name: item.name, role: item.role, importance: item.importance })),
+      storyline_count: (setup.storylines || []).length,
+      premise_count: (setup.premises || []).length,
+      resource_count: (setup.world_resources || []).length,
+    } : { present: false },
+    outline: outline ? outlineIndex(outline) : null,
+    chapters: status.chapters,
+    chapter_count: status.chapters.length,
+    written_count: status.chapters.filter((chapter) => chapter.written).length,
+    craft: files(craftDir),
+    recaps: files(recapDir),
+    next: status.next,
+  };
+  if (view === 'full') {
+    state.setup_full = setup;
+    state.outline_full = outline;
+  }
+  return { ok: true, view, state };
+}
+
 export function readSection(project, section, options = {}) {
   const id = options.id ? safeSegment(options.id) : '';
   const view = options.view || 'brief';

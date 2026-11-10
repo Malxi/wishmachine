@@ -5,7 +5,7 @@ Use this when the project has no setup, or the user asks to change the premise.
 1. Inspect the project:
 
    ```bash
-   node scripts/wishmachine.js book status --json
+   node scripts/wishmachine.js state
    node scripts/wishmachine.js book read setup
    ```
 

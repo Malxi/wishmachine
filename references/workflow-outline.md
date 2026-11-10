@@ -6,7 +6,7 @@ regenerate structure.
 1. Read setup and the current outline:
 
    ```bash
-   node scripts/wishmachine.js book read setup
+   node scripts/wishmachine.js state
    node scripts/wishmachine.js book read outline --view index
    ```
 

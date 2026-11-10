@@ -2,9 +2,10 @@
 
 Use this for chapter prose and chapter-level repairs.
 
-1. Read the relevant outline and existing chapter:
+1. Read the relevant state, outline and existing chapter:
 
    ```bash
+   node scripts/wishmachine.js state
    node scripts/wishmachine.js book read outline --id P1-V1-C1
    node scripts/wishmachine.js book read chapter --id P1-V1-C1
    ```

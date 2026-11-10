@@ -11,6 +11,7 @@
 ```bash
 node scripts/wishmachine.js version
 node scripts/wishmachine.js book init "我的书" --dir my-book --parts 1 --volumes 3 --chapter 5
+node scripts/wishmachine.js state --dir my-book --view brief
 node scripts/wishmachine.js book status --dir my-book --json
 node scripts/wishmachine.js ideas draw --type namecard --genre 科幻 --count 12 --seed 42
 node scripts/wishmachine.js check --dir my-book --profile all --target outline
