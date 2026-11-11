@@ -148,6 +148,23 @@ test('resource ledger arithmetic is checked', () => {
   assert.ok(result.check.findings.some((item) => item.rule_id === 'quality.outline.resource_ledger' && item.severity === 'high'));
 });
 
+test('recap chapter id mismatch is blocking', () => {
+  const dir = tempDir();
+  initProject({ name: 'recap test', dir, parts: 1, volumes: 1, chapter: 2 });
+  let project = loadProject(dir);
+  writeArtifact(project, { section: 'outline', mode: 'replace', apply: true, content: JSON.stringify(outline) });
+  project = loadProject(dir);
+  const recap = {
+    chapter_id: 'P1-V1-C2', title: '封锁令', location: '砚港', time: '封锁前夜',
+    present: ['孟启明'], plot_beats: ['发现名单时间戳异常'], decisions: [], reveals: [],
+    unresolved: [], promises: [], items: [], status: [], last_line: '他把名单折进内袋。',
+  };
+  const result = writeArtifact(project, { section: 'recap', id: 'P1-V1-C1', mode: 'replace', apply: true, content: JSON.stringify(recap) });
+  assert.equal(result.ok, false);
+  assert.equal(result.applied, false);
+  assert.ok(result.check.findings.some((item) => item.rule_id === 'quality.recap.chapter_id' && item.severity === 'high'));
+});
+
 test('worldpack bundles premise, resources and scenarios', () => {
   const pack = drawIdeas({ type: 'worldpack', genre: '科幻', count: 1, seed: 42 });
   assert.equal(pack.count, 1);

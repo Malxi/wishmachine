@@ -185,6 +185,45 @@ export function validateOutline(outline, config) {
         if (!Array.isArray(chapter.events)) {
           findings.push(finding('schema.outline.chapter.events', 'high', `${chapterId}.events must be an array`, chapterId));
         }
+        if (chapter.timeline !== undefined) {
+          if (!chapter.timeline || typeof chapter.timeline !== 'object' || Array.isArray(chapter.timeline)) {
+            findings.push(finding('schema.outline.chapter.timeline', 'high', `${chapterId}.timeline must be an object`, chapterId));
+          } else if (chapter.timeline.time_jump !== undefined && typeof chapter.timeline.time_jump !== 'boolean') {
+            findings.push(finding('schema.outline.chapter.timeline', 'medium', `${chapterId}.timeline.time_jump must be a boolean`, chapterId));
+          }
+        }
+        if (chapter.state_anchor !== undefined) {
+          if (!chapter.state_anchor || typeof chapter.state_anchor !== 'object' || Array.isArray(chapter.state_anchor)) {
+            findings.push(finding('schema.outline.chapter.state_anchor', 'high', `${chapterId}.state_anchor must be an object`, chapterId));
+          } else {
+            const anchor = chapter.state_anchor;
+            if (anchor.spirit_stones !== undefined && typeof anchor.spirit_stones !== 'number') {
+              findings.push(finding('schema.outline.chapter.state_anchor', 'medium', `${chapterId}.state_anchor.spirit_stones must be a number`, chapterId));
+            }
+            for (const key of ['allies', 'key_items', 'injuries']) {
+              if (anchor[key] !== undefined && (!Array.isArray(anchor[key]) || anchor[key].some((v) => typeof v !== 'string'))) {
+                findings.push(finding('schema.outline.chapter.state_anchor', 'medium', `${chapterId}.state_anchor.${key} must be an array of strings`, chapterId));
+              }
+            }
+          }
+        }
+        if (chapter.mysteries !== undefined) {
+          if (!chapter.mysteries || typeof chapter.mysteries !== 'object' || Array.isArray(chapter.mysteries)) {
+            findings.push(finding('schema.outline.chapter.mysteries', 'high', `${chapterId}.mysteries must be an object`, chapterId));
+          } else {
+            for (const key of ['planted', 'resolved']) {
+              if (chapter.mysteries[key] !== undefined && !Array.isArray(chapter.mysteries[key])) {
+                findings.push(finding('schema.outline.chapter.mysteries', 'medium', `${chapterId}.mysteries.${key} must be an array`, chapterId));
+              }
+            }
+          }
+        }
+        if (chapter.chapter_payoff !== undefined && (!chapter.chapter_payoff || typeof chapter.chapter_payoff !== 'object' || Array.isArray(chapter.chapter_payoff))) {
+          findings.push(finding('schema.outline.chapter.chapter_payoff', 'medium', `${chapterId}.chapter_payoff must be an object`, chapterId));
+        }
+        if (chapter.resource_ledger !== undefined && !Array.isArray(chapter.resource_ledger)) {
+          findings.push(finding('schema.outline.chapter.resource_ledger', 'high', `${chapterId}.resource_ledger must be an array`, chapterId));
+        }
         if (ids.has(chapter.id)) {
           findings.push(finding('quality.outline.duplicate_id', 'high', `duplicate id ${chapter.id}`, chapter.id));
         }
@@ -223,6 +262,17 @@ function outlineIndex(outline) {
 
 export { outlineIndex };
 
+function findOutlineChapter(outline, id) {
+  for (const part of outline?.parts || []) {
+    for (const volume of part.volumes || []) {
+      for (const chapter of volume.chapters || []) {
+        if (chapter.id === id) return { part, volume, chapter };
+      }
+    }
+  }
+  return null;
+}
+
 function qualityFindings(project, target, id, override = {}) {
   const findings = [];
   if (target === 'setup') {
@@ -254,17 +304,40 @@ function qualityFindings(project, target, id, override = {}) {
     if (!(recap.plot_beats || []).length) {
       findings.push(finding('quality.recap.plot_beats', 'medium', 'recap has no plot beats', id));
     }
+    if (recap.chapter_id && recap.chapter_id !== id) {
+      findings.push(finding('quality.recap.chapter_id', 'high', `recap declares chapter_id ${recap.chapter_id}, expected ${id}`, id));
+    }
+    const outlineFile = path.join(project.dir, 'story', 'compose', 'outline.json');
+    if (fs.existsSync(outlineFile)) {
+      const outline = readJson(outlineFile);
+      const found = findOutlineChapter(outline, id);
+      if (!found) {
+        findings.push(finding('quality.recap.not_in_outline', 'medium', `${id} recap has no matching outline chapter`, id));
+      } else {
+        const known = new Set(found.chapter.characters || []);
+        for (const name of recap.present || []) {
+          if (known.size > 0 && !known.has(name)) {
+            findings.push(finding('quality.recap.presence', 'medium', `${id} recap mentions ${name}, who is not in the outline chapter`, id));
+          }
+        }
+        if (found.chapter.location && recap.location && found.chapter.location !== recap.location) {
+          findings.push(finding('quality.recap.location', 'low', `${id} recap location ${recap.location} differs from outline location ${found.chapter.location}`, id));
+        }
+      }
+    }
     return findings;
   }
   if (target === 'outline') {
     const outline = override.outline || readJson(path.join(project.dir, 'story', 'compose', 'outline.json'));
     const setupFile = path.join(project.dir, 'story', 'setup', 'story_setup.json');
     const setup = override.setup || (fs.existsSync(setupFile) ? readJson(setupFile) : null);
+    let protagonistName = '';
     if (setup) {
       const protagonist = (setup.core_cast || []).find((c) => c.role === 'protagonist');
       if (!protagonist) {
         findings.push(finding('quality.setup.protagonist', 'medium', 'setup has no protagonist in core_cast', 'setup'));
       } else {
+        protagonistName = protagonist.name || '';
         if (!protagonist.story_function) {
           findings.push(finding('quality.character.background', 'medium', 'protagonist has no story_function/background anchor', protagonist.id || protagonist.name || 'protagonist'));
         }
@@ -282,19 +355,34 @@ function qualityFindings(project, target, id, override = {}) {
     ].filter(Boolean));
     const castNames = new Set((setup?.core_cast || []).map((c) => c.name).filter(Boolean));
     const storylineNames = new Set((setup?.storylines || []).map((s) => s.name).filter(Boolean));
+    const lastSeen = new Map();
+    const returnedCharacters = new Set();
+    let sequence = 0;
     for (const part of outline.parts || []) {
       for (const volume of part.volumes || []) {
         const eventTypes = {};
         const chapters = volume.chapters || [];
         for (let index = 0; index < chapters.length; index += 1) {
           const chapter = chapters[index];
+          sequence += 1;
           if (chapter.id && !/^P\d+-V\d+-C\d+$/.test(chapter.id)) {
             findings.push(finding('quality.outline.chapter_id', 'low', `chapter id ${chapter.id} does not use P1-V1-C1 form`, chapter.id));
           }
           for (const name of chapter.characters || []) {
             names.add(name);
+            const previous = lastSeen.get(name);
+            if (previous !== undefined && sequence - previous > 2 && !returnedCharacters.has(name)) {
+              findings.push(finding('quality.outline.character_return', 'low', `${name} returns after ${sequence - previous - 1} chapters without a presence beat`, chapter.id, 'Show where the character has been or why they return now.'));
+              returnedCharacters.add(name);
+            }
+            lastSeen.set(name, sequence);
             if (castNames.size > 0 && !castNames.has(name)) {
               findings.push(finding('quality.outline.unknown_character', 'low', `${chapter.id} uses unknown character ${name}`, chapter.id));
+            }
+          }
+          for (const ally of chapter.state_anchor?.allies || []) {
+            if (castNames.size > 0 && !castNames.has(ally)) {
+              findings.push(finding('quality.outline.unknown_ally', 'low', `${chapter.id} state_anchor lists unknown ally ${ally}`, chapter.id));
             }
           }
           if ((chapter.characters || []).length === 0) {
@@ -372,6 +460,9 @@ function qualityFindings(project, target, id, override = {}) {
     if (names.size === 0) {
       findings.push(finding('quality.outline.cast', 'high', 'outline has no chapter characters'));
     }
+    if (protagonistName && !names.has(protagonistName)) {
+      findings.push(finding('quality.outline.protagonist_missing', 'medium', `protagonist ${protagonistName} does not appear in any chapter`, 'protagonist'));
+    }
     return findings;
   }
   if (target === 'chapter') {
@@ -381,6 +472,30 @@ function qualityFindings(project, target, id, override = {}) {
     const text = readText(file);
     if (text.trim().length < 200) {
       findings.push(finding('quality.chapter.length', 'medium', `${id} is shorter than 200 characters`, id));
+    }
+    const outlineFile = path.join(project.dir, 'story', 'compose', 'outline.json');
+    const outline = fs.existsSync(outlineFile) ? readJson(outlineFile) : null;
+    const found = outline ? findOutlineChapter(outline, id) : null;
+    if (outline && !found) {
+      findings.push(finding('quality.chapter.not_in_outline', 'medium', `${id} is not present in the outline`, id));
+    }
+    const recapFile = path.join(project.dir, 'story', 'recaps', `${id}.json`);
+    if (fs.existsSync(recapFile)) {
+      const recap = readJson(recapFile);
+      if (recap.chapter_id && recap.chapter_id !== id) {
+        findings.push(finding('quality.chapter.recap_id', 'high', `${id} recap declares chapter_id ${recap.chapter_id}`, id));
+      }
+      const known = new Set(found?.chapter?.characters || []);
+      for (const name of recap.present || []) {
+        if (known.size > 0 && !known.has(name)) {
+          findings.push(finding('quality.chapter.recap_presence', 'medium', `${id} recap mentions ${name}, who is not in the outline chapter`, id));
+        }
+      }
+      if (found?.chapter?.location && recap.location && found.chapter.location !== recap.location) {
+        findings.push(finding('quality.chapter.recap_location', 'low', `${id} recap location ${recap.location} differs from outline location ${found.chapter.location}`, id));
+      }
+    } else {
+      findings.push(finding('quality.chapter.no_recap', 'low', `${id} has no recap`, id));
     }
     return findings;
   }
