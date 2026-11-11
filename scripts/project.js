@@ -314,19 +314,19 @@ export function exportManuscript(project, options = {}) {
 
 export function doctorProject(project) {
   const issues = [];
-  const add = (severity, code, message) => issues.push({ severity, code, message });
+  const add = (severity, code, message, suggestion = '') => issues.push({ severity, code, message, suggestion });
   for (const dir of ['story/setup', 'story/compose', 'story/craft', 'story/recaps', 'chapters', 'drafts', 'logs']) {
-    if (!fs.existsSync(path.join(project.dir, dir))) add('medium', 'layout.missing_dir', `missing directory: ${dir}`);
+    if (!fs.existsSync(path.join(project.dir, dir))) add('medium', 'layout.missing_dir', `missing directory: ${dir}`, 'Create the directory or rerun book init on a fresh project.');
   }
   const configFile = path.join(project.dir, 'novel.json');
   const rawConfig = readJson(configFile);
-  if (!rawConfig.structure) add('low', 'config.structure', 'novel.json has no structure object; using target_* or defaults');
-  if (!rawConfig.name) add('low', 'config.name', 'novel.json has no name');
-  if (!fs.existsSync(path.join(project.dir, 'story', 'setup', 'story_setup.json'))) add('low', 'artifact.setup', 'setup JSON is missing');
-  if (!fs.existsSync(path.join(project.dir, 'story', 'compose', 'outline.json'))) add('low', 'artifact.outline', 'outline JSON is missing');
+  if (!rawConfig.structure) add('low', 'config.structure', 'novel.json has no structure object; using target_* or defaults', 'Add a structure object or keep the legacy target_* fields.');
+  if (!rawConfig.name) add('low', 'config.name', 'novel.json has no name', 'Add a book name.');
+  if (!fs.existsSync(path.join(project.dir, 'story', 'setup', 'story_setup.json'))) add('low', 'artifact.setup', 'setup JSON is missing', 'Write setup through book write setup.');
+  if (!fs.existsSync(path.join(project.dir, 'story', 'compose', 'outline.json'))) add('low', 'artifact.outline', 'outline JSON is missing', 'Write an outline through book write outline.');
   const status = projectStatus(project);
-  for (const id of status.orphan_chapters || []) add('low', 'artifact.orphan_chapter', `chapter ${id} has no outline entry`);
-  for (const id of status.orphan_recaps || []) add('low', 'artifact.orphan_recap', `recap ${id} has no outline entry`);
+  for (const id of status.orphan_chapters || []) add('low', 'artifact.orphan_chapter', `chapter ${id} has no outline entry`, 'Rename the chapter or add it to the outline.');
+  for (const id of status.orphan_recaps || []) add('low', 'artifact.orphan_recap', `recap ${id} has no outline entry`, 'Rename the recap or add its chapter to the outline.');
   const blocking = issues.some((issue) => issue.severity === 'high' || issue.severity === 'critical');
   return {
     ok: !blocking,
