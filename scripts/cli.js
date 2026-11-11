@@ -3,7 +3,7 @@ import { checkProject } from './schema.js';
 import { drawIdeas, ideasTypes } from './ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference, listSkills, readSkill } from './guides.js';
 
-const VERSION = '0.1.24';
+const VERSION = '0.1.25';
 const BOOLEAN_FLAGS = new Set(['apply', 'json', 'help', 'h', 'dry-run', 'force']);
 const COMMANDS = new Set(['book', 'check', 'ideas', 'gen', 'state', 'audit', 'refresh', 'version', 'help']);
 
@@ -131,6 +131,9 @@ async function runBook(args, flags) {
       process.stdout.write(`Project: ${status.name} (${status.root})\n`);
       process.stdout.write(`Setup: ${status.setup}\n`);
       process.stdout.write(`Structure: ${status.structure.target_parts} parts / ${status.structure.target_volumes} volumes / ${status.structure.target_chapters} chapters per volume, ${written} written\n`);
+      if (status.orphan_chapters?.length) {
+        process.stdout.write(`Orphan chapters: ${status.orphan_chapters.join(', ')}\n`);
+      }
       process.stdout.write(`Next: ${status.next.stage}${status.next.targetId ? ` ${status.next.targetId}` : ''}${status.next.reason ? ` (${status.next.reason})` : ''}\n`);
     }
     return 0;

@@ -94,6 +94,12 @@ export function projectStatus(project) {
       ? { stage: 'write', targetId: `chapter:${unwritten.id}`, reason: '仍有章节未写正文。' }
       : { stage: 'complete', targetId: '', reason: '全部章节已写正文。' };
   }
+  const chapterDir = path.join(project.dir, 'chapters');
+  const chapterFiles = fs.existsSync(chapterDir)
+    ? fs.readdirSync(chapterDir).filter((name) => name.endsWith('.md')).map((name) => name.slice(0, -3)).sort()
+    : [];
+  const knownChapterIds = new Set(chapters.map((chapter) => chapter.id));
+  const orphanChapters = chapterFiles.filter((id) => !knownChapterIds.has(id));
   return {
     name: config.name,
     root: project.dir,
@@ -105,6 +111,7 @@ export function projectStatus(project) {
       chapters: (outline.parts || []).reduce((n, p) => n + (p.volumes || []).reduce((m, v) => m + (v.chapters?.length || 0), 0), 0),
     } : { parts: 0, volumes: 0, chapters: 0 },
     chapters,
+    orphan_chapters: orphanChapters,
     next,
   };
 }
@@ -128,12 +135,7 @@ export function projectState(project, options = {}) {
     const value = String(text || '');
     return value.length > max ? `${value.slice(0, max)}…` : value;
   };
-  const chapterDir = path.join(project.dir, 'chapters');
-  const chapterFiles = fs.existsSync(chapterDir)
-    ? fs.readdirSync(chapterDir).filter((name) => name.endsWith('.md')).map((name) => name.slice(0, -3)).sort()
-    : [];
-  const knownChapterIds = new Set(status.chapters.map((chapter) => chapter.id));
-  const orphanChapters = chapterFiles.filter((id) => !knownChapterIds.has(id));
+  const orphanChapters = status.orphan_chapters || [];
   const state = {
     project: {
       name: status.name,

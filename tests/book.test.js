@@ -92,6 +92,7 @@ test('chapter write and read', () => {
   assert.ok(content.content.includes('第一章'));
   const checkpointDir = path.join(dir, 'chapters', 'checkpoints');
   assert.ok(fs.readdirSync(checkpointDir).some((name) => name.endsWith('.md')));
+  assert.ok(projectStatus(project).orphan_chapters.includes('P1-V1-C1'));
   assert.ok(projectState(project).state.orphan_chapters.includes('P1-V1-C1'));
   const audit = auditProject(project);
   assert.ok(audit.targets.some((target) => target.target === 'chapter' && target.id === 'P1-V1-C1'));
