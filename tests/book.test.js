@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { initProject, loadProject, projectStatus, projectState, writeArtifact, readSection } from '../scripts/project.js';
+import { initProject, loadProject, projectStatus, projectState, auditProject, writeArtifact, readSection } from '../scripts/project.js';
 import { checkProject } from '../scripts/schema.js';
 import { drawIdeas } from '../scripts/ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference } from '../scripts/guides.js';
@@ -70,6 +70,9 @@ test('init, status, write setup/outline and check', () => {
   const state = projectState(project);
   assert.equal(state.state.chapter_count, 4);
   assert.equal(state.state.setup.cast[0].name, '孟启明');
+  const audit = auditProject(project);
+  assert.ok(audit.targets.some((target) => target.target === 'setup'));
+  assert.ok(audit.targets.some((target) => target.target === 'outline'));
 
   const check = checkProject(project, { profile: 'all', target: 'outline' });
   assert.equal(check.blocking, false);

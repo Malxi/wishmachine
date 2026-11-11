@@ -1,10 +1,10 @@
-import { loadProject, initProject, projectStatus, projectState, readSection, writeArtifact } from './project.js';import { checkProject } from './schema.js';
+import { loadProject, initProject, projectStatus, projectState, auditProject, readSection, writeArtifact } from './project.js';import { checkProject } from './schema.js';
 import { drawIdeas, ideasTypes } from './ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference, listSkills, readSkill } from './guides.js';
 
-const VERSION = '0.1.13';
+const VERSION = '0.1.14';
 const BOOLEAN_FLAGS = new Set(['apply', 'json', 'help', 'h', 'dry-run', 'force']);
-const COMMANDS = new Set(['book', 'check', 'ideas', 'gen', 'state', 'version', 'help']);
+const COMMANDS = new Set(['book', 'check', 'ideas', 'gen', 'state', 'audit', 'version', 'help']);
 
 function parseArgs(argv) {
   const flags = {};
@@ -89,6 +89,7 @@ Commands:
   book init <name> [--dir <dir>] [--parts 1] [--volumes 1] [--chapter 20] [--genre ...]
   book status [--dir <dir>] [--json]
   state [--dir <dir>] [--view brief|full]
+  audit [--dir <dir>] [--max-findings 10]
   book read <setup|outline|craft|chapter|recap|context|logs> [--id <id>] [--view index|full]
   book write <setup|outline|craft|chapter|recap> [--mode replace|patch] [--apply] [--id <id>]
   check [--profile quality|schema|custom|all] [--target setup|outline|chapter] [--id <id>]
@@ -135,6 +136,11 @@ async function runBook(args, flags) {
   if (sub === 'state') {
     const project = loadProject(stringFlag(flags, 'dir', ''));
     print(projectState(project, { view: stringFlag(flags, 'view', 'brief') }));
+    return 0;
+  }
+  if (sub === 'audit') {
+    const project = loadProject(stringFlag(flags, 'dir', ''));
+    print(auditProject(project, { maxFindings: intFlag(flags, 'max-findings', 0) }));
     return 0;
   }
   if (sub === 'read') {
@@ -268,6 +274,11 @@ export async function main(argv = process.argv.slice(2)) {
   if (command === 'state') {
     const project = loadProject(stringFlag(flags, 'dir', ''));
     print(projectState(project, { view: stringFlag(flags, 'view', 'brief') }));
+    return 0;
+  }
+  if (command === 'audit') {
+    const project = loadProject(stringFlag(flags, 'dir', ''));
+    print(auditProject(project, { maxFindings: intFlag(flags, 'max-findings', 0) }));
     return 0;
   }
   if (command === 'check') return runCheck(flags);

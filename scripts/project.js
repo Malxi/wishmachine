@@ -154,6 +154,75 @@ export function projectState(project, options = {}) {
   return { ok: true, view, state };
 }
 
+export function auditProject(project, options = {}) {
+  const targets = [];
+  const maxFindings = options.maxFindings || 0;
+  const add = (target, id) => {
+    try {
+      const result = checkProject(project, {
+        profile: 'all',
+        target,
+        id,
+        maxFindings,
+      });
+      targets.push({
+        target,
+        id: id || undefined,
+        ok: result.ok,
+        blocking: result.blocking,
+        score: result.score,
+        summary: result.summary,
+        findings: result.findings,
+      });
+    } catch (error) {
+      targets.push({
+        target,
+        id: id || undefined,
+        ok: false,
+        blocking: true,
+        score: 0,
+        summary: { total: 1, critical: 1, high: 0, medium: 0, low: 0 },
+        findings: [{
+          rule_id: 'audit.error',
+          severity: 'critical',
+          target_id: id || target,
+          issue: error.message,
+          suggestion: '',
+        }],
+      });
+    }
+  };
+  const setupFile = path.join(project.dir, 'story', 'setup', 'story_setup.json');
+  const outlineFile = path.join(project.dir, 'story', 'compose', 'outline.json');
+  if (fs.existsSync(setupFile)) add('setup');
+  if (fs.existsSync(outlineFile)) add('outline');
+  const files = (dir, ext) => fs.existsSync(dir)
+    ? fs.readdirSync(dir).filter((name) => name.endsWith(ext)).sort()
+    : [];
+  for (const name of files(path.join(project.dir, 'story', 'craft'), '.json')) {
+    add('craft', name.slice(0, -5));
+  }
+  for (const name of files(path.join(project.dir, 'story', 'recaps'), '.json')) {
+    add('recap', name.slice(0, -5));
+  }
+  for (const chapter of projectStatus(project).chapters.filter((item) => item.written)) {
+    add('chapter', chapter.id);
+  }
+  const summary = { total: 0, critical: 0, high: 0, medium: 0, low: 0 };
+  for (const target of targets) {
+    for (const key of Object.keys(summary)) summary[key] += target.summary[key] || 0;
+  }
+  const blocking = targets.some((target) => target.blocking);
+  return {
+    ok: !blocking,
+    blocking,
+    root: project.dir,
+    name: project.config.name,
+    summary,
+    targets,
+  };
+}
+
 export function readSection(project, section, options = {}) {
   const id = options.id ? safeSegment(options.id) : '';
   const view = options.view || 'brief';

@@ -2,6 +2,12 @@
 
 Use this when the user asks whether an outline or chapter is ready.
 
+Whole-project audit:
+
+```bash
+node scripts/wishmachine.js audit
+```
+
 Outline review:
 
 ```bash
