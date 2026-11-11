@@ -317,9 +317,11 @@ test('doctor reports invalid JSON without throwing', () => {
   const dir = tempDir();
   initProject({ name: 'doctor invalid', dir, parts: 1, volumes: 1, chapter: 1 });
   fs.writeFileSync(path.join(dir, 'story', 'compose', 'outline.json'), '{not json');
+  fs.writeFileSync(path.join(dir, 'story', 'craft', 'character.json'), '{also bad');
   const result = doctorProject(loadProject(dir));
   assert.equal(result.blocking, true);
   assert.ok(result.issues.some((issue) => issue.code === 'artifact.invalid_json'));
+  assert.ok(result.issues.some((issue) => String(issue.message).includes('character.json')));
 });
 
 test('refresh rebuilds markdown companions', () => {

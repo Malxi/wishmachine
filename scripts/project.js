@@ -338,10 +338,18 @@ export function doctorProject(project, options = {}) {
     }
   }
   if (!rawConfig.name) add('low', 'config.name', 'novel.json has no name', 'Add a book name.');
-  for (const file of [
+  const jsonFiles = [
     path.join(project.dir, 'story', 'setup', 'story_setup.json'),
     path.join(project.dir, 'story', 'compose', 'outline.json'),
-  ]) {
+  ];
+  for (const dir of ['story/craft', 'story/recaps']) {
+    const full = path.join(project.dir, dir);
+    if (!fs.existsSync(full)) continue;
+    for (const name of fs.readdirSync(full).filter((item) => item.endsWith('.json')).sort()) {
+      jsonFiles.push(path.join(full, name));
+    }
+  }
+  for (const file of jsonFiles) {
     if (!fs.existsSync(file)) continue;
     try {
       readJson(file);
