@@ -188,6 +188,23 @@ export function validateOutline(outline, config) {
         }
         if (!Array.isArray(chapter.events)) {
           findings.push(finding('schema.outline.chapter.events', 'high', `${chapterId}.events must be an array`, chapterId));
+        } else {
+          chapter.events.forEach((event, ei) => {
+            const eventId = `${chapterId}.events[${ei}]`;
+            if (!event || typeof event !== 'object' || Array.isArray(event)) {
+              findings.push(finding('schema.outline.chapter.event', 'high', `${eventId} must be an object`, eventId));
+              return;
+            }
+            if (typeof (event.type || event.action) !== 'string' || !(event.type || event.action).trim()) {
+              findings.push(finding('schema.outline.chapter.event', 'high', `${eventId} needs a non-empty type or action`, eventId));
+            }
+            if (event.characters !== undefined && (!Array.isArray(event.characters) || event.characters.some((v) => typeof v !== 'string'))) {
+              findings.push(finding('schema.outline.chapter.event', 'medium', `${eventId}.characters must be an array of strings`, eventId));
+            }
+            if (event.target_type !== undefined && typeof event.target_type !== 'string') {
+              findings.push(finding('schema.outline.chapter.event', 'medium', `${eventId}.target_type must be a string`, eventId));
+            }
+          });
         }
         if (chapter.timeline !== undefined) {
           if (!chapter.timeline || typeof chapter.timeline !== 'object' || Array.isArray(chapter.timeline)) {
@@ -438,13 +455,21 @@ function qualityFindings(project, target, id, override = {}) {
           for (const event of chapter.events || []) {
             const type = event.type || event.action;
             if (type) eventTypes[type] = (eventTypes[type] || 0) + 1;
+            const chapterCharacters = new Set(chapter.characters || []);
+            if (event.actor && chapterCharacters.size > 0 && !chapterCharacters.has(event.actor) &&
+              (castNames.size === 0 || castNames.has(event.actor))) {
+              findings.push(finding('quality.outline.event_actor', 'medium', `${chapter.id} event actor ${event.actor} is not in chapter.characters`, chapter.id));
+            }
+            const targetType = String(event.target_type || '').toLowerCase();
+            const target = String(event.target || event.subject || '').trim();
+            if (targetType === 'character' && target && chapterCharacters.size > 0 && !chapterCharacters.has(target)) {
+              findings.push(finding('quality.outline.event_target', 'medium', `${chapter.id} event target ${target} is not in chapter.characters`, chapter.id));
+            }
             for (const name of event.characters || []) {
               if (!(chapter.characters || []).includes(name)) {
                 findings.push(finding('quality.outline.event_character', 'medium', `${chapter.id} event uses ${name}, who is not in chapter.characters`, chapter.id));
               }
             }
-            const targetType = String(event.target_type || '').toLowerCase();
-            const target = String(event.target || event.subject || '').trim();
             const action = String(event.action || event.change || '').toLowerCase();
             if (target && (targetType === 'character' || type === 'character')) {
               if (['kill', 'die', 'death'].includes(action)) {
