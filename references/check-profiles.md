@@ -37,7 +37,7 @@ rules can block a write before it touches the project.
 Chapter quality cross-checks the outline chapter and recap presence/location,
 and warns when the outline title or a listed character never appears in the
 chapter text. Recap quality checks `chapter_id`, outline presence, cast
-presence, location, last line, plot-beat anchors and chapter-text presence.
+presence, location, last line, per-beat anchors and chapter-text presence.
 
 Output:
 

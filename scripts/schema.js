@@ -363,7 +363,11 @@ function qualityFindings(project, target, id, override = {}) {
       }
       const knownNames = [...new Set([...(found?.chapter?.characters || []), ...(recap.present || [])])];
       for (const beat of recap.plot_beats || []) {
-        if (knownNames.length > 0 && !knownNames.some((name) => chapterText.includes(name)) && !chapterText.includes(String(beat).slice(0, 6))) {
+        const beatNames = knownNames.filter((name) => String(beat).includes(name));
+        const anchored = beatNames.length > 0
+          ? beatNames.some((name) => chapterText.includes(name))
+          : chapterText.includes(String(beat).slice(0, 6));
+        if (!anchored) {
           findings.push(finding('quality.recap.plot_beat_text', 'low', `${id} recap plot beat has no recognizable anchor in the chapter text: ${beat}`, id));
         }
       }
