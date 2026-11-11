@@ -157,6 +157,7 @@ export function projectState(project, options = {}) {
 export function auditProject(project, options = {}) {
   const targets = [];
   const maxFindings = options.maxFindings || 0;
+  const view = options.view === 'full' ? 'full' : 'brief';
   const add = (target, id) => {
     try {
       const result = checkProject(project, {
@@ -213,13 +214,21 @@ export function auditProject(project, options = {}) {
     for (const key of Object.keys(summary)) summary[key] += target.summary[key] || 0;
   }
   const blocking = targets.some((target) => target.blocking);
+  const allFindings = targets.flatMap((target) => target.findings.map((item) => ({
+    ...item,
+    audit_target: target.target,
+  })));
   return {
     ok: !blocking,
     blocking,
+    view,
     root: project.dir,
     name: project.config.name,
     summary,
-    targets,
+    top_findings: allFindings.slice(0, 10),
+    targets: view === 'full'
+      ? targets
+      : targets.map(({ findings, ...target }) => target),
   };
 }
 

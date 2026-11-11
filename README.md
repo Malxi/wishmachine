@@ -12,9 +12,11 @@
 node scripts/wishmachine.js version
 node scripts/wishmachine.js book init "我的书" --dir my-book --parts 1 --volumes 3 --chapter 5
 node scripts/wishmachine.js state --dir my-book --view brief
+node scripts/wishmachine.js audit --dir my-book --view brief
 node scripts/wishmachine.js book status --dir my-book --json
 node scripts/wishmachine.js ideas draw --type namecard --genre 科幻 --count 12 --seed 42
 node scripts/wishmachine.js check --dir my-book --profile all --target outline
+node scripts/wishmachine.js refresh --dir my-book
 node scripts/wishmachine.js gen workflow read outline
 ```
 
@@ -60,9 +62,11 @@ logs/
 
 这不是完整 Novelgen。当前只移植确定性的项目管理和检查：
 
-- `book init/status/read/write`
+- `book init/status/state/read/write/refresh/audit`
 - `check quality/schema/custom`
-- `ideas namecard/premise/resource/scenario`
+- `audit` 全项目审计
+- `refresh` 重建 setup/outline markdown
+- `ideas namecard/premise/resource/scenario/provocation/law/event/worldpack`
 - `gen workflow/reference/skill`
 
 没有：
