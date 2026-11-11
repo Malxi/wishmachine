@@ -2,7 +2,7 @@ import { loadProject, initProject, projectStatus, projectState, readSection, wri
 import { drawIdeas, ideasTypes } from './ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference, listSkills, readSkill } from './guides.js';
 
-const VERSION = '0.1.7';
+const VERSION = '0.1.8';
 const BOOLEAN_FLAGS = new Set(['apply', 'json', 'help', 'h', 'dry-run', 'force']);
 const COMMANDS = new Set(['book', 'check', 'ideas', 'gen', 'state', 'version', 'help']);
 

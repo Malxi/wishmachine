@@ -195,6 +195,14 @@ test('worldpack bundles premise, resources and scenarios', () => {
   assert.ok(pack.results[0].cast.length >= 1);
 });
 
+test('provocation, law and event draws are available', () => {
+  for (const type of ['provocation', 'law', 'event']) {
+    const draw = drawIdeas({ type, count: 2, seed: 9 });
+    assert.equal(draw.count, 2);
+    assert.ok(draw.results.every((item) => item.title));
+  }
+});
+
 test('ideas are deterministic', () => {
   const a = drawIdeas({ type: 'namecard', genre: '科幻', count: 5, seed: 42 });
   const b = drawIdeas({ type: 'namecard', genre: '科幻', count: 5, seed: 42 });

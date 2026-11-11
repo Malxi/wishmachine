@@ -440,6 +440,9 @@ function qualityFindings(project, target, id, override = {}) {
               findings.push(finding('quality.outline.resource_ledger', 'high', `${chapter.id} resource_ledger arithmetic is wrong for ${entry.item || 'item'}: ${entry.start} + ${entry.delta} != ${entry.end}`, chapter.id));
             }
           }
+          if (typeof chapter.state_anchor?.spirit_stones === 'number' && chapter.state_anchor.spirit_stones < 0) {
+            findings.push(finding('quality.outline.negative_resource', 'medium', `${chapter.id} state_anchor.spirit_stones is negative`, chapter.id));
+          }
           if (index > 0) {
             const previous = chapters[index - 1];
             if (previous.location && chapter.location && previous.location !== chapter.location &&
@@ -485,8 +488,11 @@ function qualityFindings(project, target, id, override = {}) {
   if (target === 'chapter') {
     if (!id) throw new Error('chapter check requires --id');
     const file = path.join(project.dir, 'chapters', `${id}.md`);
-    if (!fs.existsSync(file)) throw new Error(`chapter not found: ${id}`);
-    const text = readText(file);
+    let text = override.chapterText;
+    if (text === undefined) {
+      if (!fs.existsSync(file)) throw new Error(`chapter not found: ${id}`);
+      text = readText(file);
+    }
     if (text.trim().length < 200) {
       findings.push(finding('quality.chapter.length', 'medium', `${id} is shorter than 200 characters`, id));
     }
@@ -503,6 +509,15 @@ function qualityFindings(project, target, id, override = {}) {
       for (const name of found.chapter.characters || []) {
         if (!text.includes(name)) {
           findings.push(finding('quality.chapter.character_absent', 'low', `${id} outline character ${name} never appears in the text`, id));
+        }
+      }
+      for (const event of found.chapter.events || []) {
+        const labels = [
+          event.actor, event.target, event.subject,
+          ...(event.characters || []),
+        ].filter((value) => typeof value === 'string' && value.trim());
+        if (labels.length > 0 && !labels.some((value) => text.includes(value))) {
+          findings.push(finding('quality.chapter.event_absent', 'low', `${id} outline event ${labels.join(' / ')} does not appear in the text`, id));
         }
       }
     }
@@ -606,6 +621,8 @@ export function checkCandidate(project, options = {}) {
   } else if (section === 'recap') {
     findings.push(...validateRecap(candidate));
     findings.push(...qualityFindings(project, 'recap', options.id || candidate?.chapter_id || '', { recap: candidate }));
+  } else if (section === 'chapter') {
+    findings.push(...qualityFindings(project, 'chapter', options.id || '', { chapterText: candidate }));
   } else {
     throw new Error(`unsupported candidate section: ${section}`);
   }

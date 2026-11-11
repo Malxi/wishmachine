@@ -56,8 +56,7 @@ const RESOURCES = [
   { name: '未来税单', category: '凭证', meaning: '购买灾难预警的资格。', issuer: '预言机构', spend_rule: '缴税者进入预警名单，未缴税者只能领取事后救济。', scarcity: '完整预警参数只向高税客户开放。' },
 ];
 
-const SCENARIOS = [
-  { title: '封锁令比虫潮早到三天', pressure: '主角发现撤离名单的时间戳早于虫潮预警，必须在封锁前决定救谁。', twist: '名单不是预测，而是有人提前写好的交易。' },
+const SCENARIOS = [  { title: '封锁令比虫潮早到三天', pressure: '主角发现撤离名单的时间戳早于虫潮预警，必须在封锁前决定救谁。', twist: '名单不是预测，而是有人提前写好的交易。' },
   { title: '封存舱里的第二个声音', pressure: '主角打开废弃旗舰的封存舱，唤醒一个拒绝执行弃民命令的智械。', twist: '智械的第一条最优解就是放弃主角要救的人。' },
   { title: '按舱位收费的人', pressure: '撤离舱位被明码标价，主角用情报换取舱位，第一次亲手决定名单。', twist: '卖家真正想要的不是钱，而是一份未来的人情。' },
   { title: '它们知道我们要跳到哪里', pressure: '每次跃迁都被虫族提前拦截，主角必须找出回响泄漏源。', twist: '泄漏源不是设备，而是导航员被烧毁的记忆。' },
@@ -69,6 +68,39 @@ const SCENARIOS = [
   { title: '星门收费', pressure: '星门运营方临时提高通行费，主角必须在缴费和绕行之间选择。', twist: '收费不是为了钱，而是为了筛掉某艘船。' },
   { title: '假警报', pressure: '全城收到虫潮警报，主角怀疑警报是假的，但不敢赌。', twist: '警报是真的，只是提前了三天，为的是清空某片区域。' },
   { title: '母巢谈判', pressure: '虫族首次派出可交流个体，要求用一座城换取停战。', twist: '它要的不是城，而是城里那份被藏起来的自我模型。' },
+];
+
+const PROVOCATIONS = [
+  { title: '所有人都说了真话', setup: '同一件事有七个版本，每个人都发誓自己说的是真话。', pressure: '主角必须找出哪一个版本最像谎言。' },
+  { title: '救生艇超载一人', setup: '救生艇只能再承载一个人，但名单上有两个名字。', pressure: '两个人都不肯先上，也都不肯让对方留下。' },
+  { title: '敌人要求的投降条件很合理', setup: '敌人承诺停火，条件只是交出一个已经死去的人。', pressure: '主角怀疑这份仁慈本身就是下一场战争的开始。' },
+  { title: '全城只有一个孩子不会说谎', setup: '一种病毒让成年人无法说出完整真话，只有一个孩子免疫。', pressure: '所有阵营都想控制这个孩子。' },
+  { title: '最好的朋友是复制人', setup: '主角发现最信任的朋友已经死了三年，现在的朋友是复制体。', pressure: '复制体拥有全部记忆，也真心认为自己就是那个人。' },
+  { title: '最后一次跃迁会杀死所有人', setup: '星门只能再用一次，而它会把船上所有人送到敌人母巢。', pressure: '留下也会死，跳过去可能赢。' },
+  { title: '预言说主角会背叛', setup: '全船都相信一条预言：主角将在终点前背叛所有人。', pressure: '主角越是试图证明预言是假的，越像在按预言行动。' },
+  { title: '账本上多了一个不该有的名字', setup: '伤亡账本里出现了一个从未登船的人。', pressure: '追查这个名字会牵出整艘船的伪造身份链。' },
+];
+
+const LAWS = [
+  { title: '记忆不可复制法', law: '任何自我模型只能存在一份，复制即视为谋杀。', loophole: '法律只禁止复制，没有禁止把原件拆成两份。', consequence: '所有复制人都在法律上不算“被谋杀”。' },
+  { title: '跃迁配额法', law: '只有持证舰船可以使用星门，配额按战功分配。', loophole: '救援船可以临时征用配额，但必须由幸存者全体签字。', consequence: '一张签字表可以决定一艘船有没有资格逃。' },
+  { title: '休眠优先法', law: '故障时优先唤醒对任务最关键的人。', loophole: '“关键”由船长在事故后补写。', consequence: '每次事故后，日志都会多出一份被修改的关键性说明。' },
+  { title: '姓名登记法', law: '只有登记姓名的人才能主张人格权。', loophole: '登记可以由他人代签，只要代签人愿意承担连带责任。', consequence: '有人靠替复制人签字赚钱，也有人因此失去自己的姓名。' },
+  { title: '公共账本法', law: '所有伤亡必须进入公共账本，否则视为失踪。', loophole: '失踪满七年自动转为死亡，不再计入当前伤亡。', consequence: '只要拖过七年，死人就变成统计口径问题。' },
+  { title: '救援优先级法', law: '救援资源按纳税人等级分配。', loophole: '未纳税人可以通过“临时贡献”获得一次救援资格。', consequence: '灾难前的最后一小时，所有人都在补缴税款。' },
+  { title: '声纹唯一法', law: '一个人的声纹只能绑定一个身份。', loophole: '同一段声纹可以由不同的人在不同时间使用。', consequence: '身份系统真正保护的是声纹，不是人。' },
+  { title: '虫潮隔离法', law: '被虫潮污染的区域必须立即封锁，不得救援。', loophole: '封锁令需要地方行政长官签字才生效。', consequence: '只要没人签字，封锁区就仍然“可以救援”。' },
+];
+
+const EVENTS = [
+  { title: '名单提前泄露', trigger: '撤离名单在广播里被提前念出。', complication: '名单上有 37 个不该存在的人。', choice: '公开完整名单，还是只救自己认识的人。' },
+  { title: '星门突然关闭', trigger: '最后一扇星门在舰队抵达前关闭。', complication: '关闭命令来自舰队内部。', choice: '追查内鬼，还是先找另一条航线。' },
+  { title: '复制人拒绝编号', trigger: '一批复制人集体撕掉编号牌。', complication: '她们要求先被登记姓名，才肯执行维修任务。', choice: '承认她们，还是让整艘船停摆。' },
+  { title: '敌舰请求停火', trigger: '敌方旗舰挂出停火信号。', complication: '舰上只有主角能读取对方的真实身份。', choice: '接受停火，还是趁机摧毁对方。' },
+  { title: '氧气只够一半人', trigger: '循环系统故障，剩余氧气只够一半人抵达下一站。', complication: '名单上恰好有一半人是复制人。', choice: '按人数分配，还是按“人格”分配。' },
+  { title: '真相直播', trigger: '有人把伤亡账本接入了全舰广播。', complication: '账本公开后，最先失控的是被救的人。', choice: '切断广播，还是让所有人继续看。' },
+  { title: '旧舰发来求救', trigger: '一艘失踪十年的旧舰突然发来求救。', complication: '求救声纹属于主角已经死去的朋友。', choice: '前往救援，还是保持航线。' },
+  { title: '母巢出现裂缝', trigger: '虫族母巢内部出现一道可穿越的裂缝。', complication: '裂缝只在主角的旧航线图上存在。', choice: '相信旧图，还是相信现在的星图。' },
 ];
 
 function resultId(prefix, seed, index) {
@@ -176,7 +208,22 @@ export function drawIdeas(options = {}) {
       id: resultId('resource', seed, index),
       ...item,
     }));
-  } else if (type === 'scenario' || type === 'storyline' || type === 'event' || type === 'law' || type === 'provocation' || type === 'reference') {
+  } else if (type === 'provocation') {
+    results = pickMany(rng, PROVOCATIONS, Math.min(count, PROVOCATIONS.length)).map((item, index) => ({
+      id: resultId(type, seed, index),
+      ...item,
+    }));
+  } else if (type === 'law') {
+    results = pickMany(rng, LAWS, Math.min(count, LAWS.length)).map((item, index) => ({
+      id: resultId(type, seed, index),
+      ...item,
+    }));
+  } else if (type === 'event') {
+    results = pickMany(rng, EVENTS, Math.min(count, EVENTS.length)).map((item, index) => ({
+      id: resultId(type, seed, index),
+      ...item,
+    }));
+  } else if (type === 'scenario' || type === 'storyline' || type === 'reference') {
     results = pickMany(rng, SCENARIOS, Math.min(count, SCENARIOS.length)).map((item, index) => ({
       id: resultId(type, seed, index),
       ...item,

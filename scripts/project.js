@@ -313,18 +313,15 @@ export function writeArtifact(project, options) {
     throw new Error(`unsupported write section: ${section}`);
   }
 
-  const check = ['setup', 'outline', 'craft', 'recap'].includes(section)
+  const check = ['setup', 'outline', 'craft', 'recap', 'chapter'].includes(section)
     ? checkCandidate(project, {
       section,
       candidate,
       kind: options.target || 'character',
-      id: section === 'recap' ? id : undefined,
+      id: section === 'chapter' || section === 'recap' ? id : undefined,
       maxFindings: options.maxIssues || 0,
     })
-    : (section === 'chapter' ? {
-      ok: true, blocking: false, profile: 'schema', target: 'chapter', id,
-      summary: { total: 0, critical: 0, high: 0, medium: 0, low: 0 }, findings: [],
-    } : null);
+    : null;
 
   if (check?.blocking && apply) {
     return { ok: false, applied: false, dry_run: false, section, check };
@@ -348,7 +345,7 @@ export function writeArtifact(project, options) {
   const config = readJson(path.join(project.dir, 'novel.json'));
   config.updated_at = nowIso();
   writeJsonAtomic(path.join(project.dir, 'novel.json'), config);
-  const after = ['setup', 'outline', 'craft', 'recap'].includes(section)
+  const after = ['setup', 'outline', 'craft', 'recap', 'chapter'].includes(section)
     ? checkProject({ ...project, config }, {
       profile: 'all',
       target: section,
