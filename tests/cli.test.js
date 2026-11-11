@@ -42,6 +42,10 @@ test('CLI init, status and ideas', () => {
   const setupIssue = doctor.issues.find((issue) => issue.code === 'artifact.setup');
   assert.ok(setupIssue);
   assert.ok(setupIssue.suggestion.length > 0);
+  fs.rmSync(path.join(dir, 'story', 'craft'), { recursive: true, force: true });
+  const fixed = JSON.parse(run(['doctor', '--dir', dir, '--fix']));
+  assert.ok(fixed.actions.some((action) => action.includes('story/craft')));
+  assert.ok(fs.existsSync(path.join(dir, 'story', 'craft')));
   const ideas = JSON.parse(run(['ideas', 'draw', '--type', 'namecard', '--genre', '科幻', '--count', '2', '--seed', '7']));
   assert.equal(ideas.count, 2);
   assert.equal(ideas.results.length, 2);

@@ -13,7 +13,7 @@ examples_en:
   - "Create a 3-volume × 5-chapter science-fiction project"
   - "Check the outline for blocking findings"
   - "Draw 12 science-fiction name cards"
-version: 0.1.31
+version: 0.1.32
 author: Malxi
 ---
 
@@ -39,6 +39,7 @@ node scripts/wishmachine.js audit --dir my-book
 node scripts/wishmachine.js refresh --dir my-book
 node scripts/wishmachine.js export --dir my-book
 node scripts/wishmachine.js doctor --dir my-book
+node scripts/wishmachine.js doctor --dir my-book --fix
 node scripts/wishmachine.js book status --dir my-book --json
 node scripts/wishmachine.js book read outline --dir my-book --view index
 node scripts/wishmachine.js book read setup --dir my-book

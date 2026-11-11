@@ -3,7 +3,7 @@ import { checkProject } from './schema.js';
 import { drawIdeas, ideasTypes } from './ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference, listSkills, readSkill } from './guides.js';
 
-const VERSION = '0.1.31';
+const VERSION = '0.1.32';
 const BOOLEAN_FLAGS = new Set(['apply', 'json', 'help', 'h', 'dry-run', 'force']);
 const COMMANDS = new Set(['book', 'check', 'ideas', 'gen', 'state', 'audit', 'refresh', 'export', 'doctor', 'version', 'help']);
 
@@ -93,7 +93,7 @@ Commands:
   audit [--dir <dir>] [--view brief|full] [--min-severity low|medium|high|critical] [--max-findings 10]
   refresh [setup|outline|all] [--dir <dir>]
   export [--dir <dir>] [--output drafts/manuscript.md]
-  doctor [--dir <dir>]
+  doctor [--dir <dir>] [--fix]
   book read <setup|outline|craft|chapter|recap|context|logs> [--id <id>] [--view index|full]
   book write <setup|outline|craft|chapter|recap> [--mode replace|patch] [--apply] [--id <id>]
   check [--profile quality|schema|custom|all] [--target setup|outline|chapter] [--id <id>]
@@ -169,7 +169,7 @@ async function runBook(args, flags) {
   }
   if (sub === 'doctor') {
     const project = loadProject(stringFlag(flags, 'dir', ''));
-    print(doctorProject(project));
+    print(doctorProject(project, { fix: boolFlag(flags, 'fix') }));
     return 0;
   }
   if (sub === 'read') {
@@ -326,7 +326,7 @@ export async function main(argv = process.argv.slice(2)) {
   }
   if (command === 'doctor') {
     const project = loadProject(stringFlag(flags, 'dir', ''));
-    print(doctorProject(project));
+    print(doctorProject(project, { fix: boolFlag(flags, 'fix') }));
     return 0;
   }
   if (command === 'check') return runCheck(flags);
