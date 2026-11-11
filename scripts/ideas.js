@@ -125,13 +125,21 @@ const EVENTS = [  { title: '名单提前泄露', trigger: '撤离名单在广播
   { title: '母巢出现裂缝', trigger: '虫族母巢内部出现一道可穿越的裂缝。', complication: '裂缝只在主角的旧航线图上存在。', choice: '相信旧图，还是相信现在的星图。' },
 ];
 
-const ENGINES = [
-  { title: '全损保险引擎', artifact: '虫洞战舰全损保单', issuer: '深空保险公司', holder: '舰队财务官', stated_purpose: '承保战舰损失并在事故后赔付', hidden_function: '用理赔数据预测下一次事故并提前撤走高价值资产', loophole: '只有保险人信标确认的残骸才算全损，而信标在船上', cost: '每次理赔都会把幸存者变成下一份保单的抵押品', protagonist_role: '唯一能签字确认全损的人', counter_expectation: '主角不逃理赔，而是让整支舰队一起理赔' },
+const ENGINES = [  { title: '全损保险引擎', artifact: '虫洞战舰全损保单', issuer: '深空保险公司', holder: '舰队财务官', stated_purpose: '承保战舰损失并在事故后赔付', hidden_function: '用理赔数据预测下一次事故并提前撤走高价值资产', loophole: '只有保险人信标确认的残骸才算全损，而信标在船上', cost: '每次理赔都会把幸存者变成下一份保单的抵押品', protagonist_role: '唯一能签字确认全损的人', counter_expectation: '主角不逃理赔，而是让整支舰队一起理赔' },
   { title: '引航快照许可引擎', artifact: '引航体快照许可证', issuer: '深空航行署', holder: '导航员', stated_purpose: '允许飞船烧毁一份意识快照完成跃迁', hidden_function: '把死刑犯与复制人的意识变成可交易导航耗材', loophole: '许可证只登记快照来源，不登记快照是否仍然活着', cost: '每次跃迁都会泄漏一段无法回收的记忆回响', protagonist_role: '发现快照来源被伪造的技师', counter_expectation: '主角公开所有快照来源，让跃迁体系失去合法性' },
   { title: '救援优先级引擎', artifact: '救援优先级债券', issuer: '联邦救援署', holder: '撤离者', stated_purpose: '用未来劳动换取优先救援资格', hidden_function: '把救援顺序变成对“未来生产力”的定价', loophole: '债券可以转让，但债务永远跟着被救者', cost: '签署者未来十年的工资被自动扣除', protagonist_role: '替别人签下债券的调度员', counter_expectation: '主角让所有人违约，逼救援署承认救援不是商品' },
   { title: '复制人租赁引擎', artifact: '复制人租赁合同', issuer: '耗材管理局', holder: '舰船雇主', stated_purpose: '按任务租用复制人劳动力', hidden_function: '用租赁期限规避复制人的人格登记', loophole: '合同到期后复制人必须被“回收”，但回收记录可以丢失', cost: '每份合同都会制造一个无法登记姓名的人', protagonist_role: '替复制人寻找回收记录漏洞的律师', counter_expectation: '主角让复制人集体拒绝被回收，而不是替她们找新合同' },
   { title: '星门通行配额引擎', artifact: '星门通行配额', issuer: '联邦航运理事会', holder: '舰长', stated_purpose: '按战功分配星门优先权', hidden_function: '用配额把不受欢迎的舰队留在虫潮里', loophole: '救援船可以临时征用配额，但必须由幸存者全体签字', cost: '每次征用都会留下一个可以被追责的签名', protagonist_role: '被迫替全船签字的舰长', counter_expectation: '主角把配额公开拍卖，让理事会无法暗中分配' },
   { title: '记忆抵押引擎', artifact: '记忆抵押凭证', issuer: '时间银行', holder: '借款人', stated_purpose: '用未来记忆换取当前资源', hidden_function: '把抵押的记忆打包成导航快照卖给舰队', loophole: '抵押合同只写记忆时长，不写记忆内容', cost: '违约者会失去一段自己无法选择删除的过去', protagonist_role: '发现自己的记忆被转卖的人', counter_expectation: '主角买回所有被抵押的记忆，而不是只买回自己的' },
+];
+
+const STORYLINES = [
+  { title: '逃生与救援', promise: '主角想救下所有人。', escalation: '每救一个人都要放弃另一个。', midpoint: '主角发现名单本身就是交易。', payoff: '主角拒绝在名单上签字。', cost: '拒绝签字会让救援船无法起飞。' },
+  { title: '身份与继承', promise: '主角想拿回自己的名字。', escalation: '每证明一次身份，就多一个人失去名字。', midpoint: '主角发现真正的继承人还活着。', payoff: '主角把姓名交还给所有被继承者。', cost: '交还姓名会让主角失去合法身份。' },
+  { title: '制度与反叛', promise: '主角想从内部修好制度。', escalation: '每修一条规则，制度就多一个漏洞。', midpoint: '主角发现制度靠漏洞维持。', payoff: '主角公开所有漏洞。', cost: '公开后最先失控的是依赖漏洞的人。' },
+  { title: '真相与记忆', promise: '主角想知道自己是谁。', escalation: '每找回一段记忆，就失去一段现在。', midpoint: '主角发现自己曾经主动删除记忆。', payoff: '主角选择保留不完整的自己。', cost: '保留记忆会让导航系统失效。' },
+  { title: '资源与配给', promise: '主角想让所有人活到下一站。', escalation: '氧气只够一半人，名单越来越短。', midpoint: '主角发现自己也在名单外。', payoff: '主角把配给权交给全体乘客。', cost: '全体投票会拖到氧气耗尽。' },
+  { title: '预言与自由', promise: '主角想打破一条预言。', escalation: '每次反抗都让预言更准确。', midpoint: '主角发现预言记录的是自己的选择。', payoff: '主角做出一件预言没有写的事。', cost: '这件事会牺牲唯一相信他的人。' },
 ];
 
 function resultId(prefix, seed, index) {
@@ -200,6 +208,7 @@ export function drawIdeas(options = {}) {
       const premise = pick(rng, PREMISES);
       const resources = pickMany(rng, RESOURCES, 2);
       const scenarios = pickMany(rng, SCENARIOS, 2);
+      const storylines = pickMany(rng, STORYLINES, 2);
       const engine = pick(rng, ENGINES);
       const cast = namecards(rng, seed + packIndex, 4);
       const packId = `worldpack-${seed}-${String(packIndex + 1).padStart(2, '0')}`;
@@ -216,6 +225,7 @@ export function drawIdeas(options = {}) {
         },
         resources: resources.map((item, index) => ({ id: `${packId}-resource-${index + 1}`, ...item })),
         scenarios: scenarios.map((item, index) => ({ id: `${packId}-scenario-${index + 1}`, ...item })),
+        storylines: storylines.map((item, index) => ({ id: `${packId}-storyline-${index + 1}`, ...item })),
         engine: { id: `${packId}-engine`, ...engine },
         cast,
       });
@@ -262,7 +272,12 @@ export function drawIdeas(options = {}) {
       id: resultId(type, seed, index),
       ...item,
     }));
-  } else if (type === 'scenario' || type === 'storyline' || type === 'reference') {
+  } else if (type === 'storyline') {
+    results = pickMany(rng, STORYLINES, Math.min(count, STORYLINES.length)).map((item, index) => ({
+      id: resultId(type, seed, index),
+      ...item,
+    }));
+  } else if (type === 'scenario' || type === 'reference') {
     results = pickMany(rng, SCENARIOS, Math.min(count, SCENARIOS.length)).map((item, index) => ({
       id: resultId(type, seed, index),
       ...item,
