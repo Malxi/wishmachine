@@ -223,6 +223,25 @@ export function auditProject(project, options = {}) {
   };
 }
 
+export function refreshProject(project, options = {}) {
+  const target = options.target || 'all';
+  if (!['all', 'setup', 'outline'].includes(target)) {
+    throw new Error(`unsupported refresh target: ${target}`);
+  }
+  const refreshed = [];
+  const setupFile = path.join(project.dir, 'story', 'setup', 'story_setup.json');
+  const outlineFile = path.join(project.dir, 'story', 'compose', 'outline.json');
+  if ((target === 'all' || target === 'setup') && fs.existsSync(setupFile)) {
+    writeTextAtomic(path.join(project.dir, 'story', 'setup', 'story_setup.md'), setupMarkdown(readJson(setupFile)));
+    refreshed.push('story/setup/story_setup.md');
+  }
+  if ((target === 'all' || target === 'outline') && fs.existsSync(outlineFile)) {
+    writeTextAtomic(path.join(project.dir, 'story', 'compose', 'outline.md'), outlineMarkdown(readJson(outlineFile)));
+    refreshed.push('story/compose/outline.md');
+  }
+  return { ok: true, action: 'refresh', target, refreshed };
+}
+
 export function readSection(project, section, options = {}) {
   const id = options.id ? safeSegment(options.id) : '';
   const view = options.view || 'brief';

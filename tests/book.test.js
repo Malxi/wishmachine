@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { initProject, loadProject, projectStatus, projectState, auditProject, writeArtifact, readSection } from '../scripts/project.js';
+import { initProject, loadProject, projectStatus, projectState, auditProject, refreshProject, writeArtifact, readSection } from '../scripts/project.js';
 import { checkProject } from '../scripts/schema.js';
 import { drawIdeas } from '../scripts/ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference } from '../scripts/guides.js';
@@ -252,6 +252,21 @@ test('provocation, law and event draws are available', () => {
     assert.equal(draw.count, 2);
     assert.ok(draw.results.every((item) => item.title));
   }
+});
+
+test('refresh rebuilds markdown companions', () => {
+  const dir = tempDir();
+  initProject({ name: 'refresh test', dir, parts: 1, volumes: 2, chapter: 2 });
+  const project = loadProject(dir);
+  writeArtifact(project, { section: 'setup', mode: 'replace', apply: true, content: JSON.stringify(setup) });
+  writeArtifact(loadProject(dir), { section: 'outline', mode: 'replace', apply: true, content: JSON.stringify(outline) });
+  fs.rmSync(path.join(dir, 'story', 'setup', 'story_setup.md'));
+  fs.rmSync(path.join(dir, 'story', 'compose', 'outline.md'));
+  const result = refreshProject(loadProject(dir));
+  assert.ok(result.refreshed.includes('story/setup/story_setup.md'));
+  assert.ok(result.refreshed.includes('story/compose/outline.md'));
+  assert.ok(fs.existsSync(path.join(dir, 'story', 'setup', 'story_setup.md')));
+  assert.ok(fs.existsSync(path.join(dir, 'story', 'compose', 'outline.md')));
 });
 
 test('builtin custom rules are loaded', () => {
