@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { initProject, loadProject, projectStatus, projectState, auditProject, refreshProject, writeArtifact, readSection } from '../scripts/project.js';
+import { initProject, loadProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, writeArtifact, readSection } from '../scripts/project.js';
 import { checkProject } from '../scripts/schema.js';
 import { drawIdeas } from '../scripts/ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference } from '../scripts/guides.js';
@@ -96,6 +96,11 @@ test('chapter write and read', () => {
   assert.ok(projectState(project).state.orphan_chapters.includes('P1-V1-C1'));
   const audit = auditProject(project);
   assert.ok(audit.targets.some((target) => target.target === 'chapter' && target.id === 'P1-V1-C1'));
+  const exported = exportManuscript(project);
+  assert.equal(exported.chapters, 1);
+  const manuscript = fs.readFileSync(exported.output, 'utf8');
+  assert.ok(manuscript.includes('第一章'));
+  assert.ok(manuscript.includes('# 章节测试'));
 });
 
 test('craft and recap schema checks', () => {

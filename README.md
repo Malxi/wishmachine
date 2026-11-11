@@ -69,6 +69,7 @@ logs/
 - `state` / `status` 会报告不在 outline 中的 orphan chapters 和 orphan recaps
 - `audit` 全项目审计，包括不在 outline 中的章节文件
 - `refresh` 重建 setup/outline markdown
+- `export` 将已写章节合并为 `drafts/manuscript.md`
 - `ideas namecard/premise/resource/scenario/provocation/law/event/worldpack`
 - `gen workflow/reference/skill`
 

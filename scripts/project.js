@@ -284,6 +284,34 @@ export function refreshProject(project, options = {}) {
   return { ok: true, action: 'refresh', target, refreshed };
 }
 
+export function exportManuscript(project, options = {}) {
+  const status = projectStatus(project);
+  const ordered = [
+    ...status.chapters.filter((chapter) => chapter.written).map((chapter) => chapter.id),
+    ...status.orphan_chapters,
+  ];
+  const unique = [...new Set(ordered)];
+  const chunks = [`# ${status.name}`, '', '> 由小说许愿机从 chapters/ 导出。', ''];
+  let chapters = 0;
+  for (const id of unique) {
+    const file = path.join(project.dir, 'chapters', `${id}.md`);
+    if (!fs.existsSync(file)) continue;
+    chunks.push(`---`, '', readText(file).trimEnd(), '');
+    chapters += 1;
+  }
+  const content = `${chunks.join('\n').trimEnd()}\n`;
+  const output = path.resolve(project.dir, options.output || path.join('drafts', 'manuscript.md'));
+  ensureDir(path.dirname(output));
+  writeTextAtomic(output, content);
+  return {
+    ok: true,
+    action: 'export',
+    output,
+    chapters,
+    bytes: Buffer.byteLength(content, 'utf8'),
+  };
+}
+
 export function readSection(project, section, options = {}) {
   const id = options.id ? safeSegment(options.id) : '';
   const view = options.view || 'brief';
