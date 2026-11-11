@@ -195,6 +195,19 @@ test('worldpack bundles premise, resources and scenarios', () => {
   assert.ok(pack.results[0].cast.length >= 1);
 });
 
+test('state anchor spirit stones must match the previous ledger end', () => {
+  const dir = tempDir();
+  initProject({ name: 'anchor test', dir, parts: 1, volumes: 1, chapter: 2 });
+  const project = loadProject(dir);
+  const anchorOutline = JSON.parse(JSON.stringify(outline));
+  anchorOutline.parts[0].volumes = [anchorOutline.parts[0].volumes[0]];
+  anchorOutline.parts[0].volumes[0].chapters[0].resource_ledger = [{ item: '灵石', start: 10, delta: -5, end: 5 }];
+  anchorOutline.parts[0].volumes[0].chapters[1].state_anchor = { spirit_stones: 9, allies: ['孟启明'] };
+  const result = writeArtifact(project, { section: 'outline', mode: 'replace', apply: true, content: JSON.stringify(anchorOutline) });
+  assert.equal(result.applied, true);
+  assert.ok(result.check.findings.some((item) => item.rule_id === 'quality.outline.anchor_continuity'));
+});
+
 test('provocation, law and event draws are available', () => {
   for (const type of ['provocation', 'law', 'event']) {
     const draw = drawIdeas({ type, count: 2, seed: 9 });

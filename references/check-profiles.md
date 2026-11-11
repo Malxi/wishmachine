@@ -24,15 +24,15 @@ node scripts/wishmachine.js check --profile custom --target chapter --id P1-V1-C
 ```
 
 Outline quality also checks item acquisition/usage, resource-ledger arithmetic,
-event-character references, storyline references, repeated event types, pacing
-runs, missing location transitions, mystery resolution order, returning
-characters, dead characters who appear again without a revival event, and a
-protagonist who never appears.
+state-anchor spirit-stone continuity, event-character references, storyline
+references, repeated event types, pacing runs, missing location transitions,
+mystery resolution order, returning characters, dead characters who appear
+again without a revival event, and a protagonist who never appears.
 
 Chapter quality cross-checks the outline chapter and recap presence/location,
 and warns when the outline title or a listed character never appears in the
 chapter text. Recap quality checks `chapter_id`, outline presence, cast
-presence and location.
+presence, location, last line and chapter-text presence.
 
 Output:
 

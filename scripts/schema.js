@@ -329,6 +329,18 @@ function qualityFindings(project, target, id, override = {}) {
         }
       }
     }
+    const chapterFile = path.join(project.dir, 'chapters', `${id}.md`);
+    if (fs.existsSync(chapterFile)) {
+      const chapterText = readText(chapterFile);
+      if (recap.last_line && !chapterText.includes(recap.last_line)) {
+        findings.push(finding('quality.recap.last_line', 'low', `${id} recap last_line does not appear in the chapter text`, id));
+      }
+      for (const name of recap.present || []) {
+        if (!chapterText.includes(name)) {
+          findings.push(finding('quality.recap.presence_text', 'low', `${id} recap present character ${name} does not appear in the chapter text`, id));
+        }
+      }
+    }
     return findings;
   }
   if (target === 'outline') {
@@ -362,6 +374,7 @@ function qualityFindings(project, target, id, override = {}) {
     const lastSeen = new Map();
     const returnedCharacters = new Set();
     const deadCharacters = new Set();
+    let previousSpiritEnd = null;
     let sequence = 0;
     for (const part of outline.parts || []) {
       for (const volume of part.volumes || []) {
@@ -445,6 +458,15 @@ function qualityFindings(project, target, id, override = {}) {
             } else if (entry.start + entry.delta !== entry.end) {
               findings.push(finding('quality.outline.resource_ledger', 'high', `${chapter.id} resource_ledger arithmetic is wrong for ${entry.item || 'item'}: ${entry.start} + ${entry.delta} != ${entry.end}`, chapter.id));
             }
+          }
+          const anchorSpirit = chapter.state_anchor?.spirit_stones;
+          if (previousSpiritEnd !== null && typeof anchorSpirit === 'number' && anchorSpirit !== previousSpiritEnd) {
+            findings.push(finding('quality.outline.anchor_continuity', 'medium', `${chapter.id} state_anchor.spirit_stones ${anchorSpirit} does not match the previous ledger end ${previousSpiritEnd}`, chapter.id, 'Carry the previous end value into the next state_anchor.'));
+          }
+          const spiritEntry = (chapter.resource_ledger || []).find((entry) =>
+            /spirit|灵石|灵力|晶石/i.test(String(entry?.item || '')));
+          if (spiritEntry && typeof spiritEntry.end === 'number') {
+            previousSpiritEnd = spiritEntry.end;
           }
           if (typeof chapter.state_anchor?.spirit_stones === 'number' && chapter.state_anchor.spirit_stones < 0) {
             findings.push(finding('quality.outline.negative_resource', 'medium', `${chapter.id} state_anchor.spirit_stones is negative`, chapter.id));
