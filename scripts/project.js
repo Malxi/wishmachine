@@ -535,7 +535,14 @@ export function writeArtifact(project, options) {
     if (!id) throw new Error('chapter write requires --id');
     file = path.join(project.dir, 'chapters', `${id}.md`);
     isJson = false;
-    candidate = raw;
+    if (mode === 'append') {
+      const existing = fs.existsSync(file) ? readText(file).trimEnd() : '';
+      candidate = `${existing}${existing ? '\n\n' : ''}${raw.trimStart()}`;
+    } else if (mode === 'replace') {
+      candidate = raw;
+    } else {
+      throw new Error(`chapter mode must be replace or append, got ${mode}`);
+    }
     if (!candidate.trim()) throw new Error('chapter content is empty');
   } else if (section === 'craft') {
     const kind = options.target || 'character';

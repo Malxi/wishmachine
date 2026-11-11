@@ -101,6 +101,12 @@ test('chapter write and read', () => {
   const manuscript = fs.readFileSync(exported.output, 'utf8');
   assert.ok(manuscript.includes('第一章'));
   assert.ok(manuscript.includes('# 章节测试'));
+  const append = writeArtifact(loadProject(dir), {
+    section: 'chapter', id: 'P1-V1-C1', mode: 'append', apply: true,
+    content: '附录内容。',
+  });
+  assert.equal(append.applied, true);
+  assert.ok(readSection(loadProject(dir), 'chapter', { id: 'P1-V1-C1' }).content.includes('附录内容'));
 });
 
 test('craft and recap schema checks', () => {

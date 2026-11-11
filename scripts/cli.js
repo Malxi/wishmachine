@@ -3,7 +3,7 @@ import { checkProject } from './schema.js';
 import { drawIdeas, ideasTypes } from './ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference, listSkills, readSkill } from './guides.js';
 
-const VERSION = '0.1.35';
+const VERSION = '0.1.36';
 const BOOLEAN_FLAGS = new Set(['apply', 'json', 'help', 'h', 'dry-run', 'force']);
 const COMMANDS = new Set(['book', 'check', 'ideas', 'gen', 'state', 'audit', 'refresh', 'export', 'doctor', 'version', 'help']);
 
@@ -95,7 +95,7 @@ Commands:
   export [--dir <dir>] [--output drafts/manuscript.md]
   doctor [--dir <dir>] [--fix]
   book read <setup|outline|craft|chapter|recap|context|logs> [--id <id>] [--view index|full]
-  book write <setup|outline|craft|chapter|recap> [--mode replace|patch] [--apply] [--id <id>]
+  book write <setup|outline|craft|chapter|recap> [--mode replace|patch|append] [--apply] [--id <id>]
   check [--profile quality|schema|custom|all] [--target setup|outline|chapter] [--id <id>]
   ideas draw --type namecard|premise|resource|scenario ... [--count 5] [--seed 42]
   ideas types

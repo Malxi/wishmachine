@@ -12,6 +12,7 @@ Both dry-run and apply run the deterministic checks; a blocking dry-run returns
 | outline | patch | volume/chapter patch JSON with `--target volume --id P1-V1` or `--target chapter --id P1-V1-C1` |
 | craft | replace or patch | craft JSON (`--target character|item|location|organization`) |
 | chapter | replace | complete chapter markdown (`--id P1-V1-C1`) |
+| chapter | append | append markdown to an existing chapter (`--id P1-V1-C1`) |
 | recap | replace or patch | recap JSON (`--id P1-V1-C1`) |
 
 Useful flags:
