@@ -124,6 +124,8 @@ test('craft and recap schema checks', () => {
   const recapResult = writeArtifact(project, { section: 'recap', id: 'P1-V1-C1', mode: 'replace', apply: true, content: JSON.stringify(recap) });
   assert.equal(recapResult.applied, true);
   assert.equal(checkProject(loadProject(dir), { profile: 'all', target: 'recap', id: 'P1-V1-C1' }).ok, true);
+  assert.ok(projectStatus(loadProject(dir)).orphan_recaps.includes('P1-V1-C1'));
+  assert.ok(projectState(loadProject(dir)).state.orphan_recaps.includes('P1-V1-C1'));
 });
 
 test('item usage before acquisition is blocking', () => {

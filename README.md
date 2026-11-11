@@ -66,7 +66,7 @@ logs/
 
 - `book init/status/state/read/write/refresh/audit`
 - `check quality/schema/custom`
-- `state` / `status` 会报告不在 outline 中的 orphan chapters
+- `state` / `status` 会报告不在 outline 中的 orphan chapters 和 orphan recaps
 - `audit` 全项目审计，包括不在 outline 中的章节文件
 - `refresh` 重建 setup/outline markdown
 - `ideas namecard/premise/resource/scenario/provocation/law/event/worldpack`

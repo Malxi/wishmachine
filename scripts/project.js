@@ -100,6 +100,11 @@ export function projectStatus(project) {
     : [];
   const knownChapterIds = new Set(chapters.map((chapter) => chapter.id));
   const orphanChapters = chapterFiles.filter((id) => !knownChapterIds.has(id));
+  const recapDir = path.join(project.dir, 'story', 'recaps');
+  const recapFiles = fs.existsSync(recapDir)
+    ? fs.readdirSync(recapDir).filter((name) => name.endsWith('.json')).map((name) => name.slice(0, -5)).sort()
+    : [];
+  const orphanRecaps = recapFiles.filter((id) => !knownChapterIds.has(id));
   return {
     name: config.name,
     root: project.dir,
@@ -112,6 +117,7 @@ export function projectStatus(project) {
     } : { parts: 0, volumes: 0, chapters: 0 },
     chapters,
     orphan_chapters: orphanChapters,
+    orphan_recaps: orphanRecaps,
     next,
   };
 }
@@ -159,6 +165,7 @@ export function projectState(project, options = {}) {
     chapter_count: status.chapters.length,
     written_count: status.chapters.filter((chapter) => chapter.written).length,
     orphan_chapters: orphanChapters,
+    orphan_recaps: status.orphan_recaps || [],
     craft: files(craftDir),
     recaps: files(recapDir),
     next: status.next,
