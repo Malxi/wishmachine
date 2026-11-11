@@ -115,8 +115,7 @@ const LAWS = [
   { title: '虫潮隔离法', law: '被虫潮污染的区域必须立即封锁，不得救援。', loophole: '封锁令需要地方行政长官签字才生效。', consequence: '只要没人签字，封锁区就仍然“可以救援”。' },
 ];
 
-const EVENTS = [
-  { title: '名单提前泄露', trigger: '撤离名单在广播里被提前念出。', complication: '名单上有 37 个不该存在的人。', choice: '公开完整名单，还是只救自己认识的人。' },
+const EVENTS = [  { title: '名单提前泄露', trigger: '撤离名单在广播里被提前念出。', complication: '名单上有 37 个不该存在的人。', choice: '公开完整名单，还是只救自己认识的人。' },
   { title: '星门突然关闭', trigger: '最后一扇星门在舰队抵达前关闭。', complication: '关闭命令来自舰队内部。', choice: '追查内鬼，还是先找另一条航线。' },
   { title: '复制人拒绝编号', trigger: '一批复制人集体撕掉编号牌。', complication: '她们要求先被登记姓名，才肯执行维修任务。', choice: '承认她们，还是让整艘船停摆。' },
   { title: '敌舰请求停火', trigger: '敌方旗舰挂出停火信号。', complication: '舰上只有主角能读取对方的真实身份。', choice: '接受停火，还是趁机摧毁对方。' },
@@ -124,6 +123,15 @@ const EVENTS = [
   { title: '真相直播', trigger: '有人把伤亡账本接入了全舰广播。', complication: '账本公开后，最先失控的是被救的人。', choice: '切断广播，还是让所有人继续看。' },
   { title: '旧舰发来求救', trigger: '一艘失踪十年的旧舰突然发来求救。', complication: '求救声纹属于主角已经死去的朋友。', choice: '前往救援，还是保持航线。' },
   { title: '母巢出现裂缝', trigger: '虫族母巢内部出现一道可穿越的裂缝。', complication: '裂缝只在主角的旧航线图上存在。', choice: '相信旧图，还是相信现在的星图。' },
+];
+
+const ENGINES = [
+  { title: '全损保险引擎', artifact: '虫洞战舰全损保单', issuer: '深空保险公司', holder: '舰队财务官', stated_purpose: '承保战舰损失并在事故后赔付', hidden_function: '用理赔数据预测下一次事故并提前撤走高价值资产', loophole: '只有保险人信标确认的残骸才算全损，而信标在船上', cost: '每次理赔都会把幸存者变成下一份保单的抵押品', protagonist_role: '唯一能签字确认全损的人', counter_expectation: '主角不逃理赔，而是让整支舰队一起理赔' },
+  { title: '引航快照许可引擎', artifact: '引航体快照许可证', issuer: '深空航行署', holder: '导航员', stated_purpose: '允许飞船烧毁一份意识快照完成跃迁', hidden_function: '把死刑犯与复制人的意识变成可交易导航耗材', loophole: '许可证只登记快照来源，不登记快照是否仍然活着', cost: '每次跃迁都会泄漏一段无法回收的记忆回响', protagonist_role: '发现快照来源被伪造的技师', counter_expectation: '主角公开所有快照来源，让跃迁体系失去合法性' },
+  { title: '救援优先级引擎', artifact: '救援优先级债券', issuer: '联邦救援署', holder: '撤离者', stated_purpose: '用未来劳动换取优先救援资格', hidden_function: '把救援顺序变成对“未来生产力”的定价', loophole: '债券可以转让，但债务永远跟着被救者', cost: '签署者未来十年的工资被自动扣除', protagonist_role: '替别人签下债券的调度员', counter_expectation: '主角让所有人违约，逼救援署承认救援不是商品' },
+  { title: '复制人租赁引擎', artifact: '复制人租赁合同', issuer: '耗材管理局', holder: '舰船雇主', stated_purpose: '按任务租用复制人劳动力', hidden_function: '用租赁期限规避复制人的人格登记', loophole: '合同到期后复制人必须被“回收”，但回收记录可以丢失', cost: '每份合同都会制造一个无法登记姓名的人', protagonist_role: '替复制人寻找回收记录漏洞的律师', counter_expectation: '主角让复制人集体拒绝被回收，而不是替她们找新合同' },
+  { title: '星门通行配额引擎', artifact: '星门通行配额', issuer: '联邦航运理事会', holder: '舰长', stated_purpose: '按战功分配星门优先权', hidden_function: '用配额把不受欢迎的舰队留在虫潮里', loophole: '救援船可以临时征用配额，但必须由幸存者全体签字', cost: '每次征用都会留下一个可以被追责的签名', protagonist_role: '被迫替全船签字的舰长', counter_expectation: '主角把配额公开拍卖，让理事会无法暗中分配' },
+  { title: '记忆抵押引擎', artifact: '记忆抵押凭证', issuer: '时间银行', holder: '借款人', stated_purpose: '用未来记忆换取当前资源', hidden_function: '把抵押的记忆打包成导航快照卖给舰队', loophole: '抵押合同只写记忆时长，不写记忆内容', cost: '违约者会失去一段自己无法选择删除的过去', protagonist_role: '发现自己的记忆被转卖的人', counter_expectation: '主角买回所有被抵押的记忆，而不是只买回自己的' },
 ];
 
 function resultId(prefix, seed, index) {
@@ -192,6 +200,7 @@ export function drawIdeas(options = {}) {
       const premise = pick(rng, PREMISES);
       const resources = pickMany(rng, RESOURCES, 2);
       const scenarios = pickMany(rng, SCENARIOS, 2);
+      const engine = pick(rng, ENGINES);
       const cast = namecards(rng, seed + packIndex, 4);
       const packId = `worldpack-${seed}-${String(packIndex + 1).padStart(2, '0')}`;
       packs.push({
@@ -207,13 +216,20 @@ export function drawIdeas(options = {}) {
         },
         resources: resources.map((item, index) => ({ id: `${packId}-resource-${index + 1}`, ...item })),
         scenarios: scenarios.map((item, index) => ({ id: `${packId}-scenario-${index + 1}`, ...item })),
+        engine: { id: `${packId}-engine`, ...engine },
         cast,
       });
     }
     results = packs;
   } else if (type === 'namecard' || type === 'name' || type === 'cast') {
     results = namecards(rng, seed, count);
-  } else if (type === 'premise' || type === 'engine' || type === 'axiom') {
+  } else if (type === 'engine') {
+    results = pickMany(rng, ENGINES, Math.min(count, ENGINES.length)).map((item, index) => ({
+      id: resultId('engine', seed, index),
+      ...item,
+      reference_id: options.source || 'wishmachine',
+    }));
+  } else if (type === 'premise' || type === 'axiom') {
     results = pickMany(rng, PREMISES, Math.min(count, PREMISES.length)).map((item, index) => ({
       id: resultId('premise', seed, index),
       title: item.title,

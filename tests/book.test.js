@@ -216,6 +216,7 @@ test('worldpack bundles premise, resources and scenarios', () => {
   assert.ok(pack.results[0].premise.title);
   assert.ok(pack.results[0].resources.length >= 1);
   assert.ok(pack.results[0].scenarios.length >= 1);
+  assert.ok(pack.results[0].engine.artifact);
   assert.ok(pack.results[0].cast.length >= 1);
 });
 
@@ -267,12 +268,13 @@ test('a character who left cannot appear later without a return', () => {
   assert.ok(result.check.findings.some((item) => item.rule_id === 'quality.outline.character_absent_return'));
 });
 
-test('provocation, law and event draws are available', () => {
-  for (const type of ['provocation', 'law', 'event']) {
+test('provocation, law, event and engine draws are available', () => {
+  for (const type of ['provocation', 'law', 'event', 'engine']) {
     const draw = drawIdeas({ type, count: 2, seed: 9 });
     assert.equal(draw.count, 2);
     assert.ok(draw.results.every((item) => item.title));
   }
+  assert.ok(drawIdeas({ type: 'engine', count: 1, seed: 9 }).results[0].artifact);
 });
 
 test('legacy novel.json structure fields are normalized', () => {
