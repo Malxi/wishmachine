@@ -338,9 +338,25 @@ export function doctorProject(project, options = {}) {
     }
   }
   if (!rawConfig.name) add('low', 'config.name', 'novel.json has no name', 'Add a book name.');
+  for (const file of [
+    path.join(project.dir, 'story', 'setup', 'story_setup.json'),
+    path.join(project.dir, 'story', 'compose', 'outline.json'),
+  ]) {
+    if (!fs.existsSync(file)) continue;
+    try {
+      readJson(file);
+    } catch (error) {
+      add('high', 'artifact.invalid_json', `${path.relative(project.dir, file)} is not valid JSON`, `Repair or replace the file: ${error.message}`);
+    }
+  }
   if (!fs.existsSync(path.join(project.dir, 'story', 'setup', 'story_setup.json'))) add('low', 'artifact.setup', 'setup JSON is missing', 'Write setup through book write setup.');
   if (!fs.existsSync(path.join(project.dir, 'story', 'compose', 'outline.json'))) add('low', 'artifact.outline', 'outline JSON is missing', 'Write an outline through book write outline.');
-  const status = projectStatus(project);
+  let status = { orphan_chapters: [], orphan_recaps: [] };
+  try {
+    status = projectStatus(project);
+  } catch (error) {
+    add('high', 'artifact.status', 'project status could not be loaded', `Repair the invalid artifact: ${error.message}`);
+  }
   for (const id of status.orphan_chapters || []) add('low', 'artifact.orphan_chapter', `chapter ${id} has no outline entry`, 'Rename the chapter or add it to the outline.');
   for (const id of status.orphan_recaps || []) add('low', 'artifact.orphan_recap', `recap ${id} has no outline entry`, 'Rename the recap or add its chapter to the outline.');
   const blocking = issues.some((issue) => issue.severity === 'high' || issue.severity === 'critical');

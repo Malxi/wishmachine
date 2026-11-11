@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { initProject, loadProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, writeArtifact, readSection } from '../scripts/project.js';
+import { initProject, loadProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, doctorProject, writeArtifact, readSection } from '../scripts/project.js';
 import { checkProject } from '../scripts/schema.js';
 import { drawIdeas } from '../scripts/ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference } from '../scripts/guides.js';
@@ -311,6 +311,15 @@ test('end-to-end project flow', () => {
   const audit = auditProject(project);
   assert.equal(audit.blocking, false);
   assert.ok(projectState(project).state.orphan_recaps.length === 0);
+});
+
+test('doctor reports invalid JSON without throwing', () => {
+  const dir = tempDir();
+  initProject({ name: 'doctor invalid', dir, parts: 1, volumes: 1, chapter: 1 });
+  fs.writeFileSync(path.join(dir, 'story', 'compose', 'outline.json'), '{not json');
+  const result = doctorProject(loadProject(dir));
+  assert.equal(result.blocking, true);
+  assert.ok(result.issues.some((issue) => issue.code === 'artifact.invalid_json'));
 });
 
 test('refresh rebuilds markdown companions', () => {
