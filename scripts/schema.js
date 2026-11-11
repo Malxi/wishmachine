@@ -204,6 +204,9 @@ export function validateOutline(outline, config) {
             if (event.target_type !== undefined && typeof event.target_type !== 'string') {
               findings.push(finding('schema.outline.chapter.event', 'medium', `${eventId}.target_type must be a string`, eventId));
             }
+            if (event.order !== undefined && typeof event.order !== 'number') {
+              findings.push(finding('schema.outline.chapter.event', 'medium', `${eventId}.order must be a number`, eventId));
+            }
           });
         }
         if (chapter.timeline !== undefined) {
@@ -452,9 +455,16 @@ function qualityFindings(project, target, id, override = {}) {
           if ((chapter.events || []).length === 0) {
             findings.push(finding('quality.outline.events', 'medium', `${chapter.id} has no events`, chapter.id));
           }
+          let previousEventOrder = null;
           for (const event of chapter.events || []) {
             const type = event.type || event.action;
             if (type) eventTypes[type] = (eventTypes[type] || 0) + 1;
+            if (typeof event.order === 'number') {
+              if (previousEventOrder !== null && event.order < previousEventOrder) {
+                findings.push(finding('quality.outline.event_order', 'medium', `${chapter.id} event order goes backwards: ${previousEventOrder} -> ${event.order}`, chapter.id));
+              }
+              previousEventOrder = event.order;
+            }
             const chapterCharacters = new Set(chapter.characters || []);
             if (event.actor && chapterCharacters.size > 0 && !chapterCharacters.has(event.actor) &&
               (castNames.size === 0 || castNames.has(event.actor))) {

@@ -25,11 +25,11 @@ node scripts/wishmachine.js check --profile custom --target chapter --id P1-V1-C
 
 Outline quality also checks item acquisition/usage, resource-ledger arithmetic,
 state-anchor spirit-stone continuity, event-character references, event actor
-and character target presence, storyline references, repeated event types,
-pacing runs, missing location transitions, mystery resolution order, returning
-characters, characters who left and appear again without a return event, dead
-characters who appear again without a revival event, and a protagonist who
-never appears.
+and character target presence, event ordering, storyline references, repeated
+event types, pacing runs, missing location transitions, mystery resolution
+order, returning characters, characters who left and appear again without a
+return event, dead characters who appear again without a revival event, and a
+protagonist who never appears.
 
 `book write` candidate checks include `custom` rules, so built-in and project
 rules can block a write before it touches the project.

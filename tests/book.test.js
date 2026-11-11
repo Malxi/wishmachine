@@ -269,6 +269,21 @@ test('refresh rebuilds markdown companions', () => {
   assert.ok(fs.existsSync(path.join(dir, 'story', 'compose', 'outline.md')));
 });
 
+test('event order must not go backwards', () => {
+  const dir = tempDir();
+  initProject({ name: 'event order', dir, parts: 1, volumes: 1, chapter: 2 });
+  const project = loadProject(dir);
+  const ordered = JSON.parse(JSON.stringify(outline));
+  ordered.parts[0].volumes = [ordered.parts[0].volumes[0]];
+  ordered.parts[0].volumes[0].chapters[0].events = [
+    { type: 'status', order: 2, characters: ['孟启明'], subject: '警报', change: 'started', actor: '孟启明', action: 'set', target: '警报', target_type: 'status' },
+    { type: 'status', order: 1, characters: ['孟启明'], subject: '名单', change: 'found', actor: '孟启明', action: 'set', target: '名单', target_type: 'status' },
+  ];
+  const result = writeArtifact(project, { section: 'outline', mode: 'replace', apply: true, content: JSON.stringify(ordered) });
+  assert.equal(result.applied, true);
+  assert.ok(result.check.findings.some((item) => item.rule_id === 'quality.outline.event_order'));
+});
+
 test('builtin custom rules are loaded', () => {
   const dir = tempDir();
   initProject({ name: 'rule test', dir, parts: 1, volumes: 1, chapter: 1 });
