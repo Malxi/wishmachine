@@ -129,10 +129,10 @@ test('item usage before acquisition is blocking', () => {
     type: 'item', characters: ['孟启明'], subject: '救援绳', change: 'get',
     actor: '孟启明', action: 'acquire', target: '救援绳', target_type: 'item',
   }];
-  writeArtifact(project, { section: 'outline', mode: 'replace', apply: true, content: JSON.stringify(badOutline) });
-  const check = checkProject(loadProject(dir), { profile: 'all', target: 'outline' });
-  assert.equal(check.blocking, true);
-  assert.ok(check.findings.some((item) => item.rule_id === 'quality.outline.item_usage'));
+  const result = writeArtifact(project, { section: 'outline', mode: 'replace', apply: true, content: JSON.stringify(badOutline) });
+  assert.equal(result.ok, false);
+  assert.equal(result.applied, false);
+  assert.ok(result.check.findings.some((item) => item.rule_id === 'quality.outline.item_usage'));
 });
 
 test('resource ledger arithmetic is checked', () => {
@@ -142,9 +142,10 @@ test('resource ledger arithmetic is checked', () => {
   const badOutline = JSON.parse(JSON.stringify(outline));
   badOutline.parts[0].volumes = [badOutline.parts[0].volumes[0]];
   badOutline.parts[0].volumes[0].chapters[1].resource_ledger = [{ item: '氧气', start: 10, delta: -3, end: 9, reason: '泄漏' }];
-  writeArtifact(project, { section: 'outline', mode: 'replace', apply: true, content: JSON.stringify(badOutline) });
-  const check = checkProject(loadProject(dir), { profile: 'all', target: 'outline' });
-  assert.ok(check.findings.some((item) => item.rule_id === 'quality.outline.resource_ledger' && item.severity === 'high'));
+  const result = writeArtifact(project, { section: 'outline', mode: 'replace', apply: true, content: JSON.stringify(badOutline) });
+  assert.equal(result.ok, false);
+  assert.equal(result.applied, false);
+  assert.ok(result.check.findings.some((item) => item.rule_id === 'quality.outline.resource_ledger' && item.severity === 'high'));
 });
 
 test('worldpack bundles premise, resources and scenarios', () => {

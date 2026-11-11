@@ -4,7 +4,7 @@ import {
   ensureDir, readJson, readText, writeJsonAtomic, writeTextAtomic,
   resolveProjectDir, nowIso, stamp, deepMerge, safeSegment, parseJson,
 } from './util.js';
-import { validateSetup, validateOutline, validateCraft, validateRecap, checkProject, outlineIndex } from './schema.js';
+import { checkCandidate, checkProject, outlineIndex } from './schema.js';
 
 export function initProject(options) {
   const name = String(options.name || '').trim();
@@ -252,26 +252,6 @@ function outlineMarkdown(outline) {
   return lines.join('\n');
 }
 
-function shapeCheck(section, candidate, config, kind) {
-  let findings;
-  if (section === 'setup') findings = validateSetup(candidate);
-  else if (section === 'outline') findings = validateOutline(candidate, config);
-  else if (section === 'craft') findings = validateCraft(candidate, kind || 'character');
-  else if (section === 'recap') findings = validateRecap(candidate);
-  else findings = [];
-  const summary = { total: findings.length, critical: 0, high: 0, medium: 0, low: 0 };
-  for (const f of findings) summary[f.severity] += 1;
-  return {
-    ok: summary.critical === 0 && summary.high === 0,
-    blocking: summary.critical > 0 || summary.high > 0,
-    profile: 'schema',
-    target: section,
-    score: Math.max(0, 100 - summary.critical * 20 - summary.high * 10 - summary.medium * 4 - summary.low),
-    summary,
-    findings,
-  };
-}
-
 export function writeArtifact(project, options) {
   const section = options.section;
   const mode = options.mode || 'replace';
@@ -333,13 +313,18 @@ export function writeArtifact(project, options) {
     throw new Error(`unsupported write section: ${section}`);
   }
 
-  const shape = isJson && ['setup', 'outline', 'craft', 'recap'].includes(section)
-    ? shapeCheck(section, candidate, project.config, options.target || 'character')
-    : null;
-  const check = shape || (section === 'chapter' ? {
-    ok: true, blocking: false, profile: 'schema', target: 'chapter', id,
-    summary: { total: 0, critical: 0, high: 0, medium: 0, low: 0 }, findings: [],
-  } : null);
+  const check = ['setup', 'outline', 'craft', 'recap'].includes(section)
+    ? checkCandidate(project, {
+      section,
+      candidate,
+      kind: options.target || 'character',
+      id: section === 'recap' ? id : undefined,
+      maxFindings: options.maxIssues || 0,
+    })
+    : (section === 'chapter' ? {
+      ok: true, blocking: false, profile: 'schema', target: 'chapter', id,
+      summary: { total: 0, critical: 0, high: 0, medium: 0, low: 0 }, findings: [],
+    } : null);
 
   if (check?.blocking && apply) {
     return { ok: false, applied: false, dry_run: false, section, check };

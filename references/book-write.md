@@ -2,6 +2,8 @@
 
 `wishmachine book write <setup|outline|craft|chapter|recap>` reads the complete
 artifact from stdin. The command defaults to a dry run; `--apply` writes.
+Both dry-run and apply run the deterministic checks; a blocking dry-run returns
+`ok: false` and does not write.
 
 | Section | mode | stdin |
 | --- | --- | --- |

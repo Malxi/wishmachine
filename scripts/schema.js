@@ -223,10 +223,10 @@ function outlineIndex(outline) {
 
 export { outlineIndex };
 
-function qualityFindings(project, target, id) {
+function qualityFindings(project, target, id, override = {}) {
   const findings = [];
   if (target === 'setup') {
-    const setup = readJson(path.join(project.dir, 'story', 'setup', 'story_setup.json'));
+    const setup = override.setup || readJson(path.join(project.dir, 'story', 'setup', 'story_setup.json'));
     if (!(setup.core_cast || []).some((c) => c.role === 'protagonist')) {
       findings.push(finding('quality.setup.protagonist', 'medium', 'setup has no protagonist in core_cast', 'setup'));
     }
@@ -237,7 +237,7 @@ function qualityFindings(project, target, id) {
   }
   if (target === 'craft') {
     const kind = id || 'character';
-    const craft = readJson(path.join(project.dir, 'story', 'craft', `${kind}.json`));
+    const craft = override.craft || readJson(path.join(project.dir, 'story', 'craft', `${kind}.json`));
     if (kind === 'character') {
       if (String(craft.background || '').trim().length < 20) {
         findings.push(finding('quality.craft.background', 'medium', 'character background is too thin', craft.name || kind));
@@ -250,16 +250,16 @@ function qualityFindings(project, target, id) {
   }
   if (target === 'recap') {
     if (!id) throw new Error('recap check requires --id');
-    const recap = readJson(path.join(project.dir, 'story', 'recaps', `${id}.json`));
+    const recap = override.recap || readJson(path.join(project.dir, 'story', 'recaps', `${id}.json`));
     if (!(recap.plot_beats || []).length) {
       findings.push(finding('quality.recap.plot_beats', 'medium', 'recap has no plot beats', id));
     }
     return findings;
   }
   if (target === 'outline') {
-    const outline = readJson(path.join(project.dir, 'story', 'compose', 'outline.json'));
+    const outline = override.outline || readJson(path.join(project.dir, 'story', 'compose', 'outline.json'));
     const setupFile = path.join(project.dir, 'story', 'setup', 'story_setup.json');
-    const setup = fs.existsSync(setupFile) ? readJson(setupFile) : null;
+    const setup = override.setup || (fs.existsSync(setupFile) ? readJson(setupFile) : null);
     if (setup) {
       const protagonist = (setup.core_cast || []).find((c) => c.role === 'protagonist');
       if (!protagonist) {
@@ -445,6 +445,42 @@ function customFindings(project, target, id) {
     }
   }
   return findings;
+}
+
+export function checkCandidate(project, options = {}) {
+  const section = options.section;
+  const candidate = options.candidate;
+  const kind = options.kind || 'character';
+  let findings = [];
+  if (section === 'setup') {
+    findings.push(...validateSetup(candidate));
+    findings.push(...qualityFindings(project, 'setup', '', { setup: candidate }));
+  } else if (section === 'outline') {
+    findings.push(...validateOutline(candidate, project.config));
+    findings.push(...qualityFindings(project, 'outline', '', { outline: candidate }));
+  } else if (section === 'craft') {
+    findings.push(...validateCraft(candidate, kind));
+    findings.push(...qualityFindings(project, 'craft', kind, { craft: candidate }));
+  } else if (section === 'recap') {
+    findings.push(...validateRecap(candidate));
+    findings.push(...qualityFindings(project, 'recap', options.id || candidate?.chapter_id || '', { recap: candidate }));
+  } else {
+    throw new Error(`unsupported candidate section: ${section}`);
+  }
+  const summary = { total: findings.length, critical: 0, high: 0, medium: 0, low: 0 };
+  for (const item of findings) summary[item.severity] += 1;
+  const blocking = summary.critical > 0 || summary.high > 0;
+  return {
+    ok: !blocking,
+    blocking,
+    profile: 'all',
+    target: section,
+    id: options.id || undefined,
+    score: Math.max(0, 100 - summary.critical * 20 - summary.high * 10 - summary.medium * 4 - summary.low),
+    summary,
+    findings: options.maxFindings > 0 ? findings.slice(0, options.maxFindings) : findings,
+    truncated: options.maxFindings > 0 && findings.length > options.maxFindings,
+  };
 }
 
 export function checkProject(project, options = {}) {
