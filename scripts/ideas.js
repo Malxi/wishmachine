@@ -131,6 +131,12 @@ const ENGINES = [  { title: '全损保险引擎', artifact: '虫洞战舰全损�
   { title: '复制人租赁引擎', artifact: '复制人租赁合同', issuer: '耗材管理局', holder: '舰船雇主', stated_purpose: '按任务租用复制人劳动力', hidden_function: '用租赁期限规避复制人的人格登记', loophole: '合同到期后复制人必须被“回收”，但回收记录可以丢失', cost: '每份合同都会制造一个无法登记姓名的人', protagonist_role: '替复制人寻找回收记录漏洞的律师', counter_expectation: '主角让复制人集体拒绝被回收，而不是替她们找新合同' },
   { title: '星门通行配额引擎', artifact: '星门通行配额', issuer: '联邦航运理事会', holder: '舰长', stated_purpose: '按战功分配星门优先权', hidden_function: '用配额把不受欢迎的舰队留在虫潮里', loophole: '救援船可以临时征用配额，但必须由幸存者全体签字', cost: '每次征用都会留下一个可以被追责的签名', protagonist_role: '被迫替全船签字的舰长', counter_expectation: '主角把配额公开拍卖，让理事会无法暗中分配' },
   { title: '记忆抵押引擎', artifact: '记忆抵押凭证', issuer: '时间银行', holder: '借款人', stated_purpose: '用未来记忆换取当前资源', hidden_function: '把抵押的记忆打包成导航快照卖给舰队', loophole: '抵押合同只写记忆时长，不写记忆内容', cost: '违约者会失去一段自己无法选择删除的过去', protagonist_role: '发现自己的记忆被转卖的人', counter_expectation: '主角买回所有被抵押的记忆，而不是只买回自己的' },
+  { title: '战功评级引擎', artifact: '战功积分卡', issuer: '舰队清算处', holder: '参战者', stated_purpose: '按可验证战功兑换补给和赦免', hidden_function: '只奖励能被宣传的胜利，抹掉无法公开的代价', loophole: '记录仪只认官方叙事，民兵战功需要担保人', cost: '每一次兑换都会让一个被抹掉的名字更难被追认', protagonist_role: '替民兵担保的清算员', counter_expectation: '主角把积分账本交给所有参战者共同签字' },
+  { title: '休眠轮换引擎', artifact: '休眠舱契约', issuer: '航运公司', holder: '乘客', stated_purpose: '远程航行中轮流进入休眠', hidden_function: '故障时优先唤醒对任务最关键的人，并延长“低价值”乘客的睡眠', loophole: '契约只规定唤醒顺序，不规定谁有权修改关键性', cost: '每次故障都会让同一个人多睡几年', protagonist_role: '负责修改关键性说明的船员', counter_expectation: '主角公开唤醒日志，让所有人看到谁被放弃' },
+  { title: '气候迁移引擎', artifact: '移动城市停靠许可证', issuer: '能源节点理事会', holder: '城市市长', stated_purpose: '让移动城市接入陆地能源', hidden_function: '按“未来生产力”筛选哪些城市值得被接走', loophole: '许可证可以临时转让，但转让后原城市失去排队资格', cost: '每次停靠都会让一座城市被降级', protagonist_role: '替难民城市谈判的调度员', counter_expectation: '主角让所有城市共同持有能源节点' },
+  { title: '语言翻译引擎', artifact: '死语言翻译晶体', issuer: '翻译者行会', holder: '签约方', stated_purpose: '让跨星区条约在死语言中生效', hidden_function: '翻译者可以改变一个时态，让停战变成投降', loophole: '只有注册译本有效，但注册不要求公开原文', cost: '每次签约都会让一门语言少一个活着的使用者', protagonist_role: '发现旧译本被篡改的翻译者', counter_expectation: '主角让所有签约方共同学习死语言' },
+  { title: '姓名继承引擎', artifact: '姓名继承证书', issuer: '姓名登记处', holder: '继承人', stated_purpose: '继承死者的姓名、债务和社会关系', hidden_function: '把死者生前积累的信任变成可继承资产', loophole: '一个姓名只能有一个合法继承人，但“合法”可以由登记处解释', cost: '继承者会逐渐活成别人期待的样子', protagonist_role: '同时被三个家族认领的继承人', counter_expectation: '主角把姓名交还给所有被继承者' },
+  { title: '灾难直播引擎', artifact: '灾难直播权', issuer: '灾区媒体理事会', holder: '媒体', stated_purpose: '拍卖灾区主信号，收益用于救援', hidden_function: '决定观众先看到谁，从而决定谁先被救', loophole: '直播权只覆盖主信号，灾民自己的记录不算“直播”', cost: '每一次收视都会让救援资源向镜头倾斜', protagonist_role: '拒绝剪辑原始信号的记者', counter_expectation: '主角把直播权交给灾民自己' },
 ];
 
 const STORYLINES = [
@@ -140,6 +146,12 @@ const STORYLINES = [
   { title: '真相与记忆', promise: '主角想知道自己是谁。', escalation: '每找回一段记忆，就失去一段现在。', midpoint: '主角发现自己曾经主动删除记忆。', payoff: '主角选择保留不完整的自己。', cost: '保留记忆会让导航系统失效。' },
   { title: '资源与配给', promise: '主角想让所有人活到下一站。', escalation: '氧气只够一半人，名单越来越短。', midpoint: '主角发现自己也在名单外。', payoff: '主角把配给权交给全体乘客。', cost: '全体投票会拖到氧气耗尽。' },
   { title: '预言与自由', promise: '主角想打破一条预言。', escalation: '每次反抗都让预言更准确。', midpoint: '主角发现预言记录的是自己的选择。', payoff: '主角做出一件预言没有写的事。', cost: '这件事会牺牲唯一相信他的人。' },
+  { title: '复仇与宽恕', promise: '主角想让仇人付出代价。', escalation: '每接近仇人一步，就多一个无辜者被卷进来。', midpoint: '主角发现仇人也在替别人复仇。', payoff: '主角选择公开真相而不是私下处决。', cost: '公开真相会让仇人成为英雄。' },
+  { title: '交易与背叛', promise: '主角想用一场交易换回所有人。', escalation: '每个交易对象都要求主角先背叛一个人。', midpoint: '主角发现自己才是交易标的。', payoff: '主角拒绝交易，让所有人重新谈判。', cost: '重新谈判会让最弱的人失去筹码。' },
+  { title: '成长与代价', promise: '主角想成为能承担责任的人。', escalation: '每次承担责任都要放弃一个旧身份。', midpoint: '主角发现责任本身是被设计好的陷阱。', payoff: '主角选择承担一个没有回报的责任。', cost: '这个选择会让追随者失望。' },
+  { title: '救援与牺牲', promise: '主角想救下不该被放弃的人。', escalation: '每救一个人都要让另一个人多等一小时。', midpoint: '主角发现等待的人里包括自己的家人。', payoff: '主角把救援顺序公开交给全体幸存者。', cost: '公开投票会拖慢救援。' },
+  { title: '真相与谎言', promise: '主角想公开一个被掩盖的真相。', escalation: '每公开一部分真相，就制造一个新的谎言。', midpoint: '主角发现自己也依赖那个谎言活着。', payoff: '主角公开自己的部分。', cost: '公开后主角会失去唯一的安全来源。' },
+  { title: '归乡与流亡', promise: '主角想回到被封锁的故乡。', escalation: '每靠近一步，故乡就多一条驱逐令。', midpoint: '主角发现故乡已经不需要他。', payoff: '主角选择帮助别人回去，而不是自己留下。', cost: '这个选择会让他再次成为流亡者。' },
 ];
 
 function resultId(prefix, seed, index) {
