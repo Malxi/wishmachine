@@ -83,11 +83,15 @@ test('chapter write and read', () => {
   const dir = tempDir();
   initProject({ name: '章节测试', dir, parts: 1, volumes: 1, chapter: 1 });
   let project = loadProject(dir);
+  writeArtifact(project, { section: 'chapter', mode: 'replace', apply: true, id: 'P1-V1-C1', content: '# 第一章\n\n初始版本。' });
+  project = loadProject(dir);
   const result = writeArtifact(project, { section: 'chapter', mode: 'replace', apply: true, id: 'P1-V1-C1', content: '# 第一章\n\n这是一段足够长的正文。'.repeat(20) });
   assert.equal(result.applied, true);
   project = loadProject(dir);
   const content = readSection(project, 'chapter', { id: 'P1-V1-C1' });
   assert.ok(content.content.includes('第一章'));
+  const checkpointDir = path.join(dir, 'chapters', 'checkpoints');
+  assert.ok(fs.readdirSync(checkpointDir).some((name) => name.endsWith('.md')));
   assert.ok(projectState(project).state.orphan_chapters.includes('P1-V1-C1'));
   const audit = auditProject(project);
   assert.ok(audit.targets.some((target) => target.target === 'chapter' && target.id === 'P1-V1-C1'));

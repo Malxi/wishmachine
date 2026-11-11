@@ -346,7 +346,7 @@ function checkpoint(file, name) {
   if (!fs.existsSync(file)) return;
   const dir = path.join(path.dirname(file), 'checkpoints');
   ensureDir(dir);
-  const target = path.join(dir, `${name}_${stamp()}.json`);
+  const target = path.join(dir, `${name}_${stamp()}${path.extname(file)}`);
   fs.copyFileSync(file, target);
 }
 
