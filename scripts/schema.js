@@ -357,6 +357,7 @@ function qualityFindings(project, target, id, override = {}) {
     const storylineNames = new Set((setup?.storylines || []).map((s) => s.name).filter(Boolean));
     const lastSeen = new Map();
     const returnedCharacters = new Set();
+    const deadCharacters = new Set();
     let sequence = 0;
     for (const part of outline.parts || []) {
       for (const volume of part.volumes || []) {
@@ -367,6 +368,15 @@ function qualityFindings(project, target, id, override = {}) {
           sequence += 1;
           if (chapter.id && !/^P\d+-V\d+-C\d+$/.test(chapter.id)) {
             findings.push(finding('quality.outline.chapter_id', 'low', `chapter id ${chapter.id} does not use P1-V1-C1 form`, chapter.id));
+          }
+          const revivedNow = new Set((chapter.events || [])
+            .filter((event) => ['revive', 'resurrect', 'return'].includes(String(event.action || event.change || '').toLowerCase()))
+            .map((event) => String(event.target || event.subject || '').trim())
+            .filter(Boolean));
+          for (const name of chapter.characters || []) {
+            if (deadCharacters.has(name) && !revivedNow.has(name)) {
+              findings.push(finding('quality.outline.dead_character_present', 'high', `${chapter.id} includes ${name}, who died in an earlier chapter`, chapter.id, 'Add a revival event or remove the character from this chapter.'));
+            }
           }
           for (const name of chapter.characters || []) {
             names.add(name);
@@ -402,6 +412,13 @@ function qualityFindings(project, target, id, override = {}) {
             const targetType = String(event.target_type || '').toLowerCase();
             const target = String(event.target || event.subject || '').trim();
             const action = String(event.action || event.change || '').toLowerCase();
+            if (target && (targetType === 'character' || type === 'character')) {
+              if (['kill', 'die', 'death'].includes(action)) {
+                deadCharacters.add(target);
+              } else if (['revive', 'resurrect', 'return'].includes(action)) {
+                deadCharacters.delete(target);
+              }
+            }
             if (target && (targetType === 'item' || type === 'item')) {
               if (['acquire', 'get', 'pickup', 'receive', 'gain'].includes(action)) {
                 itemState.set(target, true);
@@ -478,6 +495,16 @@ function qualityFindings(project, target, id, override = {}) {
     const found = outline ? findOutlineChapter(outline, id) : null;
     if (outline && !found) {
       findings.push(finding('quality.chapter.not_in_outline', 'medium', `${id} is not present in the outline`, id));
+    }
+    if (found?.chapter) {
+      if (found.chapter.title && !text.includes(found.chapter.title)) {
+        findings.push(finding('quality.chapter.title', 'low', `${id} text does not contain the outline title ${found.chapter.title}`, id));
+      }
+      for (const name of found.chapter.characters || []) {
+        if (!text.includes(name)) {
+          findings.push(finding('quality.chapter.character_absent', 'low', `${id} outline character ${name} never appears in the text`, id));
+        }
+      }
     }
     const recapFile = path.join(project.dir, 'story', 'recaps', `${id}.json`);
     if (fs.existsSync(recapFile)) {

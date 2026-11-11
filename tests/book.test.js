@@ -165,6 +165,27 @@ test('recap chapter id mismatch is blocking', () => {
   assert.ok(result.check.findings.some((item) => item.rule_id === 'quality.recap.chapter_id' && item.severity === 'high'));
 });
 
+test('a character who died cannot appear later without revival', () => {
+  const dir = tempDir();
+  initProject({ name: 'death test', dir, parts: 1, volumes: 1, chapter: 2 });
+  const project = loadProject(dir);
+  const deathOutline = JSON.parse(JSON.stringify(outline));
+  deathOutline.parts[0].volumes = [deathOutline.parts[0].volumes[0]];
+  deathOutline.parts[0].volumes[0].chapters[0].events = [{
+    type: 'character', characters: ['孟启明', '沈观衡'], subject: '沈观衡', change: 'death',
+    actor: '孟启明', action: 'kill', target: '沈观衡', target_type: 'character',
+  }];
+  deathOutline.parts[0].volumes[0].chapters[1].characters = ['孟启明', '沈观衡'];
+  deathOutline.parts[0].volumes[0].chapters[1].events = [{
+    type: 'status', characters: ['孟启明'], subject: '航线', change: 'changed',
+    actor: '孟启明', action: 'set', target: '航线', target_type: 'status',
+  }];
+  const result = writeArtifact(project, { section: 'outline', mode: 'replace', apply: true, content: JSON.stringify(deathOutline) });
+  assert.equal(result.ok, false);
+  assert.equal(result.applied, false);
+  assert.ok(result.check.findings.some((item) => item.rule_id === 'quality.outline.dead_character_present' && item.severity === 'high'));
+});
+
 test('worldpack bundles premise, resources and scenarios', () => {
   const pack = drawIdeas({ type: 'worldpack', genre: '科幻', count: 1, seed: 42 });
   assert.equal(pack.count, 1);
