@@ -208,6 +208,41 @@ test('state anchor spirit stones must match the previous ledger end', () => {
   assert.ok(result.check.findings.some((item) => item.rule_id === 'quality.outline.anchor_continuity'));
 });
 
+test('outline chapter patch updates one chapter', () => {
+  const dir = tempDir();
+  initProject({ name: 'patch test', dir, parts: 1, volumes: 1, chapter: 2 });
+  let project = loadProject(dir);
+  writeArtifact(project, { section: 'outline', mode: 'replace', apply: true, content: JSON.stringify(outline) });
+  project = loadProject(dir);
+  const result = writeArtifact(project, {
+    section: 'outline', mode: 'patch', target: 'chapter', id: 'P1-V1-C1', apply: true,
+    content: JSON.stringify({ summary: '修订后的第一章摘要' }),
+  });
+  assert.equal(result.applied, true);
+  const saved = readSection(loadProject(dir), 'outline', { id: 'P1-V1-C1' }).chapter;
+  assert.equal(saved.summary, '修订后的第一章摘要');
+});
+
+test('a character who left cannot appear later without a return', () => {
+  const dir = tempDir();
+  initProject({ name: 'absence test', dir, parts: 1, volumes: 1, chapter: 2 });
+  const project = loadProject(dir);
+  const absenceOutline = JSON.parse(JSON.stringify(outline));
+  absenceOutline.parts[0].volumes = [absenceOutline.parts[0].volumes[0]];
+  absenceOutline.parts[0].volumes[0].chapters[0].events = [{
+    type: 'character', characters: ['孟启明', '沈观衡'], subject: '沈观衡', change: 'leave',
+    actor: '沈观衡', action: 'leave', target: '沈观衡', target_type: 'character',
+  }];
+  absenceOutline.parts[0].volumes[0].chapters[1].characters = ['孟启明', '沈观衡'];
+  absenceOutline.parts[0].volumes[0].chapters[1].events = [{
+    type: 'status', characters: ['孟启明'], subject: '航线', change: 'changed',
+    actor: '孟启明', action: 'set', target: '航线', target_type: 'status',
+  }];
+  const result = writeArtifact(project, { section: 'outline', mode: 'replace', apply: true, content: JSON.stringify(absenceOutline) });
+  assert.equal(result.applied, true);
+  assert.ok(result.check.findings.some((item) => item.rule_id === 'quality.outline.character_absent_return'));
+});
+
 test('provocation, law and event draws are available', () => {
   for (const type of ['provocation', 'law', 'event']) {
     const draw = drawIdeas({ type, count: 2, seed: 9 });

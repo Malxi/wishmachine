@@ -380,6 +380,7 @@ function qualityFindings(project, target, id, override = {}) {
     const lastSeen = new Map();
     const returnedCharacters = new Set();
     const deadCharacters = new Set();
+    const absentCharacters = new Set();
     let previousSpiritEnd = null;
     let sequence = 0;
     for (const part of outline.parts || []) {
@@ -393,12 +394,18 @@ function qualityFindings(project, target, id, override = {}) {
             findings.push(finding('quality.outline.chapter_id', 'low', `chapter id ${chapter.id} does not use P1-V1-C1 form`, chapter.id));
           }
           const revivedNow = new Set((chapter.events || [])
-            .filter((event) => ['revive', 'resurrect', 'return'].includes(String(event.action || event.change || '').toLowerCase()))
+            .filter((event) => ['revive', 'resurrect'].includes(String(event.action || event.change || '').toLowerCase()))
+            .map((event) => String(event.target || event.subject || '').trim())
+            .filter(Boolean));
+          const returnedNow = new Set((chapter.events || [])
+            .filter((event) => ['return', 'arrive', 'rejoin'].includes(String(event.action || event.change || '').toLowerCase()))
             .map((event) => String(event.target || event.subject || '').trim())
             .filter(Boolean));
           for (const name of chapter.characters || []) {
             if (deadCharacters.has(name) && !revivedNow.has(name)) {
               findings.push(finding('quality.outline.dead_character_present', 'high', `${chapter.id} includes ${name}, who died in an earlier chapter`, chapter.id, 'Add a revival event or remove the character from this chapter.'));
+            } else if (absentCharacters.has(name) && !returnedNow.has(name)) {
+              findings.push(finding('quality.outline.character_absent_return', 'low', `${chapter.id} includes ${name}, who left earlier without a return event`, chapter.id, 'Add a return/arrive event or show how the character rejoined.'));
             }
           }
           for (const name of chapter.characters || []) {
@@ -416,6 +423,8 @@ function qualityFindings(project, target, id, override = {}) {
           for (const ally of chapter.state_anchor?.allies || []) {
             if (deadCharacters.has(ally)) {
               findings.push(finding('quality.outline.dead_ally', 'high', `${chapter.id} state_anchor lists ${ally}, who already died`, chapter.id, 'Remove the dead ally or add a revival event.'));
+            } else if (absentCharacters.has(ally)) {
+              findings.push(finding('quality.outline.absent_ally', 'low', `${chapter.id} state_anchor lists ${ally}, who has left`, chapter.id));
             } else if (castNames.size > 0 && !castNames.has(ally)) {
               findings.push(finding('quality.outline.unknown_ally', 'low', `${chapter.id} state_anchor lists unknown ally ${ally}`, chapter.id));
             }
@@ -440,8 +449,13 @@ function qualityFindings(project, target, id, override = {}) {
             if (target && (targetType === 'character' || type === 'character')) {
               if (['kill', 'die', 'death'].includes(action)) {
                 deadCharacters.add(target);
-              } else if (['revive', 'resurrect', 'return'].includes(action)) {
+                absentCharacters.delete(target);
+              } else if (['revive', 'resurrect'].includes(action)) {
                 deadCharacters.delete(target);
+              } else if (['leave', 'exit', 'depart'].includes(action)) {
+                absentCharacters.add(target);
+              } else if (['return', 'arrive', 'rejoin'].includes(action)) {
+                absentCharacters.delete(target);
               }
             }
             if (target && (targetType === 'item' || type === 'item')) {

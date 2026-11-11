@@ -39,4 +39,10 @@ For a local volume fix, use:
 node scripts/wishmachine.js book write outline --mode patch --target volume --id P1-V1 --apply < volume-patch.json
 ```
 
+For a single chapter, use:
+
+```bash
+node scripts/wishmachine.js book write outline --mode patch --target chapter --id P1-V1-C1 --apply < chapter-patch.json
+```
+
 Never add chapters by editing `story/compose/outline.json` directly.

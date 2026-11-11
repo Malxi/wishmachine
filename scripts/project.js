@@ -283,6 +283,19 @@ export function writeArtifact(project, options) {
         if (!volume) throw new Error(`outline volume not found: ${id}`);
         Object.assign(volume, deepMerge(volume, patch));
         candidate = current;
+      } else if (options.target === 'chapter') {
+        if (!id) throw new Error('outline chapter patch requires --id');
+        let chapter;
+        for (const part of current.parts || []) {
+          for (const volume of part.volumes || []) {
+            chapter = (volume.chapters || []).find((item) => item.id === id);
+            if (chapter) break;
+          }
+          if (chapter) break;
+        }
+        if (!chapter) throw new Error(`outline chapter not found: ${id}`);
+        Object.assign(chapter, deepMerge(chapter, patch));
+        candidate = current;
       } else {
         candidate = deepMerge(current, patch);
       }
