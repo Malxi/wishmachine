@@ -70,6 +70,7 @@ logs/
 - `audit` 全项目审计，包括不在 outline 中的章节文件
 - `refresh` 重建 setup/outline markdown
 - `export` 将已写章节合并为 `drafts/manuscript.md`
+- `doctor` 检查项目目录、配置、缺失 JSON 和 orphan 文件
 - `ideas namecard/premise/resource/scenario/provocation/law/event/worldpack`
 - `gen workflow/reference/skill`
 

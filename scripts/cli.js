@@ -1,11 +1,11 @@
-import { loadProject, initProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, readSection, writeArtifact } from './project.js';
+import { loadProject, initProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, doctorProject, readSection, writeArtifact } from './project.js';
 import { checkProject } from './schema.js';
 import { drawIdeas, ideasTypes } from './ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference, listSkills, readSkill } from './guides.js';
 
-const VERSION = '0.1.29';
+const VERSION = '0.1.30';
 const BOOLEAN_FLAGS = new Set(['apply', 'json', 'help', 'h', 'dry-run', 'force']);
-const COMMANDS = new Set(['book', 'check', 'ideas', 'gen', 'state', 'audit', 'refresh', 'export', 'version', 'help']);
+const COMMANDS = new Set(['book', 'check', 'ideas', 'gen', 'state', 'audit', 'refresh', 'export', 'doctor', 'version', 'help']);
 
 function parseArgs(argv) {
   const flags = {};
@@ -93,6 +93,7 @@ Commands:
   audit [--dir <dir>] [--view brief|full] [--min-severity low|medium|high|critical] [--max-findings 10]
   refresh [setup|outline|all] [--dir <dir>]
   export [--dir <dir>] [--output drafts/manuscript.md]
+  doctor [--dir <dir>]
   book read <setup|outline|craft|chapter|recap|context|logs> [--id <id>] [--view index|full]
   book write <setup|outline|craft|chapter|recap> [--mode replace|patch] [--apply] [--id <id>]
   check [--profile quality|schema|custom|all] [--target setup|outline|chapter] [--id <id>]
@@ -164,6 +165,11 @@ async function runBook(args, flags) {
   if (sub === 'export') {
     const project = loadProject(stringFlag(flags, 'dir', ''));
     print(exportManuscript(project, { output: stringFlag(flags, 'output', '') }));
+    return 0;
+  }
+  if (sub === 'doctor') {
+    const project = loadProject(stringFlag(flags, 'dir', ''));
+    print(doctorProject(project));
     return 0;
   }
   if (sub === 'read') {
@@ -316,6 +322,11 @@ export async function main(argv = process.argv.slice(2)) {
   if (command === 'export') {
     const project = loadProject(stringFlag(flags, 'dir', ''));
     print(exportManuscript(project, { output: stringFlag(flags, 'output', '') }));
+    return 0;
+  }
+  if (command === 'doctor') {
+    const project = loadProject(stringFlag(flags, 'dir', ''));
+    print(doctorProject(project));
     return 0;
   }
   if (command === 'check') return runCheck(flags);

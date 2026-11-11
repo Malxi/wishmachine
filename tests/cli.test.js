@@ -38,6 +38,8 @@ test('CLI init, status and ideas', () => {
   const audit = JSON.parse(run(['audit', '--dir', dir, '--max-findings', '5']));
   assert.equal(audit.ok, true);
   assert.equal(Array.isArray(audit.targets), true);
+  const doctor = JSON.parse(run(['doctor', '--dir', dir]));
+  assert.ok(doctor.issues.some((issue) => issue.code === 'artifact.setup'));
   const ideas = JSON.parse(run(['ideas', 'draw', '--type', 'namecard', '--genre', '科幻', '--count', '2', '--seed', '7']));
   assert.equal(ideas.count, 2);
   assert.equal(ideas.results.length, 2);

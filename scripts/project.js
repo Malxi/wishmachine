@@ -312,6 +312,31 @@ export function exportManuscript(project, options = {}) {
   };
 }
 
+export function doctorProject(project) {
+  const issues = [];
+  const add = (severity, code, message) => issues.push({ severity, code, message });
+  for (const dir of ['story/setup', 'story/compose', 'story/craft', 'story/recaps', 'chapters', 'drafts', 'logs']) {
+    if (!fs.existsSync(path.join(project.dir, dir))) add('medium', 'layout.missing_dir', `missing directory: ${dir}`);
+  }
+  const configFile = path.join(project.dir, 'novel.json');
+  const rawConfig = readJson(configFile);
+  if (!rawConfig.structure) add('low', 'config.structure', 'novel.json has no structure object; using target_* or defaults');
+  if (!rawConfig.name) add('low', 'config.name', 'novel.json has no name');
+  if (!fs.existsSync(path.join(project.dir, 'story', 'setup', 'story_setup.json'))) add('low', 'artifact.setup', 'setup JSON is missing');
+  if (!fs.existsSync(path.join(project.dir, 'story', 'compose', 'outline.json'))) add('low', 'artifact.outline', 'outline JSON is missing');
+  const status = projectStatus(project);
+  for (const id of status.orphan_chapters || []) add('low', 'artifact.orphan_chapter', `chapter ${id} has no outline entry`);
+  for (const id of status.orphan_recaps || []) add('low', 'artifact.orphan_recap', `recap ${id} has no outline entry`);
+  const blocking = issues.some((issue) => issue.severity === 'high' || issue.severity === 'critical');
+  return {
+    ok: !blocking,
+    blocking,
+    root: project.dir,
+    name: project.config.name,
+    issues,
+  };
+}
+
 export function readSection(project, section, options = {}) {
   const id = options.id ? safeSegment(options.id) : '';
   const view = options.view || 'brief';
