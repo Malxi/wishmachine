@@ -309,6 +309,17 @@ test('builtin custom rules are loaded', () => {
   assert.ok(check.findings.some((item) => item.rule_id === 'builtin.no-deus-ex'));
 });
 
+test('placeholder custom rule applies to setup', () => {
+  const dir = tempDir();
+  initProject({ name: 'placeholder test', dir, parts: 1, volumes: 1, chapter: 1 });
+  const project = loadProject(dir);
+  const placeholder = { ...setup, premise: '待填写' };
+  const result = writeArtifact(project, { section: 'setup', mode: 'replace', apply: true, content: JSON.stringify(placeholder) });
+  assert.equal(result.applied, true);
+  const check = checkProject(loadProject(dir), { profile: 'custom', target: 'setup' });
+  assert.ok(check.findings.some((item) => item.rule_id === 'builtin.no-placeholder'));
+});
+
 test('ideas are deterministic', () => {
   const a = drawIdeas({ type: 'namecard', genre: '科幻', count: 5, seed: 42 });
   const b = drawIdeas({ type: 'namecard', genre: '科幻', count: 5, seed: 42 });

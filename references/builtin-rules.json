@@ -34,5 +34,23 @@
     "pattern": "下一瞬间.*已经.*(?:抵达|到达|站在)",
     "message": "possible unexplained teleport",
     "suggestion": "Add a transition, travel beat, or explicit time skip."
+  },
+  {
+    "id": "builtin.no-placeholder",
+    "target": "all",
+    "severity": "medium",
+    "kind": "regex",
+    "pattern": "待填写|TODO|TBD",
+    "message": "placeholder text is still present",
+    "suggestion": "Replace the placeholder with a concrete story fact before checking in."
+  },
+  {
+    "id": "builtin.no-lorem",
+    "target": "chapter",
+    "severity": "medium",
+    "kind": "contains",
+    "pattern": "lorem ipsum",
+    "message": "placeholder prose is still present",
+    "suggestion": "Replace the placeholder prose with real scene text."
   }
 ]
