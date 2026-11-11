@@ -128,6 +128,12 @@ export function projectState(project, options = {}) {
     const value = String(text || '');
     return value.length > max ? `${value.slice(0, max)}…` : value;
   };
+  const chapterDir = path.join(project.dir, 'chapters');
+  const chapterFiles = fs.existsSync(chapterDir)
+    ? fs.readdirSync(chapterDir).filter((name) => name.endsWith('.md')).map((name) => name.slice(0, -3)).sort()
+    : [];
+  const knownChapterIds = new Set(status.chapters.map((chapter) => chapter.id));
+  const orphanChapters = chapterFiles.filter((id) => !knownChapterIds.has(id));
   const state = {
     project: {
       name: status.name,
@@ -150,6 +156,7 @@ export function projectState(project, options = {}) {
     chapters: status.chapters,
     chapter_count: status.chapters.length,
     written_count: status.chapters.filter((chapter) => chapter.written).length,
+    orphan_chapters: orphanChapters,
     craft: files(craftDir),
     recaps: files(recapDir),
     next: status.next,
@@ -212,6 +219,14 @@ export function auditProject(project, options = {}) {
   }
   for (const name of files(path.join(project.dir, 'story', 'recaps'), '.json')) {
     add('recap', name.slice(0, -5));
+  }
+  const chapterDir = path.join(project.dir, 'chapters');
+  const writtenChapters = fs.existsSync(chapterDir)
+    ? fs.readdirSync(chapterDir).filter((name) => name.endsWith('.md')).map((name) => name.slice(0, -3)).sort()
+    : [];
+  const known = new Set(projectStatus(project).chapters.filter((item) => item.written).map((item) => item.id));
+  for (const id of writtenChapters) {
+    if (!known.has(id)) add('chapter', id);
   }
   for (const chapter of projectStatus(project).chapters.filter((item) => item.written)) {
     add('chapter', chapter.id);

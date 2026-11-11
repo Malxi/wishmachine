@@ -88,6 +88,9 @@ test('chapter write and read', () => {
   project = loadProject(dir);
   const content = readSection(project, 'chapter', { id: 'P1-V1-C1' });
   assert.ok(content.content.includes('第一章'));
+  assert.ok(projectState(project).state.orphan_chapters.includes('P1-V1-C1'));
+  const audit = auditProject(project);
+  assert.ok(audit.targets.some((target) => target.target === 'chapter' && target.id === 'P1-V1-C1'));
 });
 
 test('craft and recap schema checks', () => {
