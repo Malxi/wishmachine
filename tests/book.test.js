@@ -353,6 +353,25 @@ test('builtin custom rules are loaded', () => {
   assert.ok(check.findings.some((item) => item.rule_id === 'builtin.no-deus-ex'));
 });
 
+test('project custom rule blocks candidate write', () => {
+  const dir = tempDir();
+  initProject({ name: 'custom rule write', dir, parts: 1, volumes: 1, chapter: 1 });
+  const ruleDir = path.join(dir, '.wishmachine', 'rules');
+  fs.mkdirSync(ruleDir, { recursive: true });
+  fs.writeFileSync(path.join(ruleDir, 'forbidden.json'), JSON.stringify({
+    id: 'project.forbidden', target: 'chapter', severity: 'high', kind: 'contains', pattern: '禁忌', message: 'forbidden word',
+  }));
+  const project = loadProject(dir);
+  const result = writeArtifact(project, {
+    section: 'chapter', id: 'P1-V1-C1', mode: 'replace', apply: true,
+    content: `这里出现了禁忌。${'正常的正文继续推进。'.repeat(20)}`,
+  });
+  assert.equal(result.ok, false);
+  assert.equal(result.applied, false);
+  assert.ok(result.check.findings.some((item) => item.rule_id === 'project.forbidden'));
+  assert.equal(fs.existsSync(path.join(dir, 'chapters', 'P1-V1-C1.md')), false);
+});
+
 test('placeholder custom rule applies to setup', () => {
   const dir = tempDir();
   initProject({ name: 'placeholder test', dir, parts: 1, volumes: 1, chapter: 1 });
