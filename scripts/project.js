@@ -171,6 +171,7 @@ export function projectState(project, options = {}) {
 export function auditProject(project, options = {}) {
   const targets = [];
   const maxFindings = options.maxFindings || 0;
+  const minSeverity = options.minSeverity;
   const view = options.view === 'full' ? 'full' : 'brief';
   const add = (target, id) => {
     try {
@@ -178,6 +179,7 @@ export function auditProject(project, options = {}) {
         profile: 'all',
         target,
         id,
+        minSeverity,
         maxFindings,
       });
       targets.push({

@@ -1,8 +1,9 @@
-import { loadProject, initProject, projectStatus, projectState, auditProject, refreshProject, readSection, writeArtifact } from './project.js';import { checkProject } from './schema.js';
+import { loadProject, initProject, projectStatus, projectState, auditProject, refreshProject, readSection, writeArtifact } from './project.js';
+import { checkProject } from './schema.js';
 import { drawIdeas, ideasTypes } from './ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference, listSkills, readSkill } from './guides.js';
 
-const VERSION = '0.1.20';
+const VERSION = '0.1.21';
 const BOOLEAN_FLAGS = new Set(['apply', 'json', 'help', 'h', 'dry-run', 'force']);
 const COMMANDS = new Set(['book', 'check', 'ideas', 'gen', 'state', 'audit', 'refresh', 'version', 'help']);
 
@@ -89,7 +90,7 @@ Commands:
   book init <name> [--dir <dir>] [--parts 1] [--volumes 1] [--chapter 20] [--genre ...]
   book status [--dir <dir>] [--json]
   state [--dir <dir>] [--view brief|full]
-  audit [--dir <dir>] [--view brief|full] [--max-findings 10]
+  audit [--dir <dir>] [--view brief|full] [--min-severity low|medium|high|critical] [--max-findings 10]
   refresh [setup|outline|all] [--dir <dir>]
   book read <setup|outline|craft|chapter|recap|context|logs> [--id <id>] [--view index|full]
   book write <setup|outline|craft|chapter|recap> [--mode replace|patch] [--apply] [--id <id>]
@@ -143,6 +144,7 @@ async function runBook(args, flags) {
     const project = loadProject(stringFlag(flags, 'dir', ''));
     print(auditProject(project, {
       view: stringFlag(flags, 'view', 'brief'),
+      minSeverity: stringFlag(flags, 'min-severity', ''),
       maxFindings: intFlag(flags, 'max-findings', 0),
     }));
     return 0;
@@ -289,6 +291,7 @@ export async function main(argv = process.argv.slice(2)) {
     const project = loadProject(stringFlag(flags, 'dir', ''));
     print(auditProject(project, {
       view: stringFlag(flags, 'view', 'brief'),
+      minSeverity: stringFlag(flags, 'min-severity', ''),
       maxFindings: intFlag(flags, 'max-findings', 0),
     }));
     return 0;

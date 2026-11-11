@@ -64,7 +64,8 @@ Output:
 A finding is blocking when `severity` is `high` or `critical`.
 
 `audit` runs the same checks across setup, outline, all craft files, all recaps,
-and every written chapter, and returns one aggregated result:
+and every written chapter, and returns one aggregated result. It accepts
+`--min-severity` and `--view brief|full`.
 
 Custom rule example:
 
