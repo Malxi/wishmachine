@@ -340,6 +340,12 @@ function qualityFindings(project, target, id, override = {}) {
           findings.push(finding('quality.recap.presence_text', 'low', `${id} recap present character ${name} does not appear in the chapter text`, id));
         }
       }
+      const knownNames = [...new Set([...(found?.chapter?.characters || []), ...(recap.present || [])])];
+      for (const beat of recap.plot_beats || []) {
+        if (knownNames.length > 0 && !knownNames.some((name) => chapterText.includes(name)) && !chapterText.includes(String(beat).slice(0, 6))) {
+          findings.push(finding('quality.recap.plot_beat_text', 'low', `${id} recap plot beat has no recognizable anchor in the chapter text: ${beat}`, id));
+        }
+      }
     }
     return findings;
   }
@@ -467,6 +473,9 @@ function qualityFindings(project, target, id, override = {}) {
             /spirit|灵石|灵力|晶石/i.test(String(entry?.item || '')));
           if (spiritEntry && typeof spiritEntry.end === 'number') {
             previousSpiritEnd = spiritEntry.end;
+          }
+          if (spiritEntry && typeof anchorSpirit === 'number' && anchorSpirit !== spiritEntry.start) {
+            findings.push(finding('quality.outline.anchor_start', 'medium', `${chapter.id} state_anchor.spirit_stones ${anchorSpirit} does not match its own ledger start ${spiritEntry.start}`, chapter.id));
           }
           if (typeof chapter.state_anchor?.spirit_stones === 'number' && chapter.state_anchor.spirit_stones < 0) {
             findings.push(finding('quality.outline.negative_resource', 'medium', `${chapter.id} state_anchor.spirit_stones is negative`, chapter.id));
@@ -604,22 +613,25 @@ function customRules(project) {
   return rules;
 }
 
-function customFindings(project, target, id) {
+function customFindings(project, target, id, overrideText) {
   const findings = [];
-  let text = '';
-  if (target === 'setup') text = readText(path.join(project.dir, 'story', 'setup', 'story_setup.json'));
-  if (target === 'outline') text = readText(path.join(project.dir, 'story', 'compose', 'outline.json'));
-  if (target === 'chapter') {
-    if (!id) throw new Error('chapter custom check requires --id');
-    text = readText(path.join(project.dir, 'chapters', `${id}.md`));
-  }
-  if (target === 'craft') {
-    const kind = id || 'character';
-    text = readText(path.join(project.dir, 'story', 'craft', `${kind}.json`));
-  }
-  if (target === 'recap') {
-    if (!id) throw new Error('recap custom check requires --id');
-    text = readText(path.join(project.dir, 'story', 'recaps', `${id}.json`));
+  let text = overrideText;
+  if (text === undefined) {
+    text = '';
+    if (target === 'setup') text = readText(path.join(project.dir, 'story', 'setup', 'story_setup.json'));
+    if (target === 'outline') text = readText(path.join(project.dir, 'story', 'compose', 'outline.json'));
+    if (target === 'chapter') {
+      if (!id) throw new Error('chapter custom check requires --id');
+      text = readText(path.join(project.dir, 'chapters', `${id}.md`));
+    }
+    if (target === 'craft') {
+      const kind = id || 'character';
+      text = readText(path.join(project.dir, 'story', 'craft', `${kind}.json`));
+    }
+    if (target === 'recap') {
+      if (!id) throw new Error('recap custom check requires --id');
+      text = readText(path.join(project.dir, 'story', 'recaps', `${id}.json`));
+    }
   }
   for (const rule of customRules(project)) {
     const ruleTarget = String(rule.target || 'all');
@@ -664,6 +676,8 @@ export function checkCandidate(project, options = {}) {
   } else {
     throw new Error(`unsupported candidate section: ${section}`);
   }
+  const candidateText = section === 'chapter' ? candidate : JSON.stringify(candidate);
+  findings.push(...customFindings(project, section, options.id || '', candidateText));
   const summary = { total: findings.length, critical: 0, high: 0, medium: 0, low: 0 };
   for (const item of findings) summary[item.severity] += 1;
   const blocking = summary.critical > 0 || summary.high > 0;
