@@ -254,6 +254,21 @@ test('provocation, law and event draws are available', () => {
   }
 });
 
+test('legacy novel.json structure fields are normalized', () => {
+  const dir = tempDir();
+  initProject({ name: 'legacy test', dir, parts: 1, volumes: 2, chapter: 3 });
+  const configFile = path.join(dir, 'novel.json');
+  const config = JSON.parse(fs.readFileSync(configFile, 'utf8'));
+  delete config.structure;
+  config.target_parts = 1;
+  config.target_volumes = 2;
+  config.target_chapters = 4;
+  fs.writeFileSync(configFile, JSON.stringify(config, null, 2));
+  const project = loadProject(dir);
+  assert.deepEqual(project.config.structure, { target_parts: 1, target_volumes: 2, target_chapters: 4 });
+  assert.equal(projectStatus(project).structure.target_chapters, 4);
+});
+
 test('refresh rebuilds markdown companions', () => {
   const dir = tempDir();
   initProject({ name: 'refresh test', dir, parts: 1, volumes: 2, chapter: 2 });

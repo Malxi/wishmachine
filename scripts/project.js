@@ -52,7 +52,14 @@ export function loadProject(explicit) {
   if (!fs.existsSync(configFile)) {
     throw new Error(`no novel.json found at ${dir}; run book init first`);
   }
-  return { dir, config: readJson(configFile) };
+  const config = readJson(configFile);
+  const structure = config.structure || {};
+  config.structure = {
+    target_parts: Number(structure.target_parts ?? config.target_parts ?? 1),
+    target_volumes: Number(structure.target_volumes ?? config.target_volumes ?? 1),
+    target_chapters: Number(structure.target_chapters ?? config.target_chapters ?? config.chapter_count ?? 20),
+  };
+  return { dir, config };
 }
 
 export function projectStatus(project) {

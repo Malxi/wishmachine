@@ -58,6 +58,8 @@ logs/
 {"target_parts":1,"target_volumes":3,"target_chapters":5}
 ```
 
+旧项目的顶层 `target_parts` / `target_volumes` / `target_chapters` 也会被读取并规范化。
+
 ## 范围
 
 这不是完整 Novelgen。当前只移植确定性的项目管理和检查：
