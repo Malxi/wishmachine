@@ -332,9 +332,10 @@ function qualityFindings(project, target, id, override = {}) {
       findings.push(finding('quality.recap.chapter_id', 'high', `recap declares chapter_id ${recap.chapter_id}, expected ${id}`, id));
     }
     const outlineFile = path.join(project.dir, 'story', 'compose', 'outline.json');
+    let found = null;
     if (fs.existsSync(outlineFile)) {
       const outline = readJson(outlineFile);
-      const found = findOutlineChapter(outline, id);
+      found = findOutlineChapter(outline, id);
       if (!found) {
         findings.push(finding('quality.recap.not_in_outline', 'medium', `${id} recap has no matching outline chapter`, id));
       } else {

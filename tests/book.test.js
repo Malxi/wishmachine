@@ -284,6 +284,35 @@ test('legacy novel.json structure fields are normalized', () => {
   assert.equal(projectStatus(project).structure.target_chapters, 4);
 });
 
+test('end-to-end project flow', () => {
+  const dir = tempDir();
+  initProject({ name: 'E2E', dir, parts: 1, volumes: 1, chapter: 2 });
+  let project = loadProject(dir);
+  writeArtifact(project, { section: 'setup', mode: 'replace', apply: true, content: JSON.stringify(setup) });
+  project = loadProject(dir);
+  writeArtifact(project, { section: 'outline', mode: 'replace', apply: true, content: JSON.stringify(outline) });
+  project = loadProject(dir);
+  const chapterText = '# 封锁令\n\n孟启明在砚港发现撤离名单的时间戳早于虫潮预警。他把名单折进内袋，决定先去找调度处。';
+  writeArtifact(project, { section: 'chapter', id: 'P1-V1-C1', mode: 'replace', apply: true, content: chapterText });
+  project = loadProject(dir);
+  const recap = {
+    chapter_id: 'P1-V1-C1', title: '封锁令', location: '砚港', time: '封锁前夜',
+    present: ['孟启明'], plot_beats: ['孟启明发现名单时间戳异常'], decisions: ['去找调度处'],
+    reveals: ['名单早于预警'], unresolved: ['谁改了名单'], promises: [], items: ['名单'],
+    status: ['警觉'], last_line: '他把名单折进内袋，决定先去找调度处。', cliffhanger: '',
+  };
+  writeArtifact(project, { section: 'recap', id: 'P1-V1-C1', mode: 'replace', apply: true, content: JSON.stringify(recap) });
+  project = loadProject(dir);
+  const check = checkProject(project, { profile: 'all', target: 'chapter', id: 'P1-V1-C1' });
+  assert.equal(check.blocking, false);
+  const exported = exportManuscript(project);
+  assert.equal(exported.chapters, 1);
+  assert.ok(fs.readFileSync(exported.output, 'utf8').includes('孟启明'));
+  const audit = auditProject(project);
+  assert.equal(audit.blocking, false);
+  assert.ok(projectState(project).state.orphan_recaps.length === 0);
+});
+
 test('refresh rebuilds markdown companions', () => {
   const dir = tempDir();
   initProject({ name: 'refresh test', dir, parts: 1, volumes: 2, chapter: 2 });
