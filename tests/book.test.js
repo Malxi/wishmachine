@@ -203,6 +203,16 @@ test('provocation, law and event draws are available', () => {
   }
 });
 
+test('builtin custom rules are loaded', () => {
+  const dir = tempDir();
+  initProject({ name: 'rule test', dir, parts: 1, volumes: 1, chapter: 1 });
+  const project = loadProject(dir);
+  const text = `他突然醒来，发现一切都是梦。${'他把这个念头按下去，继续检查氧气。'.repeat(20)}`;
+  writeArtifact(project, { section: 'chapter', id: 'P1-V1-C1', mode: 'replace', apply: true, content: text });
+  const check = checkProject(loadProject(dir), { profile: 'custom', target: 'chapter', id: 'P1-V1-C1' });
+  assert.ok(check.findings.some((item) => item.rule_id === 'builtin.no-deus-ex'));
+});
+
 test('ideas are deterministic', () => {
   const a = drawIdeas({ type: 'namecard', genre: '科幻', count: 5, seed: 42 });
   const b = drawIdeas({ type: 'namecard', genre: '科幻', count: 5, seed: 42 });

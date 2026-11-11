@@ -13,7 +13,7 @@ examples_en:
   - "Create a 3-volume × 5-chapter science-fiction project"
   - "Check the outline for blocking findings"
   - "Draw 12 science-fiction name cards"
-version: 0.1.8
+version: 0.1.9
 author: Malxi
 ---
 
@@ -60,6 +60,9 @@ node scripts/wishmachine.js book write chapter --dir my-book --id P1-V1-C1 --mod
 node scripts/wishmachine.js check --dir my-book --profile all --target outline --max-findings 20
 node scripts/wishmachine.js check --dir my-book --profile schema --target setup
 ```
+
+`custom` includes the built-in rules in `references/builtin-rules.json` plus
+project rules under `.wishmachine/rules` or `.novelgen/rules`.
 
 Profile：
 

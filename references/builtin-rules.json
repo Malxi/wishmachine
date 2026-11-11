@@ -1,0 +1,38 @@
+[
+  {
+    "id": "builtin.no-deus-ex",
+    "target": "chapter",
+    "severity": "medium",
+    "kind": "regex",
+    "pattern": "突然.*醒来|一切.*梦|原来.*梦",
+    "message": "possible deus ex machina or dream reset",
+    "suggestion": "Add causal setup, a cost, or a concrete decision instead of a sudden reset."
+  },
+  {
+    "id": "builtin.no-amnesia-reset",
+    "target": "chapter",
+    "severity": "medium",
+    "kind": "regex",
+    "pattern": "失去.*记忆|忘记.*一切|完全不记得",
+    "message": "possible amnesia reset",
+    "suggestion": "Keep continuity: show what is remembered, what is lost, and why it matters now."
+  },
+  {
+    "id": "builtin.no-sudden-power",
+    "target": "chapter",
+    "severity": "medium",
+    "kind": "regex",
+    "pattern": "突然.*无敌|瞬间.*突破|毫无代价.*变强",
+    "message": "possible unearned power-up",
+    "suggestion": "Show the cost, preparation, or prior constraint that makes the power-up earned."
+  },
+  {
+    "id": "builtin.no-teleport",
+    "target": "chapter",
+    "severity": "low",
+    "kind": "regex",
+    "pattern": "下一瞬间.*已经.*(?:抵达|到达|站在)",
+    "message": "possible unexplained teleport",
+    "suggestion": "Add a transition, travel beat, or explicit time skip."
+  }
+]

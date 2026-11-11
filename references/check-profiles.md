@@ -65,4 +65,6 @@ Custom rule example:
 ```
 
 `kind` supports `regex` and `contains`; a file may contain one rule object or an
-array of rules.
+array of rules. Wishmachine also loads the built-in rules in
+`references/builtin-rules.json`; project rules under `.wishmachine/rules` or
+`.novelgen/rules` are added on top.

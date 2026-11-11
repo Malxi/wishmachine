@@ -1,6 +1,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { readJson, readText } from './util.js';
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const BUILTIN_RULES_FILE = path.join(ROOT, 'references', 'builtin-rules.json');
 
 const SEVERITIES = ['critical', 'high', 'medium', 'low'];
 
@@ -391,7 +395,9 @@ function qualityFindings(project, target, id, override = {}) {
             }
           }
           for (const ally of chapter.state_anchor?.allies || []) {
-            if (castNames.size > 0 && !castNames.has(ally)) {
+            if (deadCharacters.has(ally)) {
+              findings.push(finding('quality.outline.dead_ally', 'high', `${chapter.id} state_anchor lists ${ally}, who already died`, chapter.id, 'Remove the dead ally or add a revival event.'));
+            } else if (castNames.size > 0 && !castNames.has(ally)) {
               findings.push(finding('quality.outline.unknown_ally', 'low', `${chapter.id} state_anchor lists unknown ally ${ally}`, chapter.id));
             }
           }
@@ -550,13 +556,23 @@ function customRules(project) {
     path.join(project.dir, '.novelgen', 'rules'),
   ];
   const rules = [];
+  if (fs.existsSync(BUILTIN_RULES_FILE)) {
+    try {
+      const value = JSON.parse(readText(BUILTIN_RULES_FILE));
+      for (const rule of Array.isArray(value) ? value : [value]) {
+        rules.push({ ...rule, source: 'builtin', file: 'builtin-rules.json' });
+      }
+    } catch {
+      // Built-in rule corruption must not make every check fail.
+    }
+  }
   for (const dir of dirs) {
     if (!fs.existsSync(dir)) continue;
     for (const name of fs.readdirSync(dir).filter((n) => n.endsWith('.json')).sort()) {
       try {
         const value = JSON.parse(readText(path.join(dir, name)));
         const list = Array.isArray(value) ? value : [value];
-        for (const rule of list) rules.push({ ...rule, file: name });
+        for (const rule of list) rules.push({ ...rule, source: 'project', file: name });
       } catch {
         // A malformed rule is reported by check as a low finding below.
         rules.push({ id: `invalid.${name}`, target: 'all', severity: 'medium', message: `invalid custom rule ${name}` });
