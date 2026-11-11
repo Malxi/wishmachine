@@ -395,6 +395,11 @@ function qualityFindings(project, target, id, override = {}) {
       ...((setup?.world_resources || []).map((item) => item.name)),
       ...((setup?.premises || []).map((item) => item.name)),
     ].filter(Boolean));
+    const craftItemFile = path.join(project.dir, 'story', 'craft', 'item.json');
+    if (fs.existsSync(craftItemFile)) {
+      const craftItem = readJson(craftItemFile);
+      if (craftItem?.name) knownItems.add(craftItem.name);
+    }
     const castNames = new Set((setup?.core_cast || []).map((c) => c.name).filter(Boolean));
     const storylineNames = new Set((setup?.storylines || []).map((s) => s.name).filter(Boolean));
     const lastSeen = new Map();
@@ -447,6 +452,11 @@ function qualityFindings(project, target, id, override = {}) {
               findings.push(finding('quality.outline.absent_ally', 'low', `${chapter.id} state_anchor lists ${ally}, who has left`, chapter.id));
             } else if (castNames.size > 0 && !castNames.has(ally)) {
               findings.push(finding('quality.outline.unknown_ally', 'low', `${chapter.id} state_anchor lists unknown ally ${ally}`, chapter.id));
+            }
+          }
+          for (const item of chapter.state_anchor?.key_items || []) {
+            if (!knownItems.has(item) && !itemState.has(item)) {
+              findings.push(finding('quality.outline.anchor_item', 'low', `${chapter.id} state_anchor lists unknown key item ${item}`, chapter.id, 'Define it in setup/craft or acquire it in an earlier event.'));
             }
           }
           if ((chapter.characters || []).length === 0) {
