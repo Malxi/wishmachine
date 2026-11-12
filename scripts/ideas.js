@@ -645,8 +645,10 @@ function buildOutlinePack(plot, seed, options = {}) {
   const volumeId = options.volumeId || 'P1-V1';
   const chapterOffset = Number(options.chapterOffset) || 0;
   const totalChapters = Number(options.totalChapters) || chapters;
+  let previousChapterConsequence = options.previousConsequence || '';
   for (let index = 0; index < chapters; index += 1) {
     const globalIndex = chapterOffset + index;
+    const entryFromPrevious = previousChapterConsequence;
     const beat = beats[Math.min(beats.length - 1, Math.floor((globalIndex * beats.length) / totalChapters))] || beats[0] || {
       act: 'Act I', function: 'setup', beat: '主角进入故事。',
     };
@@ -703,7 +705,7 @@ function buildOutlinePack(plot, seed, options = {}) {
           ? `反转：${plot.storyline?.midpoint || scenarioB?.twist || '原本的理解被推翻'}`
           : `复杂化：${scenarioB?.twist || blocking?.stake || '新的阻力出现'}`;
       const sceneGoal = sceneIndex === 0
-        ? beat.beat
+        ? (entryFromPrevious ? `承接上一章“${entryFromPrevious}”，进入：${beat.beat}` : beat.beat)
         : lastScene
           ? `处理上一场后果，并承受：${chapterObstacle}`
           : `承接“${previousConsequence}”，验证：${scenarioB?.twist || blocking?.stake || chapterObstacle}`;
@@ -756,6 +758,8 @@ function buildOutlinePack(plot, seed, options = {}) {
       characters: castNames,
       location: plot.location?.name || '关键地点',
       obstacle: chapterObstacle,
+      entry_from_previous: entryFromPrevious,
+      exit_consequence: scenes[scenes.length - 1]?.consequence || '',
       mysteries,
       events,
       conflict: plot.premise?.central_conflict || plot.premise?.conflict || '主角必须做出选择。',
@@ -779,6 +783,7 @@ function buildOutlinePack(plot, seed, options = {}) {
         hook: globalIndex === totalChapters - 1 ? '故事结束，代价留下。' : '下一章的压力升起。',
       },
     });
+    previousChapterConsequence = chapterList[chapterList.length - 1].exit_consequence;
   }
   const volume = {
     id: volumeId || 'P1-V1',
@@ -828,6 +833,7 @@ function buildMultiVolumeOutlinePack(plot, seed, options = {}) {
   const chaptersPerVolume = Math.max(3, Math.min(60, Number(options.chaptersPerVolume) || Number(options.chapters) || 10));
   const storylines = (plot.storylines || [plot.storyline]).filter(Boolean);
   const bases = [];
+  let previousVolumeConsequence = '';
   for (let volumeIndex = 0; volumeIndex < volumes; volumeIndex += 1) {
     const volumePlot = {
       ...plot,
@@ -840,6 +846,7 @@ function buildMultiVolumeOutlinePack(plot, seed, options = {}) {
       chapterOffset: volumeIndex * chaptersPerVolume,
       totalChapters: volumes * chaptersPerVolume,
       volumeId: `P1-V${volumeIndex + 1}`,
+      previousConsequence: previousVolumeConsequence,
     });
     const volume = base.draft_outline.parts[0].volumes[0];
     volume.id = `P1-V${volumeIndex + 1}`;
@@ -867,6 +874,7 @@ function buildMultiVolumeOutlinePack(plot, seed, options = {}) {
       end: `end of volume ${volumeIndex + 1}`,
       anchor: volumePlot.storyline?.title || plot.premise?.title || '',
     };
+    previousVolumeConsequence = volume.chapters[volume.chapters.length - 1]?.exit_consequence || previousVolumeConsequence;
     bases.push(base);
   }
   const volumeList = bases.map((base) => base.draft_outline.parts[0].volumes[0]);

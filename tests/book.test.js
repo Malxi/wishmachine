@@ -444,6 +444,9 @@ test('outlinepack expands into multiple volumes', () => {
   assert.ok(outline.chapters[0].scenes[1].mysteries.planted.length > 0);
   assert.equal(outline.chapters[0].scene_chain.length, 3);
   assert.equal(outline.chapters[0].scene_chain[1].turn, outline.chapters[0].scenes[1].turn_event);
+  assert.equal(outline.chapters[1].entry_from_previous, outline.chapters[0].exit_consequence);
+  assert.ok(outline.chapters[1].scenes[0].goal.includes('承接上一章'));
+  assert.equal(outline.volumes[1].chapters[0].entry_from_previous, outline.volumes[0].chapters[3].exit_consequence);
   assert.ok(outline.setup_draft.storylines.length >= 2);
   assert.ok(outline.setup_draft.storylines.some((storyline) => storyline.type === 'subplot'));
   assert.equal(outline.setup_draft.premises[0].progression.length, 4);
