@@ -278,6 +278,39 @@ export function undoRegistryOperation(project, options = {}) {
   };
 }
 
+export function checkRegistryBackups(project) {
+  const dir = path.join(project.dir, 'logs', 'registry-backups');
+  if (!fs.existsSync(dir)) return { ok: true, action: 'check-backups', checked: 0, findings: [] };
+  const names = fs.readdirSync(dir).filter((name) => fs.statSync(path.join(dir, name)).isDirectory()).sort();
+  const findings = [];
+  let checked = 0;
+  for (const name of names) {
+    checked += 1;
+    const backupDir = path.join(dir, name);
+    const manifestFile = path.join(backupDir, 'manifest.json');
+    if (!fs.existsSync(manifestFile)) {
+      findings.push({ backup: name, status: 'missing_manifest' });
+      continue;
+    }
+    let manifest;
+    try {
+      manifest = readJson(manifestFile);
+    } catch (error) {
+      findings.push({ backup: name, status: 'invalid_manifest', error: error.message });
+      continue;
+    }
+    for (const [file, checksum] of Object.entries(manifest.checksums || {})) {
+      const target = path.join(backupDir, file);
+      if (!fs.existsSync(target)) {
+        findings.push({ backup: name, status: 'missing_file', file });
+      } else if (fileChecksum(target) !== checksum) {
+        findings.push({ backup: name, status: 'checksum_mismatch', file });
+      }
+    }
+  }
+  return { ok: findings.length === 0, action: 'check-backups', checked, findings };
+}
+
 export function createRegistrySnapshot(project) {
   const backup = createRegistryBackup(project, 'manual');
   return {

@@ -1,10 +1,10 @@
-import { loadProject, initProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, doctorProject, saveIdeaDraw, saveImportedIdeas, saveResearchReport, discoverSources, searchSources, readSection, writeArtifact, projectRegistryStatus, cleanRegistry, abandonMystery, registryOperations, undoRegistryOperation, registryBackups, createRegistrySnapshot, restoreRegistryBackup } from './project.js';
+import { loadProject, initProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, doctorProject, saveIdeaDraw, saveImportedIdeas, saveResearchReport, discoverSources, searchSources, readSection, writeArtifact, projectRegistryStatus, cleanRegistry, abandonMystery, registryOperations, undoRegistryOperation, registryBackups, createRegistrySnapshot, restoreRegistryBackup, checkRegistryBackups } from './project.js';
 import { checkProject } from './schema.js';
 import { readJson } from './util.js';
 import { drawIdeas, ideasTypes, validateIdeaDraw } from './ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference, listSkills, readSkill } from './guides.js';
 
-const VERSION = '0.2.19';
+const VERSION = '0.2.20';
 const BOOLEAN_FLAGS = new Set(['apply', 'json', 'help', 'h', 'dry-run', 'force', 'ingest']);
 const COMMANDS = new Set(['book', 'check', 'ideas', 'gen', 'state', 'audit', 'refresh', 'export', 'doctor', 'version', 'help']);
 
@@ -101,6 +101,7 @@ Commands:
   book registry log [--limit 20] [--action abandon|clean] [--since ISO] [--dir <project>]
   book registry undo [--operation <id>] [--dir <project>]
   book registry backups [--keep 10] [--prune] [--dir <project>]
+  book registry check-backups [--dir <project>]
   book registry backup [--dir <project>]
   book registry restore --backup <name> [--dry-run] [--dir <project>]
   book registry abandon --mystery <id> [--reason <text>] [--dry-run] [--dir <project>]
@@ -172,6 +173,11 @@ async function runBook(args, flags) {
       if (!backup) fail('book registry restore requires --backup');
       print(restoreRegistryBackup(project, backup, { dryRun: boolFlag(flags, 'dry-run') }));
       return 0;
+    }
+    if (args[1] === 'check-backups') {
+      const result = checkRegistryBackups(project);
+      print(result);
+      return result.ok ? 0 : 1;
     }
     if (args[1] === 'backups') {
       print(registryBackups(project, {

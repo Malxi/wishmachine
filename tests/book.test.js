@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import http from 'node:http';
-import { initProject, loadProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, doctorProject, saveIdeaDraw, saveImportedIdeas, saveResearchReport, ingestSource, discoverSources, searchSources, buildProjectGraph, projectRegistryStatus, registryOperations, cleanRegistry, abandonMystery, undoRegistryOperation, registryBackups, createRegistrySnapshot, restoreRegistryBackup, writeArtifact, readSection } from '../scripts/project.js';
+import { initProject, loadProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, doctorProject, saveIdeaDraw, saveImportedIdeas, saveResearchReport, ingestSource, discoverSources, searchSources, buildProjectGraph, projectRegistryStatus, registryOperations, cleanRegistry, abandonMystery, undoRegistryOperation, registryBackups, createRegistrySnapshot, restoreRegistryBackup, checkRegistryBackups, writeArtifact, readSection } from '../scripts/project.js';
 import { checkProject, validateOutline, validateSetup } from '../scripts/schema.js';
 import { drawIdeas, validateIdeaDraw } from '../scripts/ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference } from '../scripts/guides.js';
@@ -969,8 +969,10 @@ test('registry restore rejects a tampered snapshot', () => {
   writeArtifact(project, { section: 'outline', content: JSON.stringify(outline.draft_outline), apply: true });
   const snapshot = createRegistrySnapshot(project);
   const name = snapshot.backup.split('/').pop();
+  assert.equal(checkRegistryBackups(project).ok, true);
   fs.appendFileSync(path.join(dir, 'logs', 'registry-backups', name, 'outline.json'), '\n');
   assert.throws(() => restoreRegistryBackup(project, name), /checksum mismatch/);
+  assert.ok(checkRegistryBackups(project).findings.some((finding) => finding.status === 'checksum_mismatch'));
 });
 
 test('saved idea draws are readable from the project', () => {

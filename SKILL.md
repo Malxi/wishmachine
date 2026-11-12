@@ -13,7 +13,7 @@ examples_en:
   - "Create a 3-volume × 5-chapter science-fiction project"
   - "Check the outline for blocking findings"
   - "Draw 12 science-fiction name cards"
-version: 0.2.19
+version: 0.2.20
 author: Malxi
 ---
 
@@ -192,6 +192,7 @@ lists or prunes `logs/registry-backups/`. `book registry backup` creates a
 manual snapshot; `book registry restore --backup <name> [--dry-run]` restores it.
 `book registry backups` also shows manifest metadata, and restore verifies
 manifest checksums before overwriting setup/outline.
+`book registry check-backups` verifies every snapshot manifest and file checksum.
 `book registry undo [--operation <id>]` restores the selected or most recent
 backed-up operation; each abandon/clean writes a backup and operation id. `book registry abandon --mystery <id>` manually marks a
 mystery dropped with a reason; add `--dry-run` to preview without writing.
