@@ -892,7 +892,8 @@ function needsThreadMigration(project) {
   if ((setup.storylines || []).some((storyline) => !storyline.thread_id)) return true;
   if (outlineChapters(outline).some((chapter) => !chapter.thread_id)) return true;
   const expectedMysteries = collectOutlineMysteryRegistry(outline);
-  if (expectedMysteries.length > 0) {
+  const hasMysteryRegistry = Array.isArray(setup.mystery_registry) || Array.isArray(outline.mystery_registry);
+  if (hasMysteryRegistry || expectedMysteries.length > 0) {
     if (!Array.isArray(setup.mystery_registry) || !Array.isArray(outline.mystery_registry)) return true;
     if (JSON.stringify(setup.mystery_registry) !== JSON.stringify(expectedMysteries)) return true;
     if (JSON.stringify(outline.mystery_registry) !== JSON.stringify(expectedMysteries)) return true;
@@ -962,7 +963,8 @@ function migrateThreadRegistry(project) {
   }
   const expectedMysteries = collectOutlineMysteryRegistry(outline);
   let mysteryCount = 0;
-  if (expectedMysteries.length > 0) {
+  const hasMysteryRegistry = Array.isArray(setup.mystery_registry) || Array.isArray(outline.mystery_registry);
+  if (expectedMysteries.length > 0 || hasMysteryRegistry) {
     if (JSON.stringify(setup.mystery_registry) !== JSON.stringify(expectedMysteries)) {
       setup.mystery_registry = expectedMysteries;
       changed = true;

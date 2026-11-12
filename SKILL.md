@@ -13,7 +13,7 @@ examples_en:
   - "Create a 3-volume × 5-chapter science-fiction project"
   - "Check the outline for blocking findings"
   - "Draw 12 science-fiction name cards"
-version: 0.1.94
+version: 0.1.95
 author: Malxi
 ---
 
@@ -172,7 +172,8 @@ setup/outline registry drift (including mystery registry drift), unknown chapter
 thread ids, and thread references to missing or non-registry mystery ids.
 `doctor --fix` rebuilds a missing or stale mystery registry from chapter data.
 Checks also flag stale registry entries, final-status mismatches and resolved
-mysteries that are not linked from their thread.
+or dropped mysteries that are not linked from their thread. `doctor --fix`
+removes stale registry entries.
 Dropped mysteries carry `reason: pending_capacity`; registry status must be
 present in the chapter status set. `doctor --fix`
 migrates old projects, synchronizes thread status from resolved mysteries and

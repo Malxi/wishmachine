@@ -508,6 +508,11 @@ test('long outlinepack records dropped mysteries', () => {
   assert.ok(outline.dropped_mysteries.every((mystery) => mystery.abandoned_thread?.thread_id));
   assert.ok(outline.abandoned_threads.length > 0);
   assert.ok(outline.chapters.some((chapter) => chapter.mysteries.dropped.length > 0));
+  const abandonedThread = outline.thread_registry.find((thread) => thread.abandoned_mysteries.length > 0);
+  assert.ok(abandonedThread);
+  const unlinked = JSON.parse(JSON.stringify(outline.draft_outline));
+  unlinked.thread_registry.find((thread) => thread.id === abandonedThread.id).abandoned_mysteries = [];
+  assert.ok(validateOutline(unlinked, { structure: {} }).some((finding) => finding.rule_id === 'quality.outline.thread.abandonment_not_linked'));
 });
 
 test('idea validation rejects unknown thread ids', () => {
@@ -769,6 +774,27 @@ test('doctor --fix fills missing mystery registry', () => {
   assert.ok(setup.mystery_registry.length > 0);
   assert.ok(repaired.mystery_registry.length > 0);
   assert.equal(setup.mystery_registry.length, repaired.mystery_registry.length);
+});
+
+test('doctor --fix removes stale mystery registry entries', () => {
+  const dir = tempDir();
+  initProject({ name: 'stale mystery', dir, parts: 1, volumes: 1, chapter: 10 });
+  const project = loadProject(dir);
+  const outline = drawIdeas({ type: 'outlinepack', genre: '悬疑', count: 1, seed: 42, chapters: 10 }).results[0];
+  writeArtifact(project, { section: 'setup', content: JSON.stringify(outline.setup_draft), apply: true });
+  writeArtifact(project, { section: 'outline', content: JSON.stringify(outline.draft_outline), apply: true });
+  const setupFile = path.join(dir, 'story', 'setup', 'story_setup.json');
+  const outlineFile = path.join(dir, 'story', 'compose', 'outline.json');
+  for (const file of [setupFile, outlineFile]) {
+    const doc = JSON.parse(fs.readFileSync(file, 'utf8'));
+    doc.mystery_registry.push({ id: 'stale-mystery', status: 'open' });
+    fs.writeFileSync(file, JSON.stringify(doc, null, 2));
+  }
+  doctorProject(project, { fix: true });
+  const setup = JSON.parse(fs.readFileSync(setupFile, 'utf8'));
+  const repaired = JSON.parse(fs.readFileSync(outlineFile, 'utf8'));
+  assert.ok(!setup.mystery_registry.some((mystery) => mystery.id === 'stale-mystery'));
+  assert.ok(!repaired.mystery_registry.some((mystery) => mystery.id === 'stale-mystery'));
 });
 
 test('saved idea draws are readable from the project', () => {

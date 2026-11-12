@@ -430,6 +430,12 @@ export function validateOutline(outline, config) {
         findings.push(finding('quality.outline.thread.resolution_not_linked', 'medium', `${mystery.id} is resolved but not linked from ${thread.id}.resolved_mysteries`, thread.id));
       }
     }
+    if (mystery.status === 'dropped' && mystery.thread_id) {
+      const thread = threadMap.get(mystery.thread_id);
+      if (thread && !(thread.abandoned_mysteries || []).some((item) => item.id === mystery.id)) {
+        findings.push(finding('quality.outline.thread.abandonment_not_linked', 'medium', `${mystery.id} is dropped but not linked from ${thread.id}.abandoned_mysteries`, thread.id));
+      }
+    }
   }
   for (const thread of threadMap.values()) {
     for (const [key, rule] of [
