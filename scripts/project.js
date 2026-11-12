@@ -187,6 +187,14 @@ export function cleanRegistry(project, options = {}) {
   writeJsonAtomic(docs.setupFile, docs.setup);
   writeJsonAtomic(docs.outlineFile, docs.outline);
   const statusRepair = repairThreadStatuses(project);
+  appendRegistryOperation(project, {
+    action: 'clean',
+    before,
+    after: expected.length * 2,
+    entries: expected.length,
+    removed,
+    removedLinks,
+  });
   return {
     ok: true,
     action: 'clean',
@@ -216,6 +224,28 @@ function findMysteryNode(outline, id) {
     }
   }
   return null;
+}
+
+function appendRegistryOperation(project, operation) {
+  const dir = path.join(project.dir, 'logs');
+  ensureDir(dir);
+  fs.appendFileSync(path.join(dir, 'registry-operations.jsonl'), `${JSON.stringify({ at: nowIso(), ...operation })}\n`, 'utf8');
+}
+
+function readRegistryOperations(project, limit = 5) {
+  const file = path.join(project.dir, 'logs', 'registry-operations.jsonl');
+  if (!fs.existsSync(file)) return [];
+  return fs.readFileSync(file, 'utf8')
+    .split(/\r?\n/)
+    .filter(Boolean)
+    .slice(-limit)
+    .map((line) => {
+      try {
+        return JSON.parse(line);
+      } catch {
+        return { raw: line };
+      }
+    });
 }
 
 export function abandonMystery(project, mysteryId, reason = 'manual', options = {}) {
@@ -281,6 +311,13 @@ export function abandonMystery(project, mysteryId, reason = 'manual', options = 
   docs.outline.mystery_registry = expected;
   writeJsonAtomic(docs.setupFile, docs.setup);
   writeJsonAtomic(docs.outlineFile, docs.outline);
+  appendRegistryOperation(project, {
+    action: 'abandon',
+    id: mysteryId,
+    chapter_id: chapterId,
+    thread_id: threadId,
+    reason,
+  });
   repairThreadStatuses(project);
   return {
     ok: true,
@@ -335,6 +372,7 @@ export function projectRegistryStatus(project) {
       ...summarize(outlineThreads, outlineMysteries),
     },
     drift,
+    operations: readRegistryOperations(project, 5),
   };
 }
 

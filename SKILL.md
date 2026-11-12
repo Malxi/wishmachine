@@ -13,7 +13,7 @@ examples_en:
   - "Create a 3-volume × 5-chapter science-fiction project"
   - "Check the outline for blocking findings"
   - "Draw 12 science-fiction name cards"
-version: 0.2.10
+version: 0.2.11
 author: Malxi
 ---
 
@@ -185,7 +185,8 @@ present in the chapter status set. `book registry` summarizes registry
 versions/counts and thread/mystery drift; `book registry clean` rebuilds the
 mystery registry and removes stale entries. `book registry clean --dry-run`
 previews before/after counts, removed mystery ids and removed thread links
-without writing. `book registry abandon --mystery <id>` manually marks a
+without writing. `book registry` also returns the latest operations from
+`logs/registry-operations.jsonl`. `book registry abandon --mystery <id>` manually marks a
 mystery dropped with a reason; add `--dry-run` to preview without writing.
 Clean also re-runs thread status repair after rebuilding the
 registry. `doctor --fix`

@@ -921,6 +921,7 @@ test('book registry abandon marks a mystery as manually dropped', () => {
   assert.equal(dropped.status, 'dropped');
   assert.equal(dropped.reason, '作者决定放弃');
   assert.ok(after.parts[0].volumes[0].chapters.some((chapter) => chapter.mysteries.dropped.some((mystery) => mystery.id === target.id)));
+  assert.ok(projectRegistryStatus(project).operations.some((operation) => operation.action === 'abandon' && operation.id === target.id));
 });
 
 test('saved idea draws are readable from the project', () => {
