@@ -861,6 +861,7 @@ function buildOutlinePack(plot, seed, options = {}) {
     }));
     chapterList.push({
       id: chapterId,
+      thread_id: threadId,
       title: `第${index + 1}章 · ${beat.function}`,
       summary: beat.beat,
       characters: castNames,
@@ -983,13 +984,18 @@ function buildOutlinePack(plot, seed, options = {}) {
   const abandonedIds = new Set(droppedMysteries.map((item) => item.thread_id).filter(Boolean));
   const threadRegistry = (plot.storylines || [plot.storyline]).filter(Boolean).map((item, index) => {
     const id = item.id || `thread-${index + 1}`;
+    const threadChapters = chapterList.filter((chapter) => chapter.thread_id === id);
+    const lastChapter = threadChapters[threadChapters.length - 1];
+    const resolvedIn = lastChapter && ['climax', 'resolution'].includes(lastChapter.beat_function)
+      ? lastChapter.id
+      : null;
     return {
       id,
       name: item.title || `storyline ${index + 1}`,
       type: index === 0 ? 'main' : 'subplot',
       importance: index === 0 ? 10 : 6,
-      status: abandonedIds.has(id) ? 'abandoned' : 'active',
-      resolved_in: null,
+      status: resolvedIn ? 'resolved' : abandonedIds.has(id) ? 'abandoned' : 'active',
+      resolved_in: resolvedIn,
     };
   });
   return {
@@ -1087,13 +1093,18 @@ function buildMultiVolumeOutlinePack(plot, seed, options = {}) {
   const abandonedIds = new Set(allDropped.map((mystery) => mystery.thread_id));
   const threadRegistry = storylines.map((item, index) => {
     const id = item.id || `thread-${index + 1}`;
+    const threadChapters = chapters.filter((chapter) => chapter.thread_id === id);
+    const lastChapter = threadChapters[threadChapters.length - 1];
+    const resolvedIn = lastChapter && ['climax', 'resolution'].includes(lastChapter.beat_function)
+      ? lastChapter.id
+      : null;
     return {
       id,
       name: item.title || `storyline ${index + 1}`,
       type: index === 0 ? 'main' : 'subplot',
       importance: index === 0 ? 10 : 6,
-      status: abandonedIds.has(id) ? 'abandoned' : 'active',
-      resolved_in: null,
+      status: resolvedIn ? 'resolved' : abandonedIds.has(id) ? 'abandoned' : 'active',
+      resolved_in: resolvedIn,
     };
   });
   return {
