@@ -236,6 +236,11 @@ function createRegistryBackup(project, action) {
   const outlineFile = path.join(project.dir, 'story', 'compose', 'outline.json');
   fs.copyFileSync(setupFile, path.join(dir, 'story_setup.json'));
   fs.copyFileSync(outlineFile, path.join(dir, 'outline.json'));
+  writeJsonAtomic(path.join(dir, 'manifest.json'), {
+    created_at: nowIso(),
+    action,
+    files: ['story_setup.json', 'outline.json'],
+  });
   return path.relative(project.dir, dir).replace(/\\/g, '/');
 }
 
@@ -275,7 +280,7 @@ export function createRegistrySnapshot(project) {
   };
 }
 
-export function restoreRegistryBackup(project, backupName) {
+export function restoreRegistryBackup(project, backupName, options = {}) {
   if (!backupName) throw new Error('restoreRegistryBackup requires a backup name');
   const root = path.resolve(project.dir, 'logs', 'registry-backups');
   const backupDir = path.resolve(root, backupName);
@@ -284,6 +289,14 @@ export function restoreRegistryBackup(project, backupName) {
   const outlineSource = path.join(backupDir, 'outline.json');
   if (!fs.existsSync(setupSource) || !fs.existsSync(outlineSource)) {
     throw new Error(`registry backup not found: ${backupName}`);
+  }
+  if (options.dryRun) {
+    return {
+      ok: true,
+      action: 'restore-dry-run',
+      backup: backupName,
+      dryRun: true,
+    };
   }
   const setupFile = path.join(project.dir, 'story', 'setup', 'story_setup.json');
   const outlineFile = path.join(project.dir, 'story', 'compose', 'outline.json');
@@ -317,10 +330,23 @@ export function registryBackups(project, options = {}) {
   }
   const backups = names
     .filter((name) => !removed.includes(name))
-    .map((name) => ({
-      name,
-      path: path.relative(project.dir, path.join(dir, name)).replace(/\\/g, '/'),
-    }));
+    .map((name) => {
+      const backupDir = path.join(dir, name);
+      let manifest = null;
+      try {
+        const manifestFile = path.join(backupDir, 'manifest.json');
+        if (fs.existsSync(manifestFile)) manifest = readJson(manifestFile);
+      } catch {
+        manifest = null;
+      }
+      return {
+        name,
+        path: path.relative(project.dir, backupDir).replace(/\\/g, '/'),
+        created_at: manifest?.created_at || null,
+        action: manifest?.action || null,
+        files: manifest?.files || [],
+      };
+    });
   return { ok: true, action: 'registry-backups', count: backups.length, backups, removed };
 }
 

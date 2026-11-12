@@ -944,10 +944,16 @@ test('manual registry snapshot can be restored', () => {
   writeArtifact(project, { section: 'setup', content: JSON.stringify(outline.setup_draft), apply: true });
   writeArtifact(project, { section: 'outline', content: JSON.stringify(outline.draft_outline), apply: true });
   const snapshot = createRegistrySnapshot(project);
+  const listed = registryBackups(project).backups.find((backup) => backup.name === snapshot.backup.split('/').pop());
+  assert.ok(listed.created_at);
+  assert.equal(listed.action, 'manual');
   const outlineFile = path.join(dir, 'story', 'compose', 'outline.json');
   const before = JSON.parse(fs.readFileSync(outlineFile, 'utf8'));
   before.thread_registry = [];
   fs.writeFileSync(outlineFile, JSON.stringify(before, null, 2));
+  const dryRun = restoreRegistryBackup(project, snapshot.backup.split('/').pop(), { dryRun: true });
+  assert.equal(dryRun.dryRun, true);
+  assert.equal(JSON.parse(fs.readFileSync(outlineFile, 'utf8')).thread_registry.length, 0);
   const restored = restoreRegistryBackup(project, snapshot.backup.split('/').pop());
   assert.equal(restored.ok, true);
   const after = JSON.parse(fs.readFileSync(outlineFile, 'utf8'));
