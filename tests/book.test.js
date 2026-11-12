@@ -694,6 +694,29 @@ test('doctor --fix repairs thread status from resolved mysteries', () => {
   assert.ok(repairedSetup.thread_registry[0].resolved_in);
 });
 
+test('doctor --fix downgrades resolved threads without a resolved mystery', () => {
+  const dir = tempDir();
+  initProject({ name: 'thread downgrade', dir, parts: 1, volumes: 1, chapter: 10 });
+  const project = loadProject(dir);
+  const outline = drawIdeas({ type: 'outlinepack', genre: '悬疑', count: 1, seed: 42, chapters: 10 }).results[0];
+  writeArtifact(project, { section: 'setup', content: JSON.stringify(outline.setup_draft), apply: true });
+  writeArtifact(project, { section: 'outline', content: JSON.stringify(outline.draft_outline), apply: true });
+  const setupFile = path.join(dir, 'story', 'setup', 'story_setup.json');
+  const outlineFile = path.join(dir, 'story', 'compose', 'outline.json');
+  const doc = JSON.parse(fs.readFileSync(outlineFile, 'utf8'));
+  const thread = doc.thread_registry.find((item) => item.status === 'resolved');
+  for (const chapter of doc.parts[0].volumes[0].chapters) {
+    chapter.mysteries.resolved = (chapter.mysteries.resolved || []).filter((item) => item.thread_id !== thread.id);
+  }
+  fs.writeFileSync(outlineFile, JSON.stringify(doc, null, 2));
+  const setup = JSON.parse(fs.readFileSync(setupFile, 'utf8'));
+  setup.thread_registry.find((item) => item.id === thread.id).status = 'resolved';
+  fs.writeFileSync(setupFile, JSON.stringify(setup, null, 2));
+  doctorProject(project, { fix: true });
+  const repaired = JSON.parse(fs.readFileSync(outlineFile, 'utf8'));
+  assert.equal(repaired.thread_registry.find((item) => item.id === thread.id).status, 'active');
+});
+
 test('saved idea draws are readable from the project', () => {
   const dir = tempDir();
   initProject({ name: 'idea store', dir, parts: 1, volumes: 1, chapter: 1 });

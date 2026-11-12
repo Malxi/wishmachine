@@ -978,10 +978,13 @@ function needsThreadStatusRepair(project) {
   if (!setupRegistry.length || !outlineRegistry.length) return false;
   const resolved = threadResolutionMap(docs.outline);
   const abandoned = new Set((docs.outline.abandoned_threads || []).map((item) => item.thread_id));
-  return [...setupRegistry, ...outlineRegistry].some((thread) => (
-    (thread.status === 'active' && resolved.has(thread.id))
-    || (thread.status === 'abandoned' && !abandoned.has(thread.id))
-  ));
+  return [...setupRegistry, ...outlineRegistry].some((thread) => {
+    const hasResolution = resolved.has(thread.id);
+    return (thread.status === 'active' && hasResolution)
+      || (thread.status === 'resolved' && !hasResolution)
+      || (thread.status === 'abandoned' && !abandoned.has(thread.id))
+      || (thread.status === 'abandoned' && hasResolution);
+  });
 }
 
 function repairThreadStatuses(project) {
@@ -993,7 +996,18 @@ function repairThreadStatuses(project) {
     const registry = Array.isArray(doc.thread_registry) ? doc.thread_registry : [];
     const abandoned = Array.isArray(doc.abandoned_threads) ? doc.abandoned_threads : [];
     for (const thread of registry) {
-      if (thread.status === 'active' && resolved.has(thread.id)) {
+      const hasResolution = resolved.has(thread.id);
+      if (hasResolution && thread.status !== 'resolved') {
+        thread.status = 'resolved';
+        thread.resolved_in = resolved.get(thread.id);
+        changed = true;
+      }
+      if (!hasResolution && thread.status === 'resolved') {
+        thread.status = 'active';
+        thread.resolved_in = null;
+        changed = true;
+      }
+      if (thread.status === 'abandoned' && hasResolution) {
         thread.status = 'resolved';
         thread.resolved_in = resolved.get(thread.id);
         changed = true;

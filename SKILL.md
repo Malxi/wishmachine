@@ -13,7 +13,7 @@ examples_en:
   - "Create a 3-volume × 5-chapter science-fiction project"
   - "Check the outline for blocking findings"
   - "Draw 12 science-fiction name cards"
-version: 0.1.86
+version: 0.1.87
 author: Malxi
 ---
 
@@ -176,7 +176,8 @@ it also fills missing chapter thread ids by matching thread names in chapter
 text, preserves resolved status from outline, and repairs setup/outline registry
 drift. Checks also verify that resolved threads have a matching resolved mystery
 and that abandoned threads are listed in `abandoned_threads`. `doctor --fix`
-synchronizes thread status from resolved mysteries and fills abandoned entries. Pending mysteries are sorted by importance and capped; dropped
+synchronizes thread status from resolved mysteries and fills abandoned entries;
+it also downgrades a resolved thread when no matching resolved mystery remains. Pending mysteries are sorted by importance and capped; dropped
 mysteries are recorded in `dropped_mysteries` and `abandoned_threads`.
 The saved pack also contains `setup_draft` with main/subplot
 storylines, premise progression and a world timeline.
