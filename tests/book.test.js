@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import http from 'node:http';
-import { initProject, loadProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, doctorProject, saveIdeaDraw, saveImportedIdeas, saveResearchReport, ingestSource, discoverSources, searchSources, buildProjectGraph, projectRegistryStatus, registryOperations, cleanRegistry, abandonMystery, undoRegistryOperation, registryBackups, createRegistrySnapshot, restoreRegistryBackup, checkRegistryBackups, writeArtifact, readSection } from '../scripts/project.js';
+import { initProject, loadProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, doctorProject, saveIdeaDraw, saveImportedIdeas, saveResearchReport, ingestSource, discoverSources, searchSources, buildProjectGraph, projectRegistryStatus, registryOperations, cleanRegistry, abandonMystery, undoRegistryOperation, redoRegistryOperation, registryBackups, createRegistrySnapshot, restoreRegistryBackup, checkRegistryBackups, writeArtifact, readSection } from '../scripts/project.js';
 import { checkProject, validateOutline, validateSetup } from '../scripts/schema.js';
 import { drawIdeas, validateIdeaDraw } from '../scripts/ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference } from '../scripts/guides.js';
@@ -936,6 +936,10 @@ test('book registry abandon marks a mystery as manually dropped', () => {
   assert.equal(undo.action, 'undo');
   const restored = JSON.parse(fs.readFileSync(outlineFile, 'utf8'));
   assert.equal(restored.mystery_registry.find((mystery) => mystery.id === target.id).status, 'resolved');
+  const redo = redoRegistryOperation(project);
+  assert.equal(redo.action, 'redo');
+  const redone = JSON.parse(fs.readFileSync(outlineFile, 'utf8'));
+  assert.equal(redone.mystery_registry.find((mystery) => mystery.id === target.id).status, 'dropped');
 });
 
 test('manual registry snapshot can be restored', () => {

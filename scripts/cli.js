@@ -1,10 +1,10 @@
-import { loadProject, initProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, doctorProject, saveIdeaDraw, saveImportedIdeas, saveResearchReport, discoverSources, searchSources, readSection, writeArtifact, projectRegistryStatus, cleanRegistry, abandonMystery, registryOperations, undoRegistryOperation, registryBackups, createRegistrySnapshot, restoreRegistryBackup, checkRegistryBackups } from './project.js';
+import { loadProject, initProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, doctorProject, saveIdeaDraw, saveImportedIdeas, saveResearchReport, discoverSources, searchSources, readSection, writeArtifact, projectRegistryStatus, cleanRegistry, abandonMystery, registryOperations, undoRegistryOperation, redoRegistryOperation, registryBackups, createRegistrySnapshot, restoreRegistryBackup, checkRegistryBackups } from './project.js';
 import { checkProject } from './schema.js';
 import { readJson } from './util.js';
 import { drawIdeas, ideasTypes, validateIdeaDraw } from './ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference, listSkills, readSkill } from './guides.js';
 
-const VERSION = '0.2.21';
+const VERSION = '0.2.22';
 const BOOLEAN_FLAGS = new Set(['apply', 'json', 'help', 'h', 'dry-run', 'force', 'ingest']);
 const COMMANDS = new Set(['book', 'check', 'ideas', 'gen', 'state', 'audit', 'refresh', 'export', 'doctor', 'version', 'help']);
 
@@ -100,6 +100,7 @@ Commands:
   book registry clean [--dir <project>] [--dry-run]
   book registry log [--limit 20] [--action abandon|clean] [--since ISO] [--dir <project>]
   book registry undo [--operation <id>] [--dir <project>]
+  book registry redo [--operation <id>] [--dir <project>]
   book registry backups [--keep 10] [--prune] [--dir <project>]
   book registry check-backups [--dir <project>]
   book registry backup [--dir <project>]
@@ -184,6 +185,10 @@ async function runBook(args, flags) {
         keep: intFlag(flags, 'keep', 10),
         prune: boolFlag(flags, 'prune'),
       }));
+      return 0;
+    }
+    if (args[1] === 'redo') {
+      print(redoRegistryOperation(project, { operationId: stringFlag(flags, 'operation', '') }));
       return 0;
     }
     if (args[1] === 'undo') {

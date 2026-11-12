@@ -189,6 +189,7 @@ export function cleanRegistry(project, options = {}) {
   writeJsonAtomic(docs.setupFile, docs.setup);
   writeJsonAtomic(docs.outlineFile, docs.outline);
   const statusRepair = repairThreadStatuses(project);
+  const afterBackup = createRegistryBackup(project, 'clean-after');
   appendRegistryOperation(project, {
     action: 'clean',
     before,
@@ -197,6 +198,7 @@ export function cleanRegistry(project, options = {}) {
     removed,
     removedLinks,
     backup,
+    after_backup: afterBackup,
   });
   return {
     ok: true,
@@ -269,6 +271,8 @@ export function undoRegistryOperation(project, options = {}) {
     action: 'undo',
     restored: target.backup,
     original_action: target.action,
+    original_operation_id: target.id,
+    after_backup: target.after_backup,
   });
   return {
     ok: true,
@@ -373,6 +377,35 @@ export function restoreRegistryBackup(project, backupName, options = {}) {
   };
 }
 
+export function redoRegistryOperation(project, options = {}) {
+  const operations = readRegistryOperations(project, 200);
+  const target = options.operationId
+    ? operations.find((operation) => (
+      operation.action === 'undo'
+      && (operation.id === options.operationId || operation.original_operation_id === options.operationId)
+    ))
+    : [...operations].reverse().find((operation) => operation.action === 'undo' && operation.after_backup);
+  if (!target?.after_backup) throw new Error('no undo operation with an after_backup to redo');
+  const backupDir = path.resolve(project.dir, target.after_backup);
+  const root = path.resolve(project.dir);
+  if (!backupDir.startsWith(root)) throw new Error('registry backup is outside the project');
+  const setupFile = path.join(project.dir, 'story', 'setup', 'story_setup.json');
+  const outlineFile = path.join(project.dir, 'story', 'compose', 'outline.json');
+  fs.copyFileSync(path.join(backupDir, 'story_setup.json'), setupFile);
+  fs.copyFileSync(path.join(backupDir, 'outline.json'), outlineFile);
+  appendRegistryOperation(project, {
+    action: 'redo',
+    restored: target.after_backup,
+    original_operation_id: target.id,
+  });
+  return {
+    ok: true,
+    action: 'redo',
+    restored: target.after_backup,
+    original_operation_id: target.id,
+  };
+}
+
 export function registryBackups(project, options = {}) {
   const dir = path.join(project.dir, 'logs', 'registry-backups');
   if (!fs.existsSync(dir)) return { ok: true, action: 'registry-backups', count: 0, backups: [], removed: [], protected: [] };
@@ -382,7 +415,8 @@ export function registryBackups(project, options = {}) {
     .sort()
     .reverse();
   const referenced = new Set(readRegistryOperations(project, 1000)
-    .map((operation) => String(operation.backup || '').split('/').pop())
+    .flatMap((operation) => [operation.backup, operation.after_backup])
+    .map((backup) => String(backup || '').split('/').pop())
     .filter(Boolean));
   const keepSet = new Set(names.slice(0, keep));
   const removed = [];
@@ -509,6 +543,8 @@ export function abandonMystery(project, mysteryId, reason = 'manual', options = 
   docs.outline.mystery_registry = expected;
   writeJsonAtomic(docs.setupFile, docs.setup);
   writeJsonAtomic(docs.outlineFile, docs.outline);
+  repairThreadStatuses(project);
+  const afterBackup = createRegistryBackup(project, 'abandon-after');
   appendRegistryOperation(project, {
     action: 'abandon',
     id: mysteryId,
@@ -516,8 +552,8 @@ export function abandonMystery(project, mysteryId, reason = 'manual', options = 
     thread_id: threadId,
     reason,
     backup,
+    after_backup: afterBackup,
   });
-  repairThreadStatuses(project);
   return {
     ok: true,
     action: 'abandon',
