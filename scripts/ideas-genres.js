@@ -52,8 +52,8 @@ export const SUSPENSE = {
     { name: '测谎仪', type: '审讯设备', function: '显示证人的生理波动。', cost: '误判会让无辜者崩溃。', limit: '不能作为单独证据。' },
   ],
   packs: [
-    { theme: 'suspense-room', premise: '密室里的第七个证人', engine: '证据等级制度', resources: ['原始案卷', '口供副本'], scenarios: ['不在场证明', '证人翻供'], storylines: ['真相与伪证', '时间线'], location: '审讯室', faction: '刑侦队', equipment: '录音笔' },
-    { theme: 'suspense-memory', premise: '记忆鉴定：被修改的目击', engine: '记忆鉴定制度', resources: ['口供副本', '证物袋'], scenarios: ['第二具尸体', '密室钥匙'], storylines: ['受害者与替罪羊', '沉默的证人'], location: '停尸房', faction: '检察院', equipment: '测谎仪' },
+    { theme: 'suspense-room', premise: '密室里的第七个证人', motif: '罗阿诺克殖民地的消失', engine: '证据等级制度', resources: ['原始案卷', '口供副本'], scenarios: ['不在场证明', '证人翻供'], storylines: ['真相与伪证', '时间线'], location: '审讯室', faction: '刑侦队', equipment: '录音笔' },
+    { theme: 'suspense-memory', premise: '记忆鉴定：被修改的目击', motif: '迪亚特洛夫山口的帐篷', engine: '记忆鉴定制度', resources: ['口供副本', '证物袋'], scenarios: ['第二具尸体', '密室钥匙'], storylines: ['受害者与替罪羊', '沉默的证人'], location: '停尸房', faction: '检察院', equipment: '测谎仪' },
   ],
 };
 

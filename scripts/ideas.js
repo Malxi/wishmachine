@@ -277,6 +277,7 @@ const DEFAULT_PACKS = [
   {
     theme: 'evacuation',
     premise: '账本与真相：被改写的伤亡表',
+    motif: '玛丽·塞莱斯特号的空船',
     engine: '全损保险引擎',
     resources: ['撤离舱位券', '引航体快照'],
     scenarios: ['封锁令比虫潮早到三天', '公开账本'],
@@ -299,6 +300,7 @@ const DEFAULT_PACKS = [
   {
     theme: 'gate',
     premise: '劳动与违约：机甲驾驶员雇佣契',
+    motif: '特洛伊木马',
     engine: '星门通行配额引擎',
     resources: ['可执行工时', '跃迁配额'],
     scenarios: ['按舱位收费的人', '星门收费'],
@@ -326,6 +328,7 @@ const XIANXIA_PACKS = [
   {
     theme: 'name',
     premise: '命册与真名',
+    motif: '敦煌藏经洞的封门',
     engine: '照命册清册引擎',
     resources: ['真名玉册', '本命血墨'],
     scenarios: ['第七行空了', '清册之夜'],
@@ -359,6 +362,7 @@ const XIANXIA_PACKS = [
   {
     theme: 'paper',
     premise: '纸人与替死',
+    motif: '画皮：借来的脸',
     engine: '替身纸人引擎',
     resources: ['替身纸人', '本命血墨'],
     scenarios: ['洗墨池边的无名客', '清册之夜'],
@@ -381,6 +385,7 @@ function buildWorldpack(def, packIndex, seed, cast, sources) {
   const location = find(sources.locations, 'name', def.location);
   const faction = find(sources.factions, 'name', def.faction);
   const equipment = find(sources.equipment, 'name', def.equipment);
+  const motif = def.motif ? find(MOTIFS, 'title', def.motif) : null;
   const packId = `worldpack-${seed}-${String(packIndex + 1).padStart(2, '0')}`;
   const entities = [];
   const relations = [];
@@ -395,6 +400,7 @@ function buildWorldpack(def, packIndex, seed, cast, sources) {
   const locationId = location ? addEntity('location', 'location', location.name) : '';
   const factionId = faction ? addEntity('faction', 'faction', faction.name) : '';
   const equipmentId = equipment ? addEntity('equipment', 'equipment', equipment.name) : '';
+  const motifId = motif ? addEntity('motif', 'motif', motif.title) : '';
   const resourceIds = resources.map((item, index) => addEntity('resource', `resource-${index + 1}`, item.name));
   const scenarioIds = scenarios.map((item, index) => addEntity('scenario', `scenario-${index + 1}`, item.title));
   const storylineIds = storylines.map((item, index) => addEntity('storyline', `storyline-${index + 1}`, item.title));
@@ -405,6 +411,7 @@ function buildWorldpack(def, packIndex, seed, cast, sources) {
   if (factionId && engineId) relate(factionId, engineId, 'issues');
   if (locationId && engineId) relate(locationId, engineId, 'hosts');
   if (equipmentId && premiseId) relate(equipmentId, premiseId, 'enables');
+  if (motifId && premiseId) relate(premiseId, motifId, 'inspired_by');
   for (const id of resourceIds) if (premiseId) relate(id, premiseId, 'constrains');
   for (const id of scenarioIds) if (premiseId) relate(id, premiseId, 'tests');
   for (const id of storylineIds) if (premiseId) relate(id, premiseId, 'dramatizes');
@@ -416,25 +423,51 @@ function buildWorldpack(def, packIndex, seed, cast, sources) {
   const keywords = [...new Set([
     def.theme,
     premise?.title,
+    motif?.title,
     engine?.artifact,
     location?.name,
     faction?.name,
     equipment?.name,
     ...cast.map((character) => character.name),
   ].filter(Boolean))];
+  const styleByDeck = {
+    default: '近未来科幻，制度悬疑，冷峻，低饱和',
+    xianxia: '东方玄幻，宗门，清冷，水墨',
+    suspense: '犯罪悬疑，冷色，现实主义',
+    urban: '都市现实，冷调，职场',
+    history: '历史写实，旧纸色，考据',
+  };
+  const negativeByDeck = {
+    default: 'anachronism, genre mismatch, inconsistent rules, generic fantasy, lore dump, overpowered protagonist',
+    xianxia: 'guns, spaceships, modern bureaucracy, anachronism, genre mismatch',
+    suspense: 'supernatural solution, magic, coincidental evidence, genre mismatch',
+    urban: 'fantasy races, spaceships, medieval setting, genre mismatch',
+    history: 'modern technology, plastic, neon, anachronistic bureaucracy, genre mismatch',
+  };
+  const style = styleByDeck[sources.name] || styleByDeck.default;
   const prompt = [
+    style,
     `${def.theme} 主题`,
     premise?.title,
+    motif?.title,
     engine?.artifact,
     location?.name,
     faction?.name,
     equipment?.name,
-  ].filter(Boolean).join('；');
+  ].filter(Boolean).join('，');
+  const promptPack = {
+    positive: prompt,
+    negative: negativeByDeck[sources.name] || negativeByDeck.default,
+    style,
+    keywords,
+  };
   return {
     id: packId,
     pack_id: packId,
     theme: def.theme,
     prompt,
+    prompt_pack: promptPack,
+    negative_prompt: promptPack.negative,
     keywords,
     premise: premise ? {
       title: premise.title,
@@ -451,6 +484,7 @@ function buildWorldpack(def, packIndex, seed, cast, sources) {
     location: location ? { id: `${packId}-location`, ...location } : null,
     faction: faction ? { id: `${packId}-faction`, ...faction } : null,
     equipment: equipment ? { id: `${packId}-equipment`, ...equipment } : null,
+    motif: motif ? { id: `${packId}-motif`, ...motif } : null,
     entities,
     relations,
     graph: { entities, relations },

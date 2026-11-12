@@ -385,6 +385,18 @@ test('imported cards and research reports are persisted', () => {
   assert.ok(projectState(project).state.research.some((item) => item.name === imported.saved.id));
 });
 
+test('worldpacks include motifs and positive/negative prompt packs', () => {
+  const pack = drawIdeas({ type: 'worldpack', genre: '修仙', count: 4, seed: 42 });
+  const paper = pack.results.find((item) => item.theme === 'paper');
+  assert.ok(paper);
+  assert.equal(paper.motif.title, '画皮：借来的脸');
+  assert.ok(paper.prompt_pack.positive.includes('画皮'));
+  assert.ok(paper.prompt_pack.negative.includes('spaceships'));
+  assert.ok(paper.prompt_pack.style.includes('东方玄幻'));
+  assert.ok(paper.entities.some((entity) => entity.type === 'motif'));
+  assert.ok(paper.relations.some((relation) => relation.type === 'inspired_by'));
+});
+
 test('genre decks cover suspense, urban and history', () => {
   for (const [genre, deck] of [['悬疑', 'suspense'], ['都市', 'urban'], ['历史', 'history']]) {
     const premise = drawIdeas({ type: 'premise', genre, count: 1, seed: 42 });
