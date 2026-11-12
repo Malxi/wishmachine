@@ -161,7 +161,9 @@ goal begins from the previous consequence. Chapters carry
 chapters and volumes. The entry consequence also feeds the chapter's
 `obstacle`, `conflict`, `chapter_payoff.pressure`, `mysteries.carried` and
 previous `hook`. Pending mysteries carry across chapters/volumes and are
-resolved at climax/resolution; `pending_mysteries` is capped. The saved pack also contains `setup_draft` with main/subplot
+resolved at climax/resolution; `pending_mysteries` is capped. Mysteries are
+structured objects with `id`, `question`, `answer`, `payoff` and `status`.
+The saved pack also contains `setup_draft` with main/subplot
 storylines, premise progression and a world timeline.
 Some packs also include a `motif` and an `inspired_by` graph edge.
 `cast_relations` links the four characters to each other, the faction, the
