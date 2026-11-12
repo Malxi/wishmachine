@@ -175,6 +175,13 @@ export function validateSetup(setup) {
             if (mysteryIds.has(mystery.id)) findings.push(finding('quality.setup.mystery_registry.duplicate', 'high', `duplicate mystery id ${mystery.id}`, mystery.id));
             mysteryIds.add(mystery.id);
           }
+          const sorted = [...setup.mystery_registry].sort((left, right) => (
+            String(left.chapter_id || '').localeCompare(String(right.chapter_id || ''), undefined, { numeric: true })
+            || String(left.id || '').localeCompare(String(right.id || ''), undefined, { numeric: true })
+          ));
+          if (sorted.some((mystery, index) => mystery.id !== setup.mystery_registry[index]?.id)) {
+            findings.push(finding('quality.setup.mystery_registry.order', 'low', 'mystery_registry is not sorted by chapter_id/id'));
+          }
         }
       }
     }
@@ -256,6 +263,15 @@ export function validateOutline(outline, config) {
           }
         }
       }
+    }
+  }
+  if (Array.isArray(outline.thread_registry)) {
+    const sortedThreads = [...outline.thread_registry].sort((left, right) => {
+      if (left.type !== right.type) return left.type === 'main' ? -1 : 1;
+      return String(left.id || '').localeCompare(String(right.id || ''), undefined, { numeric: true });
+    });
+    if (sortedThreads.some((thread, index) => thread.id !== outline.thread_registry[index]?.id)) {
+      findings.push(finding('quality.outline.thread.registry_order', 'low', 'thread_registry is not sorted by main/sub then id'));
     }
   }
   if (Array.isArray(outline.mystery_registry)) {

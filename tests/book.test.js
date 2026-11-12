@@ -556,6 +556,12 @@ test('outline validation checks thread resolution and abandoned threads', () => 
   const unsorted = JSON.parse(JSON.stringify(outline.draft_outline));
   unsorted.mystery_registry.reverse();
   assert.ok(validateOutline(unsorted, { structure: {} }).some((finding) => finding.rule_id === 'quality.outline.mystery.registry_order'));
+  const unsortedThreads = JSON.parse(JSON.stringify(outline.draft_outline));
+  unsortedThreads.thread_registry.reverse();
+  assert.ok(validateOutline(unsortedThreads, { structure: {} }).some((finding) => finding.rule_id === 'quality.outline.thread.registry_order'));
+  const unsortedSetup = JSON.parse(JSON.stringify(outline.setup_draft));
+  unsortedSetup.mystery_registry.reverse();
+  assert.ok(validateSetup(unsortedSetup).some((finding) => finding.rule_id === 'quality.setup.mystery_registry.order'));
   const statusMismatch = JSON.parse(JSON.stringify(outline.draft_outline));
   const resolvedMystery = statusMismatch.mystery_registry.find((mystery) => mystery.status === 'resolved' && mystery.id.endsWith('-mystery-core'));
   resolvedMystery.status = 'open';
