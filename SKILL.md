@@ -13,7 +13,7 @@ examples_en:
   - "Create a 3-volume × 5-chapter science-fiction project"
   - "Check the outline for blocking findings"
   - "Draw 12 science-fiction name cards"
-version: 0.1.42
+version: 0.1.43
 author: Malxi
 ---
 
@@ -75,6 +75,7 @@ book init
           -> 从正文写 recap -> book write recap
   -> audit
   -> 设定/大纲编辑性审查（review-checklist）
+  -> 可选：research skill 联网考究抽卡实体
   -> refresh
   -> export --format book
 ```
@@ -117,7 +118,11 @@ node scripts/wishmachine.js ideas draw --type storyline --count 4 --seed 9
 node scripts/wishmachine.js ideas draw --type location --count 4 --seed 9
 node scripts/wishmachine.js ideas draw --type faction --count 4 --seed 9
 node scripts/wishmachine.js ideas draw --type equipment --count 4 --seed 9
+node scripts/wishmachine.js ideas draw --type motif --count 4 --seed 9
 node scripts/wishmachine.js ideas draw --type worldpack --genre 科幻 --count 1 --seed 42
+node scripts/wishmachine.js ideas draw --type worldpack --genre 修仙 --count 1 --seed 42 --dir my-book --save
+node scripts/wishmachine.js book read ideas --dir my-book
+node scripts/wishmachine.js book read idea --id <saved-id> --dir my-book
 node scripts/wishmachine.js ideas types
 ```
 
@@ -134,15 +139,19 @@ node scripts/wishmachine.js gen workflow read outline
 node scripts/wishmachine.js gen reference list
 node scripts/wishmachine.js gen reference read outline-schema
 node scripts/wishmachine.js gen reference read review-checklist
+node scripts/wishmachine.js gen workflow read research
 ```
 
 第一次写 setup 前读 `setup-schema`；第一次写 outline 前读 `outline-schema`。
 设定和大纲的编辑性审查使用 `review-checklist`，它不会替代确定性检查。
+历史/文化/科学元素使用 `wishmachine-research` skill 联网考究后再进入 canon。
 
 ## 边界
 
 - 不生成 setup/outline/正文。
 - 不调用 LLM。
+- 抽卡结果默认只输出；加 `--save` 才写入 `story/ideas/`。
+- 不做历史考据；考据由 `wishmachine-research` skill 联网完成，主 skill 只负责保存抽卡结果和确定性检查。
 - 不包含 RPG 模拟；`check --profile rpg` 会明确报未实现。
 - 不做 MCP；只提供 CLI，方便作为 Skill 的 `scripts/` 直接运行。
 - 不直接编辑项目文件；写入走 `book write`。

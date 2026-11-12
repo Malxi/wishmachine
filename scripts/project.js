@@ -43,7 +43,7 @@ export function initProject(options) {
       min_chars: minChars,
     },
   };
-  for (const sub of ['story/setup', 'story/compose', 'story/craft', 'story/reviews', 'chapters', 'drafts', 'logs']) {
+  for (const sub of ['story/setup', 'story/compose', 'story/craft', 'story/reviews', 'story/ideas', 'story/research', 'chapters', 'drafts', 'logs']) {
     ensureDir(path.join(dir, sub));
   }
   writeJsonAtomic(path.join(dir, 'novel.json'), config);
@@ -137,6 +137,23 @@ export function projectStatus(project) {
   };
 }
 
+export function saveIdeaDraw(project, draw) {
+  const type = String(draw?.query?.type || 'ideas');
+  const seed = draw?.query?.seed || 0;
+  const id = `${type}-${seed}-${stamp()}`;
+  const dir = path.join(project.dir, 'story', 'ideas');
+  ensureDir(dir);
+  const file = path.join(dir, `${id}.json`);
+  writeJsonAtomic(file, draw);
+  return {
+    ...draw,
+    saved: {
+      id,
+      path: path.relative(project.dir, file).replace(/\\/g, '/'),
+    },
+  };
+}
+
 export function projectState(project, options = {}) {
   const status = projectStatus(project);
   const setupFile = path.join(project.dir, 'story', 'setup', 'story_setup.json');
@@ -182,6 +199,8 @@ export function projectState(project, options = {}) {
     written_count: status.chapters.filter((chapter) => chapter.written).length,
     orphan_chapters: orphanChapters,
     orphan_recaps: status.orphan_recaps || [],
+    ideas: files(path.join(project.dir, 'story', 'ideas')),
+    research: files(path.join(project.dir, 'story', 'research')),
     craft: files(craftDir),
     recaps: files(recapDir),
     next: status.next,
@@ -510,6 +529,32 @@ export function readSection(project, section, options = {}) {
       const file = path.join(project.dir, 'story', 'recaps', `${id}.json`);
       if (!fs.existsSync(file)) throw new Error(`recap not found: ${id}`);
       return { ok: true, section, id, recap: readJson(file) };
+    }
+    case 'ideas': {
+      const dir = path.join(project.dir, 'story', 'ideas');
+      const results = fs.existsSync(dir)
+        ? fs.readdirSync(dir).filter((name) => name.endsWith('.json')).sort().map((name) => ({
+          id: name.slice(0, -5),
+          size: fs.statSync(path.join(dir, name)).size,
+        }))
+        : [];
+      return { ok: true, section, results };
+    }
+    case 'idea': {
+      if (!id) throw new Error('book read idea requires --id');
+      const file = path.join(project.dir, 'story', 'ideas', `${id}.json`);
+      if (!fs.existsSync(file)) throw new Error(`saved idea draw not found: ${id}`);
+      return { ok: true, section, id, draw: readJson(file) };
+    }
+    case 'research': {
+      const dir = path.join(project.dir, 'story', 'research');
+      const results = fs.existsSync(dir)
+        ? fs.readdirSync(dir).filter((name) => name.endsWith('.json')).sort().map((name) => ({
+          id: name.slice(0, -5),
+          size: fs.statSync(path.join(dir, name)).size,
+        }))
+        : [];
+      return { ok: true, section, results };
     }
     case 'craft': {
       const dir = path.join(project.dir, 'story', 'craft');

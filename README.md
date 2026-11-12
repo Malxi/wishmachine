@@ -71,7 +71,9 @@ logs/
 - `refresh` 重建 setup/outline markdown
 - `export` 将已写章节导出为带目录、人物和规则的阅读版（`--format plain` 输出纯章节拼接）
 - `doctor` 检查项目目录、配置、setup/outline/craft/recap JSON 有效性、缺失 JSON 和 orphan 文件；`--fix` 会创建缺失目录并写入规范化 structure
-- `ideas namecard/premise/resource/equipment/scenario/provocation/law/event/engine/storyline/location/faction/worldpack`
+- `ideas namecard/premise/resource/equipment/scenario/provocation/law/event/engine/storyline/location/faction/motif/worldpack`
+- `ideas draw --save` 持久化到 `story/ideas/`，可用 `book read ideas` / `book read idea` 读取
+- `skills/wishmachine-research` 联网考究抽卡实体与关系
 - `gen workflow/reference/skill`
 
 没有：

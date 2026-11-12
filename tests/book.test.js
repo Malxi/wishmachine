@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { initProject, loadProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, doctorProject, writeArtifact, readSection } from '../scripts/project.js';
+import { initProject, loadProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, doctorProject, saveIdeaDraw, writeArtifact, readSection } from '../scripts/project.js';
 import { checkProject } from '../scripts/schema.js';
 import { drawIdeas } from '../scripts/ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference } from '../scripts/guides.js';
@@ -279,6 +279,25 @@ test('a character who left cannot appear later without a return', () => {
   assert.ok(result.check.findings.some((item) => item.rule_id === 'quality.outline.character_absent_return'));
 });
 
+test('saved idea draws are readable from the project', () => {
+  const dir = tempDir();
+  initProject({ name: 'idea store', dir, parts: 1, volumes: 1, chapter: 1 });
+  const project = loadProject(dir);
+  const draw = drawIdeas({ type: 'worldpack', genre: '修仙', count: 1, seed: 42 });
+  assert.ok(draw.results[0].graph.entities.length > 0);
+  assert.ok(draw.results[0].graph.relations.length > 0);
+  assert.ok(draw.results[0].keywords.length > 0);
+  assert.ok(draw.results[0].prompt.length > 0);
+  const saved = saveIdeaDraw(project, draw);
+  assert.ok(saved.saved.id);
+  assert.ok(fs.existsSync(path.join(dir, 'story', 'ideas', `${saved.saved.id}.json`)));
+  const listed = readSection(project, 'ideas');
+  assert.ok(listed.results.some((item) => item.id === saved.saved.id));
+  const loaded = readSection(project, 'idea', { id: saved.saved.id });
+  assert.equal(loaded.draw.query.seed, 42);
+  assert.ok(projectState(project).state.ideas.some((item) => item.name === saved.saved.id));
+});
+
 test('genre-aware ideas use the xianxia deck', () => {
   const xianxia = drawIdeas({ type: 'premise', genre: '修仙', count: 2, seed: 42 });
   assert.equal(xianxia.meta.deck, 'xianxia');
@@ -323,13 +342,14 @@ test('recaps copied from outline events are flagged', () => {
   assert.ok(result.check.findings.some((item) => item.rule_id === 'quality.recap.outline_copy'));
 });
 
-test('provocation, law, event, engine, storyline, location, faction and equipment draws are available', () => {
-  for (const type of ['provocation', 'law', 'event', 'engine', 'storyline', 'location', 'faction', 'equipment']) {
+test('provocation, law, event, engine, storyline, location, faction, equipment and motif draws are available', () => {
+  for (const type of ['provocation', 'law', 'event', 'engine', 'storyline', 'location', 'faction', 'equipment', 'motif']) {
     const draw = drawIdeas({ type, count: 2, seed: 9 });
     assert.equal(draw.count, 2);
     assert.ok(draw.results.every((item) => item.title || item.name));
   }
   assert.ok(drawIdeas({ type: 'engine', count: 1, seed: 9 }).results[0].artifact);
+  assert.ok(drawIdeas({ type: 'motif', count: 1, seed: 9 }).results[0].source);
 });
 
 test('legacy novel.json structure fields are normalized', () => {

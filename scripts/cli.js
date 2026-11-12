@@ -1,9 +1,9 @@
-import { loadProject, initProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, doctorProject, readSection, writeArtifact } from './project.js';
+import { loadProject, initProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, doctorProject, saveIdeaDraw, readSection, writeArtifact } from './project.js';
 import { checkProject } from './schema.js';
 import { drawIdeas, ideasTypes } from './ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference, listSkills, readSkill } from './guides.js';
 
-const VERSION = '0.1.42';
+const VERSION = '0.1.43';
 const BOOLEAN_FLAGS = new Set(['apply', 'json', 'help', 'h', 'dry-run', 'force']);
 const COMMANDS = new Set(['book', 'check', 'ideas', 'gen', 'state', 'audit', 'refresh', 'export', 'doctor', 'version', 'help']);
 
@@ -94,10 +94,10 @@ Commands:
   refresh [setup|outline|all] [--dir <dir>]
   export [--dir <dir>] [--output drafts/manuscript.md] [--format book|plain]
   doctor [--dir <dir>] [--fix]
-  book read <setup|outline|craft|chapter|recap|context|logs> [--id <id>] [--view index|full]
+  book read <setup|outline|craft|chapter|recap|context|logs|ideas|idea|research> [--id <id>] [--view index|full]
   book write <setup|outline|craft|chapter|recap> [--mode replace|patch|append] [--apply] [--id <id>]
   check [--profile quality|schema|custom|all] [--target setup|outline|chapter] [--id <id>]
-  ideas draw --type namecard|premise|resource|scenario ... [--count 5] [--seed 42]
+  ideas draw --type namecard|premise|resource|scenario ... [--count 5] [--seed 42] [--dir <project> --save]
   ideas types
   gen workflow list|read <name>
   gen skill list|read <name>
@@ -232,7 +232,7 @@ function runIdeas(args, flags) {
     return 0;
   }
   if (sub !== 'draw') fail(`unknown ideas subcommand: ${sub}`);
-  print(drawIdeas({
+  const draw = drawIdeas({
     type: stringFlag(flags, 'type', 'namecard'),
     genre: stringFlag(flags, 'genre', ''),
     count: intFlag(flags, 'count', 5),
@@ -241,7 +241,13 @@ function runIdeas(args, flags) {
     category: stringFlag(flags, 'category', ''),
     level: stringFlag(flags, 'level', 'axiom'),
     mode: stringFlag(flags, 'mode', 'balanced'),
-  }));
+  });
+  if (boolFlag(flags, 'save')) {
+    const project = loadProject(stringFlag(flags, 'dir', ''));
+    print(saveIdeaDraw(project, draw));
+  } else {
+    print(draw);
+  }
   return 0;
 }
 

@@ -3,7 +3,7 @@ import { hashSeed, mulberry32, pickMany, pick } from './util.js';
 const TYPES = [
   'provocation', 'axiom', 'event', 'law', 'scenario', 'engine',
   'worldpack', 'premise', 'storyline', 'cast', 'namecard',
-  'resource', 'equipment', 'itemcard', 'location', 'faction', 'reference', 'name',
+  'resource', 'equipment', 'itemcard', 'location', 'faction', 'motif', 'reference', 'name',
 ];
 
 const SURNAMES = ['孟', '沈', '程', '韩', '钟', '江', '谢', '许', '方', '周', '罗', '顾', '陆', '宋', '闻', '裴', '秦', '唐', '温', '叶'];
@@ -98,6 +98,17 @@ const EQUIPMENT = [
   { name: '记忆读取器', type: '审讯设备', function: '读出神经回响中的残留记忆。', cost: '被读取者会失去对应片段。', limit: '只能读取最近一次跃迁的残片。' },
   { name: '救援信标', type: '求生设备', function: '向最近舰队发送位置与幸存者名单。', cost: '开启后所有势力都会收到信号。', limit: '电池只够发送一次。' },
   { name: '舰载机甲', type: '战斗装备', function: '在舰内与虫潮中执行救援和突破。', cost: '驾驶员的神经负荷会永久累积。', limit: '需要两人协同，单人启动会烧毁接口。' },
+];
+
+const MOTIFS = [
+  { title: '玛丽·塞莱斯特号的空船', type: '历史事件', period: '1872', region: '大西洋', source: 'Mary Celeste / 玛丽·塞莱斯特号（Wikipedia 可考）', keywords: ['空船', '失踪', '完好货物', '救生艇'], premise: '一艘船被发现时货物与食物完好，救生艇和全员却消失。', conflict: '幸存者、保险公司与海事法庭争夺“失踪”还是“弃船”的解释。', twist: '船上唯一缺失的是一份被替换过的航海日志。', caution: '不要把具体失踪原因写成既定事实；历史上原因未有定论。' },
+  { title: '罗阿诺克殖民地的消失', type: '历史事件', period: '1587—1590', region: '北美', source: 'Roanoke Colony / 罗阿诺克殖民地（Wikipedia 可考）', keywords: ['殖民地', 'CROATOAN', '失踪', '补给延迟'], premise: '整座殖民地在补给船返回时消失，只留下一个刻在树上的词。', conflict: '救援者必须在“被原住民接纳”和“被西班牙人摧毁”两种解释之间选择。', twist: '那个词不是地点，而是一个人的名字。', caution: '避免把原住民写成单一敌意力量；历史解释存在争议。' },
+  { title: '迪亚特洛夫山口的帐篷', type: '历史事件', period: '1959', region: '乌拉尔山', source: 'Dyatlov Pass incident / 迪亚特洛夫事件（Wikipedia 可考）', keywords: ['雪山', '帐篷', '失温', '夜间撤离'], premise: '九名登山者在夜间从内部割开帐篷，赤脚冲向暴风雪。', conflict: '搜救队必须解释为什么经验丰富的队伍会在极寒中主动离开唯一庇护。', twist: '帐篷里留下的不是恐惧痕迹，而是一份被改过的路线记录。', caution: '不把单一阴谋论当作真相；事件仍有多种解释。' },
+  { title: '敦煌藏经洞的封门', type: '历史事件', period: '1900', region: '敦煌', source: 'Dunhuang manuscripts / 敦煌藏经洞（Wikipedia 可考）', keywords: ['藏经洞', '封门', '写本', '守护'], premise: '一个被封存数百年的洞窟在清理流沙时被打开，里面堆满写本。', conflict: '发现者、地方官府与外来探险者争夺写本的归属。', twist: '封门不是为了保护经卷，而是为了封住一份不该被读的名单。', caution: '涉及文物外流时避免把复杂历史简化成单一掠夺叙事。' },
+  { title: '山海经式的异兽记录', type: '神话地理', period: '先秦—汉', region: '中国', source: '《山海经》（公共领域古籍）', keywords: ['异兽', '山川', '祭祀', '见则'], premise: '一部古老山川志把异兽写成灾异预兆，而不是怪物图鉴。', conflict: '记录者必须决定：是如实记下异兽，还是替州府删去不祥条目。', twist: '异兽不是预兆，是记录者用动物名字藏起来的人名。', caution: '不要把不同时代的《山海经》版本混成同一套设定。' },
+  { title: '画皮：借来的脸', type: '公共领域小说', period: '清', region: '中国', source: '蒲松龄《聊斋志异·画皮》（公共领域）', keywords: ['画皮', '借脸', '识破', '书生'], premise: '一张画出来的脸可以借给另一个人，但借脸的人必须替原主活完未竟之事。', conflict: '主角发现身边最亲近的人已经换过一张脸。', twist: '画皮不是伪装，而是把“别人希望你成为的样子”固定下来。', caution: '改编自公共领域小说，但不要复制原文长段。' },
+  { title: '渔夫与魔鬼的契约', type: '公共领域小说', period: '阿拔斯王朝背景', region: '中东', source: '《一千零一夜·渔夫与魔鬼》（公共领域）', keywords: ['封印', '许愿', '反悔', '契约'], premise: '被封印的魔鬼承诺实现愿望，但每一次许愿都在改写封印条件。', conflict: '渔夫必须在“放它出来”和“保住封印”之间反复交易。', twist: '魔鬼真正想要的不是自由，而是让渔夫替它说出真名。', caution: '避免把中东文化做成单一异域奇观；保留具体社会关系。' },
+  { title: '特洛伊木马', type: '神话史诗', period: '古希腊', region: '爱琴海', source: 'Trojan Horse / 特洛伊木马（希腊神话，公共领域）', keywords: ['木马', '围城', '献礼', '内应'], premise: '围城十年后，进攻方留下一个巨大的木制献礼，然后撤走。', conflict: '守城者必须在“烧掉它”和“把它拉进城”之间选择。', twist: '木马里没有士兵，只有一份足以让守城者互相指控的名单。', caution: '不要把神话当成单一史实；明确这是神话传统。' },
 ];
 
 const SCENARIOS = [  { title: '封锁令比虫潮早到三天', pressure: '主角发现撤离名单的时间戳早于虫潮预警，必须在封锁前决定救谁。', twist: '名单不是预测，而是有人提前写好的交易。' },
@@ -382,10 +393,60 @@ function buildWorldpack(def, packIndex, seed, cast) {
   const faction = find(factionSource, 'name', def.faction);
   const equipment = find(equipmentSource, 'name', def.equipment);
   const packId = `worldpack-${seed}-${String(packIndex + 1).padStart(2, '0')}`;
+  const entities = [];
+  const relations = [];
+  const addEntity = (type, key, label, extra = {}) => {
+    const id = `${packId}:${key}`;
+    entities.push({ id, type, label, ...extra });
+    return id;
+  };
+  const relate = (from, to, type) => relations.push({ from, to, type });
+  const premiseId = premise ? addEntity('premise', 'premise', premise.title) : '';
+  const engineId = engine ? addEntity('engine', 'engine', engine.title) : '';
+  const locationId = location ? addEntity('location', 'location', location.name) : '';
+  const factionId = faction ? addEntity('faction', 'faction', faction.name) : '';
+  const equipmentId = equipment ? addEntity('equipment', 'equipment', equipment.name) : '';
+  const resourceIds = resources.map((item, index) => addEntity('resource', `resource-${index + 1}`, item.name));
+  const scenarioIds = scenarios.map((item, index) => addEntity('scenario', `scenario-${index + 1}`, item.title));
+  const storylineIds = storylines.map((item, index) => addEntity('storyline', `storyline-${index + 1}`, item.title));
+  const castIds = cast.map((character, index) => addEntity('character', `character-${index + 1}`, character.name, {
+    role: character.role_tags?.[0] || 'support',
+  }));
+  if (premiseId && engineId) relate(engineId, premiseId, 'governs');
+  if (factionId && engineId) relate(factionId, engineId, 'issues');
+  if (locationId && engineId) relate(locationId, engineId, 'hosts');
+  if (equipmentId && premiseId) relate(equipmentId, premiseId, 'enables');
+  for (const id of resourceIds) if (premiseId) relate(id, premiseId, 'constrains');
+  for (const id of scenarioIds) if (premiseId) relate(id, premiseId, 'tests');
+  for (const id of storylineIds) if (premiseId) relate(id, premiseId, 'dramatizes');
+  if (castIds[0] && premiseId) relate(castIds[0], premiseId, 'pursues');
+  if (castIds[0] && castIds[1]) relate(castIds[1], castIds[0], 'opposes');
+  if (castIds[0] && factionId) relate(castIds[0], factionId, 'belongs_to');
+  if (castIds[0] && locationId) relate(castIds[0], locationId, 'starts_at');
+  if (castIds[0] && equipmentId) relate(castIds[0], equipmentId, 'uses');
+  const keywords = [...new Set([
+    def.theme,
+    premise?.title,
+    engine?.artifact,
+    location?.name,
+    faction?.name,
+    equipment?.name,
+    ...cast.map((character) => character.name),
+  ].filter(Boolean))];
+  const prompt = [
+    `${def.theme} 主题`,
+    premise?.title,
+    engine?.artifact,
+    location?.name,
+    faction?.name,
+    equipment?.name,
+  ].filter(Boolean).join('；');
   return {
     id: packId,
     pack_id: packId,
     theme: def.theme,
+    prompt,
+    keywords,
     premise: premise ? {
       title: premise.title,
       statement: premise.statement,
@@ -401,6 +462,9 @@ function buildWorldpack(def, packIndex, seed, cast) {
     location: location ? { id: `${packId}-location`, ...location } : null,
     faction: faction ? { id: `${packId}-faction`, ...faction } : null,
     equipment: equipment ? { id: `${packId}-equipment`, ...equipment } : null,
+    entities,
+    relations,
+    graph: { entities, relations },
     cast,
   };
 }
@@ -542,6 +606,11 @@ export function drawIdeas(options = {}) {
     }));
   } else if (type === 'storyline') {
     results = pickMany(rng, storylines, Math.min(count, storylines.length)).map((item, index) => ({
+      id: resultId(type, seed, index),
+      ...item,
+    }));
+  } else if (type === 'motif') {
+    results = pickMany(rng, MOTIFS, Math.min(count, MOTIFS.length)).map((item, index) => ({
       id: resultId(type, seed, index),
       ...item,
     }));
