@@ -615,7 +615,7 @@ test('doctor --fix migrates old projects to thread_registry', () => {
         chapters: [1, 2, 3].map((number) => ({
           id: `P1-V1-C${number}`,
           title: `第${number}章`,
-          summary: '章节摘要',
+          summary: number === 2 ? '副线章节' : '章节摘要',
           characters: [],
           location: '地点',
           events: [],
@@ -635,6 +635,7 @@ test('doctor --fix migrates old projects to thread_registry', () => {
   assert.equal(migratedSetup.storylines[0].thread_id, 'thread-1');
   assert.equal(migratedOutline.thread_registry.length, 2);
   assert.equal(migratedOutline.parts[0].volumes[0].chapters[0].thread_id, 'thread-1');
+  assert.equal(migratedOutline.parts[0].volumes[0].chapters[1].thread_id, 'thread-2');
 });
 
 test('doctor --fix repairs setup/outline registry drift', () => {

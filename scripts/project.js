@@ -886,7 +886,7 @@ function migrateThreadRegistry(project) {
   const setupRegistry = Array.isArray(setup.thread_registry) ? setup.thread_registry : null;
   const outlineRegistry = Array.isArray(outline.thread_registry) ? outline.thread_registry : null;
   const storylines = Array.isArray(setup.storylines) ? setup.storylines : [];
-  const registry = setupRegistry || outlineRegistry || storylines.map((storyline, index) => ({
+  const baseRegistry = setupRegistry || outlineRegistry || storylines.map((storyline, index) => ({
     id: storyline.thread_id || `thread-${index + 1}`,
     name: storyline.name || `storyline ${index + 1}`,
     type: index === 0 ? 'main' : 'subplot',
@@ -894,6 +894,17 @@ function migrateThreadRegistry(project) {
     status: 'active',
     resolved_in: null,
   }));
+  const outlineById = new Map((outlineRegistry || []).map((thread) => [thread.id, thread]));
+  const registry = baseRegistry.map((thread) => {
+    const outlineThread = outlineById.get(thread.id);
+    if (outlineThread?.status === 'resolved' && outlineThread.resolved_in) {
+      return { ...thread, status: 'resolved', resolved_in: outlineThread.resolved_in };
+    }
+    return thread;
+  });
+  for (const thread of outlineRegistry || []) {
+    if (!registry.some((item) => item.id === thread.id)) registry.push(thread);
+  }
   if (!registry.length) return null;
   const mainThreadId = registry[0].id;
   let changed = false;
@@ -913,7 +924,9 @@ function migrateThreadRegistry(project) {
   let chapterCount = 0;
   for (const chapter of outlineChapters(outline)) {
     if (!chapter.thread_id) {
-      chapter.thread_id = mainThreadId;
+      const text = `${chapter.title || ''} ${chapter.summary || ''} ${chapter.conflict || ''}`;
+      const matching = registry.find((thread) => thread.name && text.includes(thread.name));
+      chapter.thread_id = matching?.id || mainThreadId;
       chapterCount += 1;
       changed = true;
     }
