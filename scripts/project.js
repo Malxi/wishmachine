@@ -186,6 +186,7 @@ export function cleanRegistry(project, options = {}) {
   docs.outline.mystery_registry_version = 2;
   writeJsonAtomic(docs.setupFile, docs.setup);
   writeJsonAtomic(docs.outlineFile, docs.outline);
+  const statusRepair = repairThreadStatuses(project);
   return {
     ok: true,
     action: 'clean',
@@ -194,6 +195,7 @@ export function cleanRegistry(project, options = {}) {
     entries: expected.length,
     removed,
     removedLinks,
+    statusRepaired: Boolean(statusRepair),
     dryRun: false,
   };
 }
