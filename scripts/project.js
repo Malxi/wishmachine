@@ -302,19 +302,92 @@ export function refreshProject(project, options = {}) {
 
 export function exportManuscript(project, options = {}) {
   const status = projectStatus(project);
+  const format = options.format === 'plain' ? 'plain' : 'book';
+  const setupFile = path.join(project.dir, 'story', 'setup', 'story_setup.json');
+  const outlineFile = path.join(project.dir, 'story', 'compose', 'outline.json');
+  const setup = fs.existsSync(setupFile) ? readJson(setupFile) : null;
+  const outline = fs.existsSync(outlineFile) ? readJson(outlineFile) : null;
   const ordered = [
     ...status.chapters.filter((chapter) => chapter.written).map((chapter) => chapter.id),
     ...status.orphan_chapters,
   ];
   const unique = [...new Set(ordered)];
-  const chunks = [`# ${status.name}`, '', '> 由小说许愿机从 chapters/ 导出。', ''];
-  let chapters = 0;
-  for (const id of unique) {
-    const file = path.join(project.dir, 'chapters', `${id}.md`);
-    if (!fs.existsSync(file)) continue;
-    chunks.push(`---`, '', readText(file).trimEnd(), '');
-    chapters += 1;
+  const written = new Set(unique);
+  const chapterInfo = new Map();
+  for (const part of outline?.parts || []) {
+    for (const volume of part.volumes || []) {
+      for (const chapter of volume.chapters || []) {
+        chapterInfo.set(chapter.id, { chapter, volume });
+      }
+    }
   }
+  const stripTitle = (text) => String(text).replace(/^#\s+.*(?:\r?\n)+/, '').trim();
+  const chunks = [];
+  let chapters = 0;
+
+  if (format === 'book' && setup && outline) {
+    const genres = (setup.genres || []).join(' · ');
+    const total = unique.length;
+    chunks.push(`# ${status.name}`, '');
+    if (genres) chunks.push(`> ${genres}　|　全${total}章`, '');
+    if (setup.premise) chunks.push('## 内容简介', '', String(setup.premise), '');
+    if (setup.theme) chunks.push('## 主题', '', String(setup.theme), '');
+    chunks.push('## 目录', '');
+    let number = 0;
+    for (const part of outline.parts || []) {
+      for (const volume of part.volumes || []) {
+        const volumeChapters = (volume.chapters || []).filter((chapter) => written.has(chapter.id));
+        if (!volumeChapters.length) continue;
+        chunks.push(`**${volume.title || volume.id}**`, '');
+        for (const chapter of volumeChapters) {
+          number += 1;
+          chunks.push(`${number}. ${chapter.title || chapter.id}`);
+        }
+        chunks.push('');
+      }
+    }
+    if (setup.core_cast?.length) {
+      chunks.push('## 主要人物', '');
+      for (const character of setup.core_cast) {
+        const role = character.role === 'protagonist' ? '主角' : character.role === 'antagonist' ? '对手' : '同行者';
+        chunks.push(`- **${character.name}**（${role}）：${character.story_function || ''}`);
+      }
+      chunks.push('');
+    }
+    if (setup.rules?.length) {
+      chunks.push('## 规则速览', '');
+      for (const rule of setup.rules.slice(0, 8)) chunks.push(`- ${rule}`);
+      chunks.push('');
+    }
+    chunks.push('---', '');
+    let currentVolume = '';
+    for (const id of unique) {
+      const file = path.join(project.dir, 'chapters', `${id}.md`);
+      if (!fs.existsSync(file)) continue;
+      const info = chapterInfo.get(id);
+      const volumeTitle = info?.volume?.title || info?.volume?.id || '未分组';
+      if (volumeTitle !== currentVolume) {
+        currentVolume = volumeTitle;
+        chunks.push(`## ${volumeTitle}`, '');
+        if (info?.volume?.summary) chunks.push(`> ${info.volume.summary}`, '');
+        chunks.push('---', '');
+      }
+      const raw = readText(file);
+      const title = info?.chapter?.title || raw.match(/^#\s+(.+)$/m)?.[1] || id;
+      chunks.push(`### ${title}`, '', stripTitle(raw), '', '---', '');
+      chapters += 1;
+    }
+    chunks.push('> 全书完。', '');
+  } else {
+    chunks.push(`# ${status.name}`, '', '> 由小说许愿机从 chapters/ 导出。', '');
+    for (const id of unique) {
+      const file = path.join(project.dir, 'chapters', `${id}.md`);
+      if (!fs.existsSync(file)) continue;
+      chunks.push('---', '', readText(file).trimEnd(), '');
+      chapters += 1;
+    }
+  }
+
   const content = `${chunks.join('\n').trimEnd()}\n`;
   const output = path.resolve(project.dir, options.output || path.join('drafts', 'manuscript.md'));
   ensureDir(path.dirname(output));
@@ -322,6 +395,7 @@ export function exportManuscript(project, options = {}) {
   return {
     ok: true,
     action: 'export',
+    format,
     output,
     chapters,
     bytes: Buffer.byteLength(content, 'utf8'),

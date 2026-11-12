@@ -36,3 +36,13 @@ node scripts/wishmachine.js gen reference read outline-schema
 
 The schemas distinguish `premise` (string) from `premises` (array of objects)
 and `writing_style` (object), the shapes that most often fail a first write.
+
+For a reader-facing manuscript, use:
+
+```bash
+node scripts/wishmachine.js export --format book
+node scripts/wishmachine.js export --format plain
+```
+
+`book` adds a synopsis, table of contents, cast, rules and volume headings;
+`plain` is the raw chapter concatenation.

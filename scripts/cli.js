@@ -3,7 +3,7 @@ import { checkProject } from './schema.js';
 import { drawIdeas, ideasTypes } from './ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference, listSkills, readSkill } from './guides.js';
 
-const VERSION = '0.1.40';
+const VERSION = '0.1.41';
 const BOOLEAN_FLAGS = new Set(['apply', 'json', 'help', 'h', 'dry-run', 'force']);
 const COMMANDS = new Set(['book', 'check', 'ideas', 'gen', 'state', 'audit', 'refresh', 'export', 'doctor', 'version', 'help']);
 
@@ -92,7 +92,7 @@ Commands:
   state [--dir <dir>] [--view brief|full]
   audit [--dir <dir>] [--view brief|full] [--min-severity low|medium|high|critical] [--max-findings 10]
   refresh [setup|outline|all] [--dir <dir>]
-  export [--dir <dir>] [--output drafts/manuscript.md]
+  export [--dir <dir>] [--output drafts/manuscript.md] [--format book|plain]
   doctor [--dir <dir>] [--fix]
   book read <setup|outline|craft|chapter|recap|context|logs> [--id <id>] [--view index|full]
   book write <setup|outline|craft|chapter|recap> [--mode replace|patch|append] [--apply] [--id <id>]
@@ -167,7 +167,10 @@ async function runBook(args, flags) {
   }
   if (sub === 'export') {
     const project = loadProject(stringFlag(flags, 'dir', ''));
-    print(exportManuscript(project, { output: stringFlag(flags, 'output', '') }));
+    print(exportManuscript(project, {
+      output: stringFlag(flags, 'output', ''),
+      format: stringFlag(flags, 'format', 'book'),
+    }));
     return 0;
   }
   if (sub === 'doctor') {
@@ -324,7 +327,10 @@ export async function main(argv = process.argv.slice(2)) {
   }
   if (command === 'export') {
     const project = loadProject(stringFlag(flags, 'dir', ''));
-    print(exportManuscript(project, { output: stringFlag(flags, 'output', '') }));
+    print(exportManuscript(project, {
+      output: stringFlag(flags, 'output', ''),
+      format: stringFlag(flags, 'format', 'book'),
+    }));
     return 0;
   }
   if (command === 'doctor') {

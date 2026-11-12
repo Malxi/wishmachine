@@ -101,6 +101,7 @@ test('chapter write and read', () => {
   const audit = auditProject(project);
   assert.ok(audit.targets.some((target) => target.target === 'chapter' && target.id === 'P1-V1-C1'));
   const exported = exportManuscript(project);
+  assert.equal(exported.format, 'book');
   assert.equal(exported.chapters, 1);
   const manuscript = fs.readFileSync(exported.output, 'utf8');
   assert.ok(manuscript.includes('第一章'));
@@ -364,7 +365,10 @@ test('end-to-end project flow', () => {
   assert.equal(check.blocking, false);
   const exported = exportManuscript(project);
   assert.equal(exported.chapters, 1);
-  assert.ok(fs.readFileSync(exported.output, 'utf8').includes('孟启明'));
+  const bookText = fs.readFileSync(exported.output, 'utf8');
+  assert.ok(bookText.includes('## 目录'));
+  assert.ok(bookText.includes('## 第一卷'));
+  assert.ok(bookText.includes('孟启明'));
   const audit = auditProject(project);
   assert.equal(audit.blocking, false);
   assert.ok(projectState(project).state.orphan_recaps.length === 0);
