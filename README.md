@@ -78,6 +78,7 @@ logs/
 - `plotpack` 把 worldpack、cast 关系、六个章节 beat（setup/inciting/midpoint/crisis/climax/resolution）打包
 - `outlinepack --chapters --scenes --target-chars` 展开为带 scenes、字数目标和 draft_outline 的章节骨架
 - `outlinepack --volumes --chapters-per-volume` 全局分布 6 个 beat，并生成多卷 opening/closing、mysteries、timeline
+- `doctor --fix` 为旧项目补齐 thread_registry 与 storyline thread_id
 - `check` 检查 setup/outline thread registry 漂移与 unknown chapter thread id
 - thread_registry 持久化到 setup/outline
 - `ideas validate --id` 检查 thread 状态、resolved_in 章节与 beat 一致性

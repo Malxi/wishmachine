@@ -596,6 +596,46 @@ test('checkProject reports setup/outline thread registry drift', () => {
   assert.ok(drifted.findings.some((finding) => finding.rule_id === 'quality.thread.registry_missing_setup'));
 });
 
+test('doctor --fix migrates old projects to thread_registry', () => {
+  const dir = tempDir();
+  initProject({ name: 'old project', dir, parts: 1, volumes: 1, chapter: 3 });
+  const project = loadProject(dir);
+  const setup = {
+    project_name: 'old project',
+    genres: ['悬疑'],
+    premise: '旧项目前提',
+    theme: '旧项目主题',
+    storylines: [{ name: '主线' }, { name: '副线' }],
+  };
+  const outline = {
+    parts: [{
+      id: 'P1', title: '旧卷', summary: '旧卷摘要',
+      volumes: [{
+        id: 'P1-V1', title: '第一卷', summary: '第一卷摘要',
+        chapters: [1, 2, 3].map((number) => ({
+          id: `P1-V1-C${number}`,
+          title: `第${number}章`,
+          summary: '章节摘要',
+          characters: [],
+          location: '地点',
+          events: [],
+          conflict: '冲突',
+          pacing: 'rising',
+        })),
+      }],
+    }],
+  };
+  fs.writeFileSync(path.join(dir, 'story', 'setup', 'story_setup.json'), JSON.stringify(setup, null, 2));
+  fs.writeFileSync(path.join(dir, 'story', 'compose', 'outline.json'), JSON.stringify(outline, null, 2));
+  const report = doctorProject(project, { fix: true });
+  assert.equal(report.fixed, true);
+  const migratedSetup = JSON.parse(fs.readFileSync(path.join(dir, 'story', 'setup', 'story_setup.json'), 'utf8'));
+  const migratedOutline = JSON.parse(fs.readFileSync(path.join(dir, 'story', 'compose', 'outline.json'), 'utf8'));
+  assert.equal(migratedSetup.thread_registry.length, 2);
+  assert.equal(migratedSetup.storylines[0].thread_id, 'thread-1');
+  assert.equal(migratedOutline.thread_registry.length, 2);
+});
+
 test('saved idea draws are readable from the project', () => {
   const dir = tempDir();
   initProject({ name: 'idea store', dir, parts: 1, volumes: 1, chapter: 1 });

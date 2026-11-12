@@ -13,7 +13,7 @@ examples_en:
   - "Create a 3-volume × 5-chapter science-fiction project"
   - "Check the outline for blocking findings"
   - "Draw 12 science-fiction name cards"
-version: 0.1.81
+version: 0.1.82
 author: Malxi
 ---
 
@@ -170,7 +170,8 @@ same ids; cast `storyline_refs` use those ids. `thread_registry` entries carry
 checks status consistency. `book write setup/outline --from-idea` persists
 `thread_registry` into setup/outline. `check --target setup|outline` also reports
 setup/outline registry drift (`registry_missing_setup`, `registry_missing_outline`,
-`status_mismatch`, `resolved_in_mismatch`). Pending mysteries are sorted by importance and capped; dropped
+`status_mismatch`, `resolved_in_mismatch`). `doctor --fix` migrates old projects
+that lack `thread_registry` by deriving stable thread ids from setup storylines. Pending mysteries are sorted by importance and capped; dropped
 mysteries are recorded in `dropped_mysteries` and `abandoned_threads`.
 The saved pack also contains `setup_draft` with main/subplot
 storylines, premise progression and a world timeline.

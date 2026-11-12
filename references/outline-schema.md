@@ -132,3 +132,7 @@ For a local repair, use `book_write` with
 `mode="patch", target="volume", id="P1-V1"` and a patch object. Do not send a
 whole `Outline` object in patch mode. A patch that would change the volume's
 chapter set is still validated against the whole outline before writing.
+
+## Optional thread_registry
+
+`draft_outline` may carry a top-level `thread_registry` array. Chapter `thread_id` values must reference registry ids. `check --target outline` reports unknown ids and setup/outline registry drift.

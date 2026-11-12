@@ -131,3 +131,7 @@
 - `importance` is a number; `long_form_plan.target_chapters` /
   `target_volumes` are numbers.
 - A replace replaces the whole setup. A patch should send only changed fields.
+
+## Optional thread_registry
+
+New projects may carry a top-level `thread_registry` array. Each entry has `id`, `name`, `type`, `importance`, `status` and `resolved_in`. `storylines[*].thread_id` must reference one of these ids. Old projects without it are migrated by `doctor --fix`.

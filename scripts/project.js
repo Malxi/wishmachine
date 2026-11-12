@@ -841,6 +841,48 @@ export function exportManuscript(project, options = {}) {
   };
 }
 
+function migrateThreadRegistry(project) {
+  const setupFile = path.join(project.dir, 'story', 'setup', 'story_setup.json');
+  const outlineFile = path.join(project.dir, 'story', 'compose', 'outline.json');
+  if (!fs.existsSync(setupFile) || !fs.existsSync(outlineFile)) return null;
+  let setup;
+  let outline;
+  try {
+    setup = readJson(setupFile);
+    outline = readJson(outlineFile);
+  } catch {
+    return null;
+  }
+  const setupRegistry = Array.isArray(setup.thread_registry) ? setup.thread_registry : null;
+  const outlineRegistry = Array.isArray(outline.thread_registry) ? outline.thread_registry : null;
+  if (setupRegistry && outlineRegistry) return null;
+  const storylines = Array.isArray(setup.storylines) ? setup.storylines : [];
+  const registry = setupRegistry || outlineRegistry || storylines.map((storyline, index) => ({
+    id: storyline.thread_id || `thread-${index + 1}`,
+    name: storyline.name || `storyline ${index + 1}`,
+    type: index === 0 ? 'main' : 'subplot',
+    importance: index === 0 ? 10 : 6,
+    status: 'active',
+    resolved_in: null,
+  }));
+  if (!registry.length) return null;
+  setup.thread_registry = registry;
+  setup.storylines = storylines.map((storyline, index) => ({
+    ...storyline,
+    thread_id: storyline.thread_id || registry[index]?.id || `thread-${index + 1}`,
+  }));
+  outline.thread_registry = registry;
+  writeJsonAtomic(setupFile, setup);
+  writeJsonAtomic(outlineFile, outline);
+  return {
+    registry,
+    actions: [
+      'migrated setup.thread_registry',
+      'migrated outline.thread_registry',
+    ],
+  };
+}
+
 export function doctorProject(project, options = {}) {
   const issues = [];
   const actions = [];
@@ -888,6 +930,25 @@ export function doctorProject(project, options = {}) {
   }
   if (!fs.existsSync(path.join(project.dir, 'story', 'setup', 'story_setup.json'))) add('low', 'artifact.setup', 'setup JSON is missing', 'Write setup through book write setup.');
   if (!fs.existsSync(path.join(project.dir, 'story', 'compose', 'outline.json'))) add('low', 'artifact.outline', 'outline JSON is missing', 'Write an outline through book write outline.');
+  const setupPath = path.join(project.dir, 'story', 'setup', 'story_setup.json');
+  const outlinePath = path.join(project.dir, 'story', 'compose', 'outline.json');
+  let hasThreadRegistry = false;
+  if (fs.existsSync(setupPath) && fs.existsSync(outlinePath)) {
+    try {
+      const setupDoc = readJson(setupPath);
+      const outlineDoc = readJson(outlinePath);
+      hasThreadRegistry = Array.isArray(setupDoc.thread_registry) && Array.isArray(outlineDoc.thread_registry);
+    } catch {
+      hasThreadRegistry = false;
+    }
+    if (!hasThreadRegistry) {
+      add('medium', 'thread.registry_missing', 'setup/outline do not both have thread_registry', 'Run doctor --fix to migrate thread ids, or rerun book write setup/outline.');
+      if (fix) {
+        const migration = migrateThreadRegistry(project);
+        if (migration) actions.push(...migration.actions);
+      }
+    }
+  }
   let status = { orphan_chapters: [], orphan_recaps: [] };
   try {
     status = projectStatus(project);
