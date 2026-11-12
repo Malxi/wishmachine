@@ -167,7 +167,8 @@ structured objects with `id`, `question`, `answer`, `payoff`, `importance`,
 `status`. `thread_registry` and `setup_draft.storylines[*].thread_id` share the
 same ids; cast `storyline_refs` use those ids. `thread_registry` entries carry
 `status` (active/resolved/abandoned) and `resolved_in`. `ideas validate --id`
-checks registry membership. Pending mysteries are sorted by importance and capped; dropped
+checks registry membership, status validity, active-with-resolution conflicts,
+and resolved chapter/beat consistency. Pending mysteries are sorted by importance and capped; dropped
 mysteries are recorded in `dropped_mysteries` and `abandoned_threads`.
 The saved pack also contains `setup_draft` with main/subplot
 storylines, premise progression and a world timeline.
