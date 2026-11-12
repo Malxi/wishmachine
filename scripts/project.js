@@ -851,6 +851,25 @@ function outlineChapters(outline) {
   return chapters;
 }
 
+function collectOutlineMysteryRegistry(outline) {
+  const registry = new Map();
+  const add = (mystery, chapterId, source) => {
+    if (!mystery?.id || registry.has(mystery.id)) return;
+    registry.set(mystery.id, { ...mystery, chapter_id: chapterId, source });
+  };
+  for (const chapter of outlineChapters(outline)) {
+    for (const key of ['carried', 'planted', 'resolved', 'dropped']) {
+      for (const mystery of chapter.mysteries?.[key] || []) add(mystery, chapter.id, `chapter.${key}`);
+    }
+    for (const scene of chapter.scenes || []) {
+      for (const key of ['planted', 'resolved']) {
+        for (const mystery of scene.mysteries?.[key] || []) add(mystery, chapter.id, `scene.${key}`);
+      }
+    }
+  }
+  return [...registry.values()];
+}
+
 function needsThreadMigration(project) {
   const setupFile = path.join(project.dir, 'story', 'setup', 'story_setup.json');
   const outlineFile = path.join(project.dir, 'story', 'compose', 'outline.json');
@@ -868,7 +887,14 @@ function needsThreadMigration(project) {
   if (!setupRegistry || !outlineRegistry) return true;
   if (JSON.stringify(setupRegistry) !== JSON.stringify(outlineRegistry)) return true;
   if ((setup.storylines || []).some((storyline) => !storyline.thread_id)) return true;
-  return outlineChapters(outline).some((chapter) => !chapter.thread_id);
+  if (outlineChapters(outline).some((chapter) => !chapter.thread_id)) return true;
+  const expectedMysteries = collectOutlineMysteryRegistry(outline);
+  if (expectedMysteries.length > 0) {
+    if (!Array.isArray(setup.mystery_registry) || !Array.isArray(outline.mystery_registry)) return true;
+    if (JSON.stringify(setup.mystery_registry) !== JSON.stringify(expectedMysteries)) return true;
+    if (JSON.stringify(outline.mystery_registry) !== JSON.stringify(expectedMysteries)) return true;
+  }
+  return false;
 }
 
 function migrateThreadRegistry(project) {
@@ -931,6 +957,19 @@ function migrateThreadRegistry(project) {
       changed = true;
     }
   }
+  const expectedMysteries = collectOutlineMysteryRegistry(outline);
+  let mysteryCount = 0;
+  if (expectedMysteries.length > 0) {
+    if (JSON.stringify(setup.mystery_registry) !== JSON.stringify(expectedMysteries)) {
+      setup.mystery_registry = expectedMysteries;
+      changed = true;
+    }
+    if (JSON.stringify(outline.mystery_registry) !== JSON.stringify(expectedMysteries)) {
+      outline.mystery_registry = expectedMysteries;
+      changed = true;
+    }
+    mysteryCount = expectedMysteries.length;
+  }
   if (!changed) return null;
   writeJsonAtomic(setupFile, setup);
   writeJsonAtomic(outlineFile, outline);
@@ -939,6 +978,7 @@ function migrateThreadRegistry(project) {
     actions: [
       'migrated setup.thread_registry',
       'migrated outline.thread_registry',
+      ...(mysteryCount ? [`synced ${mysteryCount} mystery registry entries`] : []),
       ...(chapterCount ? [`filled ${chapterCount} chapter thread_id values`] : []),
     ],
   };

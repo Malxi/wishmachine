@@ -955,6 +955,32 @@ function threadConsistencyFindings(project) {
       findings.push(finding('quality.thread.registry_missing_setup', 'high', `setup is missing outline thread ${id}`, id));
     }
   }
+  const setupMysteries = setup.mystery_registry;
+  const outlineMysteries = outline.mystery_registry;
+  if (Array.isArray(setupMysteries) || Array.isArray(outlineMysteries)) {
+    if (!Array.isArray(setupMysteries)) {
+      findings.push(finding('quality.mystery.registry_missing_setup', 'high', 'thread_registry', 'outline has mystery_registry but setup does not'));
+    } else if (!Array.isArray(outlineMysteries)) {
+      findings.push(finding('quality.mystery.registry_missing_outline', 'high', 'thread_registry', 'setup has mystery_registry but outline does not'));
+    } else {
+      const setupMysteryMap = new Map(setupMysteries.map((mystery) => [mystery.id, mystery]));
+      const outlineMysteryMap = new Map(outlineMysteries.map((mystery) => [mystery.id, mystery]));
+      for (const [id, mystery] of setupMysteryMap) {
+        if (!outlineMysteryMap.has(id)) {
+          findings.push(finding('quality.mystery.registry_missing_outline', 'high', `outline is missing setup mystery ${id}`, id));
+          continue;
+        }
+        if (mystery.status !== outlineMysteryMap.get(id).status) {
+          findings.push(finding('quality.mystery.status_mismatch', 'medium', `mystery ${id} status differs between setup and outline`, id));
+        }
+      }
+      for (const id of outlineMysteryMap.keys()) {
+        if (!setupMysteryMap.has(id)) {
+          findings.push(finding('quality.mystery.registry_missing_setup', 'high', `setup is missing outline mystery ${id}`, id));
+        }
+      }
+    }
+  }
   return findings;
 }
 

@@ -734,6 +734,28 @@ test('doctor --fix downgrades resolved threads without a resolved mystery', () =
   assert.equal(repaired.thread_registry.find((item) => item.id === thread.id).status, 'active');
 });
 
+test('doctor --fix fills missing mystery registry', () => {
+  const dir = tempDir();
+  initProject({ name: 'mystery migration', dir, parts: 1, volumes: 1, chapter: 10 });
+  const project = loadProject(dir);
+  const outline = drawIdeas({ type: 'outlinepack', genre: '悬疑', count: 1, seed: 42, chapters: 10 }).results[0];
+  writeArtifact(project, { section: 'setup', content: JSON.stringify(outline.setup_draft), apply: true });
+  writeArtifact(project, { section: 'outline', content: JSON.stringify(outline.draft_outline), apply: true });
+  const setupFile = path.join(dir, 'story', 'setup', 'story_setup.json');
+  const outlineFile = path.join(dir, 'story', 'compose', 'outline.json');
+  for (const file of [setupFile, outlineFile]) {
+    const doc = JSON.parse(fs.readFileSync(file, 'utf8'));
+    delete doc.mystery_registry;
+    fs.writeFileSync(file, JSON.stringify(doc, null, 2));
+  }
+  doctorProject(project, { fix: true });
+  const setup = JSON.parse(fs.readFileSync(setupFile, 'utf8'));
+  const repaired = JSON.parse(fs.readFileSync(outlineFile, 'utf8'));
+  assert.ok(setup.mystery_registry.length > 0);
+  assert.ok(repaired.mystery_registry.length > 0);
+  assert.equal(setup.mystery_registry.length, repaired.mystery_registry.length);
+});
+
 test('saved idea draws are readable from the project', () => {
   const dir = tempDir();
   initProject({ name: 'idea store', dir, parts: 1, volumes: 1, chapter: 1 });
