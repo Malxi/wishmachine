@@ -639,8 +639,12 @@ function buildOutlinePack(plot, seed, options = {}) {
     resolution: 'falling',
   };
   const chapterList = [];
+  const volumeId = options.volumeId || 'P1-V1';
+  const chapterOffset = Number(options.chapterOffset) || 0;
+  const totalChapters = Number(options.totalChapters) || chapters;
   for (let index = 0; index < chapters; index += 1) {
-    const beat = beats[Math.min(beats.length - 1, Math.floor((index * beats.length) / chapters))] || beats[0] || {
+    const globalIndex = chapterOffset + index;
+    const beat = beats[Math.min(beats.length - 1, Math.floor((globalIndex * beats.length) / totalChapters))] || beats[0] || {
       act: 'Act I', function: 'setup', beat: '主角进入故事。',
     };
     const scenes = Array.from({ length: scenesPerChapter }, (_, sceneIndex) => ({
@@ -664,7 +668,7 @@ function buildOutlinePack(plot, seed, options = {}) {
       order: sceneIndex + 1,
     }));
     chapterList.push({
-      id: `P1-V1-C${index + 1}`,
+      id: `${volumeId}-C${index + 1}`,
       title: `第${index + 1}章 · ${beat.function}`,
       summary: beat.beat,
       characters: castNames,
@@ -683,12 +687,12 @@ function buildOutlinePack(plot, seed, options = {}) {
         payoff_moment: plot.storyline?.payoff || '主角完成一次反击。',
         reward: plot.storyline?.cost || '代价被看见。',
         social_proof: '见证者承认主角做到了。',
-        hook: index === chapters - 1 ? '故事结束，代价留下。' : '下一章的压力升起。',
+        hook: globalIndex === totalChapters - 1 ? '故事结束，代价留下。' : '下一章的压力升起。',
       },
     });
   }
   const volume = {
-    id: 'P1-V1',
+    id: volumeId || 'P1-V1',
     title: '第一卷',
     summary: plot.storyline?.promise || plot.premise?.title || '故事的第一卷。',
     chapters: chapterList,
@@ -735,7 +739,14 @@ function buildMultiVolumeOutlinePack(plot, seed, options = {}) {
       ...plot,
       storyline: storylines[volumeIndex % storylines.length] || plot.storyline,
     };
-    const base = buildOutlinePack(volumePlot, seed, { ...options, chapters: chaptersPerVolume, index: volumeIndex });
+    const base = buildOutlinePack(volumePlot, seed, {
+      ...options,
+      chapters: chaptersPerVolume,
+      index: volumeIndex,
+      chapterOffset: volumeIndex * chaptersPerVolume,
+      totalChapters: volumes * chaptersPerVolume,
+      volumeId: `P1-V${volumeIndex + 1}`,
+    });
     const volume = base.draft_outline.parts[0].volumes[0];
     volume.id = `P1-V${volumeIndex + 1}`;
     volume.title = `第${volumeIndex + 1}卷`;
@@ -859,7 +870,12 @@ function buildSetupDraft(plot, outline) {
       name: plot.premise?.title || '核心前提',
       description: plot.premise?.statement || '核心前提',
       category: 'core',
-      progression: [],
+      progression: [
+        { level: 1, name: '建立规则', description: plot.premise?.surface_rule || '读者先看见规则', requirements: '主角进入规则覆盖的范围' },
+        { level: 2, name: '发现代价', description: storyline.escalation || '规则开始向主角收费', requirements: '主角第一次利用规则' },
+        { level: 3, name: '规则反噬', description: storyline.midpoint || '规则背后还有一层规则', requirements: '主角付出无法撤回的代价' },
+        { level: 4, name: '改写规则', description: storyline.payoff || '主角找到例外', requirements: '主角承担改写后的后果' },
+      ],
       appeal_engine: {
         appeal: plot.premise?.statement || 'the premise',
         surface_limit: plot.premise?.surface_rule || 'the rule',
@@ -867,6 +883,20 @@ function buildSetupDraft(plot, outline) {
         signature_win: storyline.payoff || 'the win',
       },
     }],
+    world_timeline: [
+      {
+        year: 'before',
+        event: plot.premise?.surface_rule || '旧规则建立',
+        impact: plot.premise?.scarcity || '资源与资格被重新分配',
+        related_mystery: plot.premise?.hidden_truth || '规则真正保护的是什么',
+      },
+      {
+        year: 'now',
+        event: storyline.promise || '主角进入规则',
+        impact: '主角开始付出代价',
+        related_mystery: storyline.midpoint || '规则的隐藏层',
+      },
+    ],
     world_resources: (plot.resources || []).map((resource) => ({
       name: resource.name,
       category: allowedCategories.has(resource.category)

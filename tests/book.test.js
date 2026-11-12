@@ -419,8 +419,12 @@ test('outlinepack expands into multiple volumes', () => {
   assert.equal(outline.chapters[11].id, 'P1-V3-C4');
   assert.equal(outline.volumes[2].payoff_contract.big_win.length > 0, true);
   assert.ok(new Set(outline.volumes.map((volume) => volume.payoff_contract.big_win)).size > 1);
+  assert.ok(outline.volumes[0].chapters.every((chapter) => chapter.beat_function !== 'resolution'));
+  assert.ok(outline.volumes[2].chapters.some((chapter) => chapter.beat_function === 'resolution'));
   assert.ok(outline.setup_draft.storylines.length >= 2);
   assert.ok(outline.setup_draft.storylines.some((storyline) => storyline.type === 'subplot'));
+  assert.equal(outline.setup_draft.premises[0].progression.length, 4);
+  assert.ok(outline.setup_draft.world_timeline.length >= 2);
   assert.ok(outline.setup_draft.world_resources.every((resource) => ['能源', '消耗品', '材料', '货币'].includes(resource.category)));
   assert.ok(outline.setup_draft.project_name);
   assert.deepEqual(validateSetup(outline.setup_draft), []);
