@@ -762,7 +762,9 @@ function buildOutlinePack(plot, seed, options = {}) {
       exit_consequence: scenes[scenes.length - 1]?.consequence || '',
       mysteries,
       events,
-      conflict: plot.premise?.central_conflict || plot.premise?.conflict || '主角必须做出选择。',
+      conflict: entryFromPrevious
+        ? `承接上一章后果：${entryFromPrevious}；本章冲突：${plot.premise?.central_conflict || plot.premise?.conflict || '主角必须做出选择。'}`
+        : (plot.premise?.central_conflict || plot.premise?.conflict || '主角必须做出选择。'),
       pacing: pacingByFunction[beat.function] || 'rising',
       beat_function: beat.function,
       act: beat.act,
@@ -775,12 +777,16 @@ function buildOutlinePack(plot, seed, options = {}) {
       })),
       chapter_payoff: {
         desire: plot.storyline?.promise || '主角想改变现状。',
-        pressure: plot.premise?.central_conflict || '规则不允许。',
+        pressure: entryFromPrevious
+          ? `上一章留下的后果：${entryFromPrevious}`
+          : (plot.premise?.central_conflict || '规则不允许。'),
         clever_move: beat.beat,
         payoff_moment: plot.storyline?.payoff || '主角完成一次反击。',
         reward: plot.storyline?.cost || '代价被看见。',
         social_proof: '见证者承认主角做到了。',
-        hook: globalIndex === totalChapters - 1 ? '故事结束，代价留下。' : '下一章的压力升起。',
+        hook: globalIndex === totalChapters - 1
+          ? '故事结束，代价留下。'
+          : `下一章要处理：${scenes[scenes.length - 1]?.consequence || '新的压力'}`,
       },
     });
     previousChapterConsequence = chapterList[chapterList.length - 1].exit_consequence;
