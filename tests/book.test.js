@@ -387,6 +387,19 @@ test('imported cards and research reports are persisted', () => {
   assert.ok(projectState(project).state.research.some((item) => item.name === imported.saved.id));
 });
 
+test('worldpack cast uses genre-aware archetypes', () => {
+  const expected = {
+    修仙: ['抄册执事', '剑冢散修', '掌册长老', '香火祠祝', '洗墨人', '巡册使'],
+    悬疑: ['现场刑警', '记忆鉴定师', '承办检察官', '职业证人', '档案员', '辩护律师'],
+    都市: ['被合同锁住的主播', '被竞业协议困住的员工', '平台经理', '家族委员会主席', '租客互助会组织者', '财经记者'],
+    历史: ['边镇书吏', '海商', '户部主事', '边军主将', '官匠', '史官'],
+  };
+  for (const [genre, names] of Object.entries(expected)) {
+    const pack = drawIdeas({ type: 'worldpack', genre, count: 1, seed: 42 });
+    assert.ok(pack.results[0].cast.every((character) => names.includes(character.archetype)));
+  }
+});
+
 test('worldpacks include motifs and positive/negative prompt packs', () => {
   const pack = drawIdeas({ type: 'worldpack', genre: '修仙', count: 4, seed: 42 });
   const paper = pack.results.find((item) => item.theme === 'paper');

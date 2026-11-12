@@ -1,5 +1,6 @@
 import { hashSeed, mulberry32, pickMany, pick } from './util.js';
 import { SUSPENSE, URBAN, HISTORY } from './ideas-genres.js';
+import { XIANXIA_ARCHETYPES, SUSPENSE_ARCHETYPES, URBAN_ARCHETYPES, HISTORY_ARCHETYPES } from './ideas-archetypes.js';
 
 const TYPES = [
   'provocation', 'axiom', 'event', 'law', 'scenario', 'engine',
@@ -502,7 +503,14 @@ function resultId(prefix, seed, index) {
   return `${prefix}-${seed}-${String(index + 1).padStart(2, '0')}`;
 }
 
-function namecards(rng, seed, count, roles = []) {
+function namecards(rng, seed, count, roles = [], genre = '') {
+  const genrePools = {
+    xianxia: XIANXIA_ARCHETYPES,
+    suspense: SUSPENSE_ARCHETYPES,
+    urban: URBAN_ARCHETYPES,
+    history: HISTORY_ARCHETYPES,
+  };
+  const genrePool = genrePools[genre] || null;
   const surnames = pickMany(rng, SURNAMES, Math.min(count, SURNAMES.length));
   const given = pickMany(rng, GIVEN, Math.min(count, GIVEN.length));
   const results = [];
@@ -520,9 +528,13 @@ function namecards(rng, seed, count, roles = []) {
     }
     used.add(name);
     const role = roles[i] || (i === 0 ? 'protagonist' : 'support');
-    const pool = (ROLE_ARCHETYPES[role] || [])
-      .map((archetypeName) => ARCHETYPES.find((item) => item.name === archetypeName))
-      .filter(Boolean);
+    const pool = genrePool
+      ? (genrePool.filter((item) => (item.roles || []).includes(role)).length
+        ? genrePool.filter((item) => (item.roles || []).includes(role))
+        : genrePool)
+      : (ROLE_ARCHETYPES[role] || [])
+        .map((archetypeName) => ARCHETYPES.find((item) => item.name === archetypeName))
+        .filter(Boolean);
     const archetype = (pool.length ? pick(rng, pool) : ARCHETYPES[Math.floor(rng() * ARCHETYPES.length)]);
     const id = resultId('name', seed, i);
     results.push({
@@ -575,11 +587,11 @@ export function drawIdeas(options = {}) {
     const packDefs = deck.packs;
     const selected = pickMany(rng, packDefs, Math.min(count, packDefs.length));
     results = selected.map((def, packIndex) => {
-      const cast = namecards(rng, seed + packIndex, 4, ['protagonist', 'antagonist', 'support', 'support']);
+      const cast = namecards(rng, seed + packIndex, 4, ['protagonist', 'antagonist', 'support', 'support'], deck.name);
       return buildWorldpack(def, packIndex, seed, cast, deck);
     });
   } else if (type === 'namecard' || type === 'name' || type === 'cast') {
-    results = namecards(rng, seed, count);
+    results = namecards(rng, seed, count, [], deck.name);
   } else if (type === 'engine') {
     results = pickMany(rng, engines, Math.min(count, engines.length)).map((item, index) => ({
       id: resultId('engine', seed, index),
