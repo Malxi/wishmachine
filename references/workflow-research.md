@@ -53,6 +53,17 @@ node scripts/wishmachine.js ideas discover --topic myth --limit 3 --dir my-book
 node scripts/wishmachine.js ideas discover --topic novel --limit 3 --dir my-book
 ```
 
+For an open query, use the built-in source search:
+
+```bash
+node scripts/wishmachine.js ideas search --provider wikipedia --query "Mary Celeste" --limit 3 --dir my-book
+node scripts/wishmachine.js ideas search --provider gutenberg --query "Frankenstein" --limit 3 --dir my-book
+```
+
+Search saves source cards. Add `--ingest` to fetch each Wikipedia result's page
+for title/meta/excerpt extraction. Gutenberg results save metadata and a link;
+open the text only when you need a specific excerpt.
+
 ## 3. Compatibility check
 
 Classify each entity:

@@ -1,11 +1,11 @@
-import { loadProject, initProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, doctorProject, saveIdeaDraw, saveImportedIdeas, saveResearchReport, ingestSource, discoverSources, readSection, writeArtifact } from './project.js';
+import { loadProject, initProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, doctorProject, saveIdeaDraw, saveImportedIdeas, saveResearchReport, ingestSource, discoverSources, searchSources, readSection, writeArtifact } from './project.js';
 import { checkProject } from './schema.js';
 import { readJson } from './util.js';
 import { drawIdeas, ideasTypes } from './ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference, listSkills, readSkill } from './guides.js';
 
-const VERSION = '0.1.46';
-const BOOLEAN_FLAGS = new Set(['apply', 'json', 'help', 'h', 'dry-run', 'force']);
+const VERSION = '0.1.47';
+const BOOLEAN_FLAGS = new Set(['apply', 'json', 'help', 'h', 'dry-run', 'force', 'ingest']);
 const COMMANDS = new Set(['book', 'check', 'ideas', 'gen', 'state', 'audit', 'refresh', 'export', 'doctor', 'version', 'help']);
 
 function parseArgs(argv) {
@@ -102,6 +102,7 @@ Commands:
   ideas import --file <cards.json> [--dir <project>] [--type <type>] [--source <source>]
   ideas ingest --url <https-url> [--dir <project>] [--type source]
   ideas discover [--topic history|myth|novel] [--limit 3] [--dir <project>]
+  ideas search --query <text> [--provider wikipedia|gutenberg] [--limit 3] [--ingest] [--dir <project>]
   ideas types
   gen workflow list|read <name>
   gen skill list|read <name>
@@ -265,6 +266,18 @@ async function runIdeas(args, flags) {
     print(await discoverSources(project, {
       topic: stringFlag(flags, 'topic', ''),
       limit: intFlag(flags, 'limit', 3),
+    }));
+    return 0;
+  }
+  if (sub === 'search') {
+    const query = stringFlag(flags, 'query', '');
+    if (!query) fail('ideas search requires --query');
+    const project = loadProject(stringFlag(flags, 'dir', ''));
+    print(await searchSources(project, {
+      query,
+      provider: stringFlag(flags, 'provider', 'wikipedia'),
+      limit: intFlag(flags, 'limit', 3),
+      ingest: boolFlag(flags, 'ingest'),
     }));
     return 0;
   }

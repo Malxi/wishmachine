@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import http from 'node:http';
-import { initProject, loadProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, doctorProject, saveIdeaDraw, saveImportedIdeas, saveResearchReport, ingestSource, discoverSources, writeArtifact, readSection } from '../scripts/project.js';
+import { initProject, loadProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, doctorProject, saveIdeaDraw, saveImportedIdeas, saveResearchReport, ingestSource, discoverSources, searchSources, writeArtifact, readSection } from '../scripts/project.js';
 import { checkProject } from '../scripts/schema.js';
 import { drawIdeas } from '../scripts/ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference } from '../scripts/guides.js';
@@ -278,6 +278,36 @@ test('a character who left cannot appear later without a return', () => {
   const result = writeArtifact(project, { section: 'outline', mode: 'replace', apply: true, content: JSON.stringify(absenceOutline) });
   assert.equal(result.applied, true);
   assert.ok(result.check.findings.some((item) => item.rule_id === 'quality.outline.character_absent_return'));
+});
+
+test('source search maps Gutenberg results into source cards', async () => {
+  const dir = tempDir();
+  initProject({ name: 'search test', dir, parts: 1, volumes: 1, chapter: 1 });
+  const project = loadProject(dir);
+  const original = global.fetch;
+  global.fetch = async () => ({
+    ok: true,
+    status: 200,
+    statusText: 'OK',
+    json: async () => ({
+      results: [{
+        id: 84,
+        title: 'Frankenstein',
+        authors: [{ name: 'Mary Shelley' }],
+        subjects: ['Gothic', 'Science'],
+        formats: { 'text/html': 'https://www.gutenberg.org/ebooks/84.html' },
+      }],
+    }),
+  });
+  try {
+    const result = await searchSources(project, { provider: 'gutenberg', query: 'Frankenstein', limit: 1 });
+    assert.equal(result.count, 1);
+    assert.equal(result.results[0].title, 'Frankenstein');
+    assert.equal(result.results[0].source_url, 'https://www.gutenberg.org/ebooks/84.html');
+    assert.ok(result.saved[0].id);
+  } finally {
+    global.fetch = original;
+  }
 });
 
 test('web source ingestion creates a saved source card', async () => {

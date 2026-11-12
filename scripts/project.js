@@ -261,6 +261,81 @@ export async function ingestSource(project, url, options = {}) {
   });
 }
 
+async function fetchJson(url) {
+  const response = await fetch(url, {
+    headers: { 'user-agent': 'Wishmachine/0.1 (source search)' },
+    signal: AbortSignal.timeout(15000),
+  });
+  if (!response.ok) throw new Error(`search request failed: ${response.status} ${response.statusText}`);
+  return response.json();
+}
+
+export async function searchSources(project, options = {}) {
+  const provider = String(options.provider || 'wikipedia').toLowerCase();
+  const query = String(options.query || '').trim();
+  if (!query) throw new Error('ideas search requires a query');
+  const limit = Math.max(1, Math.min(10, Number(options.limit) || 3));
+  if (provider === 'wikipedia') {
+    const host = /[\u3400-\u9fff]/.test(query) ? 'zh.wikipedia.org' : 'en.wikipedia.org';
+    const endpoint = `https://${host}/w/api.php?action=opensearch&format=json&limit=${limit}&search=${encodeURIComponent(query)}`;
+    const data = await fetchJson(endpoint);
+    const titles = Array.isArray(data?.[1]) ? data[1] : [];
+    const snippets = Array.isArray(data?.[2]) ? data[2] : [];
+    const urls = Array.isArray(data?.[3]) ? data[3] : [];
+    const cards = titles.map((title, index) => ({
+      title,
+      type: 'web-source',
+      provider: 'wikipedia',
+      query,
+      source: urls[index] || '',
+      source_url: urls[index] || '',
+      description: snippets[index] || '',
+      keywords: [query].filter(Boolean),
+      excerpt: snippets[index] || '',
+    }));
+    const saved = [];
+    if (options.ingest) {
+      for (const card of cards) {
+        try {
+          saved.push((await ingestSource(project, card.source_url, { type: 'source' })).saved);
+        } catch (error) {
+          saved.push({ error: error.message, url: card.source_url });
+        }
+      }
+    } else if (cards.length) {
+      const draw = saveImportedIdeas(project, { results: cards }, { type: 'source', source: 'wikipedia' });
+      saved.push(draw.saved);
+    }
+    return { ok: true, action: 'search', provider, query, count: cards.length, results: cards, saved };
+  }
+  if (provider === 'gutenberg') {
+    const endpoint = `https://gutendex.com/books/?search=${encodeURIComponent(query)}`;
+    const data = await fetchJson(endpoint);
+    const books = (data?.results || []).slice(0, limit);
+    const cards = books.map((book) => {
+      const formats = book.formats || {};
+      const url = formats['text/html'] || formats['text/plain'] || `https://www.gutenberg.org/ebooks/${book.id}`;
+      return {
+        title: book.title || `Gutenberg #${book.id}`,
+        type: 'public-domain-novel',
+        provider: 'gutenberg',
+        query,
+        source: url,
+        source_url: url,
+        description: (book.subjects || []).join('; '),
+        keywords: [...(book.subjects || []), ...((book.authors || []).map((author) => author.name))].slice(0, 12),
+        excerpt: '',
+        gutenberg_id: book.id,
+      };
+    });
+    const draw = cards.length
+      ? saveImportedIdeas(project, { results: cards }, { type: 'source', source: 'gutenberg' })
+      : null;
+    return { ok: true, action: 'search', provider, query, count: cards.length, results: cards, saved: draw ? [draw.saved] : [] };
+  }
+  throw new Error(`unsupported source provider: ${provider}; use wikipedia or gutenberg`);
+}
+
 export async function discoverSources(project, options = {}) {
   const catalogPath = options.catalogPath || path.join(ROOT, 'references', 'source-catalog.json');
   const catalog = readJson(catalogPath);

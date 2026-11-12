@@ -5,7 +5,7 @@ display_name_en: Novel Wish Machine Research
 description: 对小说许愿机抽出的世界包、历史母题、地点、势力、装备和人物关系做联网考究，标注来源、时代与地区错配，阻止离谱组合进入设定。
 description_zh: 对小说许愿机抽出的世界包、历史母题、地点、势力、装备和人物关系做联网考究，标注来源、时代与地区错配，阻止离谱组合进入设定。
 description_en: Research Wishmachine worldpacks, historical motifs, places, factions, equipment and character relations on the web; cite sources, flag anachronisms, and reject implausible combinations before they enter the story bible.
-version: 0.1.3
+version: 0.1.4
 author: Malxi
 ---
 
@@ -56,6 +56,16 @@ node scripts/wishmachine.js ideas discover --dir my-book --topic history --limit
 node scripts/wishmachine.js ideas discover --dir my-book --topic myth --limit 3
 node scripts/wishmachine.js ideas discover --dir my-book --topic novel --limit 3
 ```
+
+For an open query, use the source search:
+
+```bash
+node scripts/wishmachine.js ideas search --dir my-book --provider wikipedia --query "Mary Celeste" --limit 3
+node scripts/wishmachine.js ideas search --dir my-book --provider gutenberg --query "Frankenstein" --limit 3
+```
+
+`--ingest` fetches each Wikipedia page for title/meta/excerpt extraction.
+Gutenberg results save metadata and a link to the public-domain text.
 
 For each `relation`:
 
