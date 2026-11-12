@@ -13,7 +13,7 @@ examples_en:
   - "Create a 3-volume × 5-chapter science-fiction project"
   - "Check the outline for blocking findings"
   - "Draw 12 science-fiction name cards"
-version: 0.2.5
+version: 0.2.6
 author: Malxi
 ---
 
@@ -183,7 +183,8 @@ removes stale registry entries.
 Dropped mysteries carry `reason: pending_capacity`; registry status must be
 present in the chapter status set. `book registry` summarizes registry
 versions/counts and thread/mystery drift; `book registry clean` rebuilds the
-mystery registry and removes stale entries. `doctor --fix`
+mystery registry and removes stale entries. `book registry clean --dry-run`
+previews the before/after counts without writing. `doctor --fix`
 migrates old projects, synchronizes thread status from resolved mysteries and
 fills abandoned entries; it also downgrades a resolved thread when no matching
 resolved mystery remains. Pending mysteries are sorted by importance and capped; dropped

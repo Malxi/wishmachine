@@ -881,6 +881,10 @@ test('book registry clean removes stale registry entries', () => {
     doc.mystery_registry.push({ id: 'stale-mystery', status: 'open' });
     fs.writeFileSync(file, JSON.stringify(doc, null, 2));
   }
+  const dryRun = cleanRegistry(project, { dryRun: true });
+  assert.equal(dryRun.dryRun, true);
+  const before = JSON.parse(fs.readFileSync(outlineFile, 'utf8'));
+  assert.ok(before.mystery_registry.some((mystery) => mystery.id === 'stale-mystery'));
   const result = cleanRegistry(project);
   assert.equal(result.ok, true);
   const setup = JSON.parse(fs.readFileSync(setupFile, 'utf8'));

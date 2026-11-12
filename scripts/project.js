@@ -140,12 +140,22 @@ export function projectStatus(project) {
   };
 }
 
-export function cleanRegistry(project) {
+export function cleanRegistry(project, options = {}) {
   const docs = loadRegistryDocs(project);
   if (!docs) throw new Error('setup and outline are required before cleaning registries');
   const expected = collectOutlineMysteryRegistry(docs.outline);
   const before = (Array.isArray(docs.outline.mystery_registry) ? docs.outline.mystery_registry.length : 0)
     + (Array.isArray(docs.setup.mystery_registry) ? docs.setup.mystery_registry.length : 0);
+  if (options.dryRun) {
+    return {
+      ok: true,
+      action: 'clean-dry-run',
+      before,
+      after: expected.length * 2,
+      entries: expected.length,
+      dryRun: true,
+    };
+  }
   docs.setup.mystery_registry = expected;
   docs.outline.mystery_registry = expected;
   docs.setup.mystery_registry_version = 2;
@@ -158,6 +168,7 @@ export function cleanRegistry(project) {
     before,
     after: expected.length * 2,
     entries: expected.length,
+    dryRun: false,
   };
 }
 

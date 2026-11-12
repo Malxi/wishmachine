@@ -84,6 +84,7 @@ logs/
 - setup mystery_registry 与 thread_registry 也有排序校验
 - mystery_registry 使用自然章序排序（C2 在 C10 前）
 - check 校验 mystery_registry 排序，doctor 重建后保持稳定顺序
+- `book registry clean --dry-run` 预览清理前后数量，不写入
 - `book registry clean` 从章节重建 mystery_registry 并清理 stale 条目
 - `book registry` 查看 registry 版本、数量、状态与 drift
 - registry version 升级到 v2，doctor 自动迁移旧版本

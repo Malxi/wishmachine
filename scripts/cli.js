@@ -4,7 +4,7 @@ import { readJson } from './util.js';
 import { drawIdeas, ideasTypes, validateIdeaDraw } from './ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference, listSkills, readSkill } from './guides.js';
 
-const VERSION = '0.2.5';
+const VERSION = '0.2.6';
 const BOOLEAN_FLAGS = new Set(['apply', 'json', 'help', 'h', 'dry-run', 'force', 'ingest']);
 const COMMANDS = new Set(['book', 'check', 'ideas', 'gen', 'state', 'audit', 'refresh', 'export', 'doctor', 'version', 'help']);
 
@@ -97,7 +97,7 @@ Commands:
   doctor [--dir <dir>] [--fix]
   book read <setup|outline|craft|chapter|recap|context|logs|ideas|idea|research|graph> [--id <id>] [--view index|full]
   book registry [--dir <project>]
-  book registry clean [--dir <project>]
+  book registry clean [--dir <project>] [--dry-run]
   book write <setup|outline|craft|chapter|recap|research> [--mode replace|patch|append] [--apply] [--id <id>] [--from-idea <id>]
   check [--profile quality|schema|custom|all] [--target setup|outline|chapter] [--id <id>]
   ideas draw --type namecard|premise|resource|scenario ... [--count 5] [--seed 42] [--dir <project> --save]
@@ -158,7 +158,7 @@ async function runBook(args, flags) {
   if (sub === 'registry') {
     const project = loadProject(stringFlag(flags, 'dir', ''));
     if (args[1] === 'clean') {
-      const result = cleanRegistry(project);
+      const result = cleanRegistry(project, { dryRun: boolFlag(flags, 'dry-run') });
       print({ ok: result.ok, section: 'book', action: 'registry-clean', result });
       return result.ok ? 0 : 1;
     }
