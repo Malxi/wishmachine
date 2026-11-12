@@ -682,6 +682,10 @@ function buildOutlinePack(plot, seed, options = {}) {
     };
     if (beat.function === 'setup' && plot.premise?.hidden_truth) {
       mysteries.planted.push({
+        id: `${chapterId}-mystery-1`,
+        question: plot.premise.hidden_truth,
+        answer: plot.storyline?.payoff || '',
+        payoff: plot.storyline?.cost || '',
         mystery: plot.premise.hidden_truth,
         planted_in: chapterId,
         status: 'open',
@@ -689,6 +693,10 @@ function buildOutlinePack(plot, seed, options = {}) {
     }
     if (beat.function === 'midpoint' && scenarioB?.twist) {
       mysteries.planted.push({
+        id: `${chapterId}-mystery-1`,
+        question: scenarioB.twist,
+        answer: plot.storyline?.payoff || '',
+        payoff: plot.storyline?.cost || '',
         mystery: scenarioB.twist,
         planted_in: chapterId,
         status: 'open',
@@ -698,15 +706,20 @@ function buildOutlinePack(plot, seed, options = {}) {
       for (const item of pendingMysteries) {
         mysteries.resolved.push({
           ...item,
+          answer: item.answer || plot.storyline?.payoff || '答案浮出水面。',
           status: 'resolved',
           resolved_in: chapterId,
         });
       }
       pendingMysteries = [];
       mysteries.resolved.push({
+        id: `${chapterId}-mystery-core`,
+        question: plot.storyline?.midpoint || plot.premise?.hidden_truth || '核心谜题',
+        answer: plot.storyline?.payoff || '答案浮出水面。',
+        payoff: plot.storyline?.cost || '',
         mystery: plot.storyline?.midpoint || plot.premise?.hidden_truth || '核心谜题',
         resolved_in: chapterId,
-        answer: plot.storyline?.payoff || '答案浮出水面。',
+        status: 'resolved',
       });
     }
     const scenes = [];
@@ -734,12 +747,33 @@ function buildOutlinePack(plot, seed, options = {}) {
         : `因为“${turnEvent}”，${scenarioA?.pressure || '局面被推进，但新的问题被留下。'}`;
       const sceneMysteries = {
         planted: sceneIndex === 0 && plot.premise?.hidden_truth
-          ? [{ mystery: plot.premise.hidden_truth, status: 'open' }]
+          ? [{
+            id: `${chapterId}-scene-1-mystery`,
+            question: plot.premise.hidden_truth,
+            answer: plot.storyline?.payoff || '',
+            payoff: plot.storyline?.cost || '',
+            mystery: plot.premise.hidden_truth,
+            status: 'open',
+          }]
           : sceneIndex === 1
-            ? [{ mystery: `局部问题：${sceneObstacle}`, status: 'open' }]
+            ? [{
+              id: `${chapterId}-scene-${sceneIndex + 1}-mystery`,
+              question: `局部问题：${sceneObstacle}`,
+              answer: plot.storyline?.payoff || '',
+              payoff: plot.storyline?.cost || '',
+              mystery: `局部问题：${sceneObstacle}`,
+              status: 'open',
+            }]
             : [],
         resolved: lastScene
-          ? [{ mystery: plot.storyline?.midpoint || plot.premise?.hidden_truth || '本章疑问', answer: plot.storyline?.payoff || '答案在场景末出现' }]
+          ? [{
+            id: `${chapterId}-scene-${sceneIndex + 1}-mystery`,
+            question: plot.storyline?.midpoint || plot.premise?.hidden_truth || '本章疑问',
+            answer: plot.storyline?.payoff || '答案在场景末出现',
+            payoff: plot.storyline?.cost || '',
+            mystery: plot.storyline?.midpoint || plot.premise?.hidden_truth || '本章疑问',
+            status: 'resolved',
+          }]
           : [],
       };
       scenes.push({
@@ -811,11 +845,17 @@ function buildOutlinePack(plot, seed, options = {}) {
     });
     previousChapterConsequence = chapterList[chapterList.length - 1].exit_consequence;
     for (const item of mysteries.planted) {
-      pendingMysteries.push({
-        mystery: item.mystery,
-        from: chapterId,
-        status: 'open',
-      });
+      if (!pendingMysteries.some((pending) => pending.id === item.id)) {
+        pendingMysteries.push({
+          id: item.id,
+          question: item.question,
+          answer: item.answer,
+          payoff: item.payoff,
+          mystery: item.question,
+          from: chapterId,
+          status: 'open',
+        });
+      }
     }
     pendingMysteries = pendingMysteries.slice(-5);
   }

@@ -435,7 +435,9 @@ test('outlinepack expands into multiple volumes', () => {
   assert.ok(outline.chapters[0].scenes[0].stakes);
   assert.ok(outline.chapters[0].scenes[0].turn_event);
   assert.ok(outline.chapters[0].scenes[0].mysteries.planted.length > 0);
+  assert.ok(outline.chapters[0].scenes[0].mysteries.planted[0].question);
   assert.ok(outline.chapters[0].scenes[2].mysteries.resolved.length > 0);
+  assert.ok(outline.chapters[0].scenes[2].mysteries.resolved[0].answer);
   assert.ok(new Set(outline.chapters[0].scenes.map((scene) => scene.obstacle)).size > 1);
   assert.ok(new Set(outline.chapters[0].scenes.map((scene) => scene.goal)).size > 1);
   assert.ok(outline.chapters[0].scenes.every((scene) => scene.consequence));
@@ -449,7 +451,10 @@ test('outlinepack expands into multiple volumes', () => {
   assert.ok(outline.chapters[1].conflict.includes('承接上一章后果'));
   assert.ok(outline.chapters[1].obstacle.includes('上一章后果未解'));
   assert.ok(outline.chapters[1].mysteries.carried.length > 0);
+  assert.ok(outline.chapters[1].mysteries.carried[0].id);
+  assert.ok(outline.chapters[1].mysteries.carried[0].question);
   assert.ok(outline.chapters[11].mysteries.resolved.length > 0);
+  assert.ok(outline.chapters[11].mysteries.resolved[0].answer);
   assert.ok(outline.volumes[1].chapters[0].mysteries.carried.length > 0);
   assert.ok(outline.pending_mysteries.length <= 5);
   assert.ok(outline.chapters[1].scenes[0].obstacle.includes('上一章后果未解'));
