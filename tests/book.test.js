@@ -448,7 +448,10 @@ test('outlinepack expands into multiple volumes', () => {
   assert.ok(outline.chapters[1].scenes[0].goal.includes('承接上一章'));
   assert.ok(outline.chapters[1].conflict.includes('承接上一章后果'));
   assert.ok(outline.chapters[1].obstacle.includes('上一章后果未解'));
-  assert.ok(outline.chapters[1].mysteries.planted.some((mystery) => mystery.carried_from_previous));
+  assert.ok(outline.chapters[1].mysteries.carried.length > 0);
+  assert.ok(outline.chapters[11].mysteries.resolved.length > 0);
+  assert.ok(outline.volumes[1].chapters[0].mysteries.carried.length > 0);
+  assert.ok(outline.pending_mysteries.length <= 5);
   assert.ok(outline.chapters[1].scenes[0].obstacle.includes('上一章后果未解'));
   assert.ok(outline.chapters[1].chapter_payoff.pressure.includes('上一章留下的后果'));
   assert.ok(outline.chapters[0].chapter_payoff.hook.includes('下一章要处理'));

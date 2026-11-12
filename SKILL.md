@@ -13,7 +13,7 @@ examples_en:
   - "Create a 3-volume × 5-chapter science-fiction project"
   - "Check the outline for blocking findings"
   - "Draw 12 science-fiction name cards"
-version: 0.1.70
+version: 0.1.71
 author: Malxi
 ---
 
@@ -159,8 +159,9 @@ goal/obstacle/turn/stakes. Scenes also carry `turn_event`, `consequence`
 goal begins from the previous consequence. Chapters carry
 `entry_from_previous` / `exit_consequence`, so the chain continues across
 chapters and volumes. The entry consequence also feeds the chapter's
-`obstacle`, `conflict`, `chapter_payoff.pressure`, `mysteries.planted`
-(`carried_from_previous`) and previous `hook`. The saved pack also contains `setup_draft` with main/subplot
+`obstacle`, `conflict`, `chapter_payoff.pressure`, `mysteries.carried` and
+previous `hook`. Pending mysteries carry across chapters/volumes and are
+resolved at climax/resolution; `pending_mysteries` is capped. The saved pack also contains `setup_draft` with main/subplot
 storylines, premise progression and a world timeline.
 Some packs also include a `motif` and an `inspired_by` graph edge.
 `cast_relations` links the four characters to each other, the faction, the

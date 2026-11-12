@@ -646,9 +646,13 @@ function buildOutlinePack(plot, seed, options = {}) {
   const chapterOffset = Number(options.chapterOffset) || 0;
   const totalChapters = Number(options.totalChapters) || chapters;
   let previousChapterConsequence = options.previousConsequence || '';
+  let pendingMysteries = Array.isArray(options.carriedMysteries) ? options.carriedMysteries.slice() : [];
   for (let index = 0; index < chapters; index += 1) {
     const globalIndex = chapterOffset + index;
     const entryFromPrevious = previousChapterConsequence;
+    const entrySummary = entryFromPrevious.length > 120
+      ? `${entryFromPrevious.slice(0, 120)}…`
+      : entryFromPrevious;
     const beat = beats[Math.min(beats.length - 1, Math.floor((globalIndex * beats.length) / totalChapters))] || beats[0] || {
       act: 'Act I', function: 'setup', beat: '主角进入故事。',
     };
@@ -665,19 +669,17 @@ function buildOutlinePack(plot, seed, options = {}) {
       || plot.premise?.central_conflict
       || '规则阻止主角推进';
     const chapterObstacle = entryFromPrevious
-      ? `上一章后果未解：${entryFromPrevious}；${baseObstacle}`
+      ? `上一章后果未解：${entrySummary}；${baseObstacle}`
       : baseObstacle;
+    const carriedMysteries = pendingMysteries.slice(0, 3).map((item) => ({
+      ...item,
+      status: 'open',
+    }));
     const mysteries = {
+      carried: carriedMysteries,
       planted: [],
       resolved: [],
     };
-    if (entryFromPrevious) {
-      mysteries.planted.push({
-        mystery: `上一章遗留：${entryFromPrevious}`,
-        status: 'open',
-        carried_from_previous: true,
-      });
-    }
     if (beat.function === 'setup' && plot.premise?.hidden_truth) {
       mysteries.planted.push({
         mystery: plot.premise.hidden_truth,
@@ -693,6 +695,14 @@ function buildOutlinePack(plot, seed, options = {}) {
       });
     }
     if (beat.function === 'climax' || beat.function === 'resolution') {
+      for (const item of pendingMysteries) {
+        mysteries.resolved.push({
+          ...item,
+          status: 'resolved',
+          resolved_in: chapterId,
+        });
+      }
+      pendingMysteries = [];
       mysteries.resolved.push({
         mystery: plot.storyline?.midpoint || plot.premise?.hidden_truth || '核心谜题',
         resolved_in: chapterId,
@@ -715,7 +725,7 @@ function buildOutlinePack(plot, seed, options = {}) {
           ? `反转：${plot.storyline?.midpoint || scenarioB?.twist || '原本的理解被推翻'}`
           : `复杂化：${scenarioB?.twist || blocking?.stake || '新的阻力出现'}`;
       const sceneGoal = sceneIndex === 0
-        ? (entryFromPrevious ? `承接上一章“${entryFromPrevious}”，进入：${beat.beat}` : beat.beat)
+        ? (entryFromPrevious ? `承接上一章“${entrySummary}”，进入：${beat.beat}` : beat.beat)
         : lastScene
           ? `处理上一场后果，并承受：${chapterObstacle}`
           : `承接“${previousConsequence}”，验证：${scenarioB?.twist || blocking?.stake || chapterObstacle}`;
@@ -773,7 +783,7 @@ function buildOutlinePack(plot, seed, options = {}) {
       mysteries,
       events,
       conflict: entryFromPrevious
-        ? `承接上一章后果：${entryFromPrevious}；本章冲突：${plot.premise?.central_conflict || plot.premise?.conflict || '主角必须做出选择。'}`
+        ? `承接上一章后果：${entrySummary}；本章冲突：${plot.premise?.central_conflict || plot.premise?.conflict || '主角必须做出选择。'}`
         : (plot.premise?.central_conflict || plot.premise?.conflict || '主角必须做出选择。'),
       pacing: pacingByFunction[beat.function] || 'rising',
       beat_function: beat.function,
@@ -788,7 +798,7 @@ function buildOutlinePack(plot, seed, options = {}) {
       chapter_payoff: {
         desire: plot.storyline?.promise || '主角想改变现状。',
         pressure: entryFromPrevious
-          ? `上一章留下的后果：${entryFromPrevious}`
+          ? `上一章留下的后果：${entrySummary}`
           : (plot.premise?.central_conflict || '规则不允许。'),
         clever_move: beat.beat,
         payoff_moment: plot.storyline?.payoff || '主角完成一次反击。',
@@ -800,6 +810,14 @@ function buildOutlinePack(plot, seed, options = {}) {
       },
     });
     previousChapterConsequence = chapterList[chapterList.length - 1].exit_consequence;
+    for (const item of mysteries.planted) {
+      pendingMysteries.push({
+        mystery: item.mystery,
+        from: chapterId,
+        status: 'open',
+      });
+    }
+    pendingMysteries = pendingMysteries.slice(-5);
   }
   const volume = {
     id: volumeId || 'P1-V1',
@@ -841,6 +859,7 @@ function buildOutlinePack(plot, seed, options = {}) {
     prompt_pack: plot.prompt_pack,
     motif: plot.motif,
     plotpack: plot,
+    pending_mysteries: pendingMysteries,
   };
 }
 
@@ -850,6 +869,7 @@ function buildMultiVolumeOutlinePack(plot, seed, options = {}) {
   const storylines = (plot.storylines || [plot.storyline]).filter(Boolean);
   const bases = [];
   let previousVolumeConsequence = '';
+  let carriedMysteries = [];
   for (let volumeIndex = 0; volumeIndex < volumes; volumeIndex += 1) {
     const volumePlot = {
       ...plot,
@@ -863,6 +883,7 @@ function buildMultiVolumeOutlinePack(plot, seed, options = {}) {
       totalChapters: volumes * chaptersPerVolume,
       volumeId: `P1-V${volumeIndex + 1}`,
       previousConsequence: previousVolumeConsequence,
+      carriedMysteries,
     });
     const volume = base.draft_outline.parts[0].volumes[0];
     volume.id = `P1-V${volumeIndex + 1}`;
@@ -891,6 +912,7 @@ function buildMultiVolumeOutlinePack(plot, seed, options = {}) {
       anchor: volumePlot.storyline?.title || plot.premise?.title || '',
     };
     previousVolumeConsequence = volume.chapters[volume.chapters.length - 1]?.exit_consequence || previousVolumeConsequence;
+    carriedMysteries = base.pending_mysteries || [];
     bases.push(base);
   }
   const volumeList = bases.map((base) => base.draft_outline.parts[0].volumes[0]);
@@ -921,6 +943,7 @@ function buildMultiVolumeOutlinePack(plot, seed, options = {}) {
       }],
     },
     chapter_config: chapterConfig,
+    pending_mysteries: carriedMysteries,
   };
 }
 
