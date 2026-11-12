@@ -1107,6 +1107,7 @@ function buildMultiVolumeOutlinePack(plot, seed, options = {}) {
       resolved_in: resolvedIn,
     };
   });
+  setupDraft.thread_registry = threadRegistry;
   return {
     ...bases[0],
     id,
@@ -1116,6 +1117,7 @@ function buildMultiVolumeOutlinePack(plot, seed, options = {}) {
     setup_draft: setupDraft,
     thread_registry: threadRegistry,
     draft_outline: {
+      thread_registry: threadRegistry,
       parts: [{
         id: 'P1',
         title: plot.premise?.title || '未命名故事',

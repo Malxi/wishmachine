@@ -116,6 +116,26 @@ export function validateSetup(setup) {
       }
     });
   }
+  if (setup.thread_registry !== undefined) {
+    if (!Array.isArray(setup.thread_registry)) {
+      findings.push(finding('schema.setup.thread_registry', 'high', 'thread_registry must be an array'));
+    } else {
+      const ids = new Set();
+      for (const thread of setup.thread_registry) {
+        if (!thread?.id) {
+          findings.push(finding('schema.setup.thread_registry.id', 'high', 'thread registry entry needs an id'));
+          continue;
+        }
+        if (ids.has(thread.id)) findings.push(finding('quality.setup.thread_registry.duplicate', 'high', `duplicate thread id ${thread.id}`, thread.id));
+        ids.add(thread.id);
+      }
+      for (const storyline of setup.storylines || []) {
+        if (storyline?.thread_id && !ids.has(storyline.thread_id)) {
+          findings.push(finding('quality.setup.thread_registry.unknown', 'high', `storyline ${storyline.name || storyline.thread_id} references unknown thread ${storyline.thread_id}`, storyline.thread_id));
+        }
+      }
+    }
+  }
   return findings;
 }
 
@@ -128,6 +148,23 @@ export function validateOutline(outline, config) {
     return [finding('schema.outline.parts', 'critical', 'outline.parts must be a non-empty array')];
   }
   const ids = new Set();
+  const threadIds = new Set();
+  if (outline.thread_registry !== undefined) {
+    if (!Array.isArray(outline.thread_registry)) {
+      findings.push(finding('schema.outline.thread_registry', 'high', 'thread_registry must be an array'));
+    } else {
+      for (const thread of outline.thread_registry) {
+        if (!thread?.id) {
+          findings.push(finding('schema.outline.thread_registry.id', 'high', 'thread registry entry needs an id'));
+          continue;
+        }
+        if (threadIds.has(thread.id)) {
+          findings.push(finding('quality.outline.thread_registry.duplicate', 'high', `duplicate thread id ${thread.id}`, thread.id));
+        }
+        threadIds.add(thread.id);
+      }
+    }
+  }
   const chapterIds = [];
   let volumeCount = 0;
   let chapterCount = 0;
@@ -182,6 +219,9 @@ export function validateOutline(outline, config) {
           if (typeof chapter[key] !== 'string' || !chapter[key].trim()) {
             findings.push(finding(`schema.outline.chapter.${key}`, 'high', `${chapterId}.${key} must be a non-empty string`, chapterId));
           }
+        }
+        if (threadIds.size > 0 && chapter.thread_id !== undefined && !threadIds.has(chapter.thread_id)) {
+          findings.push(finding('quality.outline.unknown_thread', 'high', `${chapterId} references unknown thread ${chapter.thread_id}`, chapterId));
         }
         if (!Array.isArray(chapter.characters) || chapter.characters.some((v) => typeof v !== 'string')) {
           findings.push(finding('schema.outline.chapter.characters', 'high', `${chapterId}.characters must be an array of strings`, chapterId));

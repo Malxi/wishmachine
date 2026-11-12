@@ -483,8 +483,13 @@ test('outlinepack expands into multiple volumes', () => {
   assert.ok(outline.setup_draft.world_timeline.length >= 2);
   assert.ok(outline.setup_draft.world_resources.every((resource) => ['能源', '消耗品', '材料', '货币'].includes(resource.category)));
   assert.ok(outline.setup_draft.project_name);
+  assert.ok(outline.setup_draft.thread_registry.length >= 2);
+  assert.equal(outline.draft_outline.thread_registry.length, outline.thread_registry.length);
   assert.deepEqual(validateSetup(outline.setup_draft), []);
   assert.deepEqual(validateOutline(outline.draft_outline, { structure: {} }), []);
+  const badOutline = JSON.parse(JSON.stringify(outline.draft_outline));
+  badOutline.parts[0].volumes[0].chapters[0].thread_id = 'missing-thread';
+  assert.ok(validateOutline(badOutline, { structure: {} }).some((finding) => finding.rule_id === 'quality.outline.unknown_thread'));
 });
 
 test('long outlinepack records dropped mysteries', () => {
