@@ -12,8 +12,13 @@ export function initProject(options) {
   const parts = Number(options.parts || 1);
   const volumes = Number(options.volumes || 1);
   const chapters = Number(options.chapter || options.chapters || 20);
+  const targetChars = Number(options.chapterChars || 3000);
+  const minChars = Number(options.minChars || 1800);
   if (parts <= 0 || volumes <= 0 || chapters <= 0) {
     throw new Error('--parts, --volumes and --chapter must be positive');
+  }
+  if (targetChars <= 0 || minChars <= 0 || minChars > targetChars) {
+    throw new Error('--chapter-chars must be positive and >= --min-chars');
   }
   const dir = path.resolve(options.dir || name);
   if (fs.existsSync(path.join(dir, 'novel.json'))) {
@@ -32,6 +37,10 @@ export function initProject(options) {
       target_parts: parts,
       target_volumes: volumes,
       target_chapters: chapters,
+    },
+    chapter_config: {
+      target_chars: targetChars,
+      min_chars: minChars,
     },
   };
   for (const sub of ['story/setup', 'story/compose', 'story/craft', 'story/reviews', 'chapters', 'drafts', 'logs']) {
@@ -58,6 +67,11 @@ export function loadProject(explicit) {
     target_parts: Number(structure.target_parts ?? config.target_parts ?? 1),
     target_volumes: Number(structure.target_volumes ?? config.target_volumes ?? 1),
     target_chapters: Number(structure.target_chapters ?? config.target_chapters ?? config.chapter_count ?? 20),
+  };
+  const chapterConfig = config.chapter_config || {};
+  config.chapter_config = {
+    target_chars: Number(chapterConfig.target_chars ?? config.target_chars ?? 3000),
+    min_chars: Number(chapterConfig.min_chars ?? config.min_chars ?? 1800),
   };
   return { dir, config };
 }
@@ -110,6 +124,7 @@ export function projectStatus(project) {
     root: project.dir,
     setup,
     structure: config.structure,
+    chapter_config: config.chapter_config,
     outline: outline ? {
       parts: outline.parts?.length || 0,
       volumes: (outline.parts || []).reduce((n, p) => n + (p.volumes?.length || 0), 0),
@@ -148,6 +163,7 @@ export function projectState(project, options = {}) {
       root: status.root,
       language: project.config.language || '',
       structure: status.structure,
+      chapter_config: status.chapter_config,
     },
     setup: setup ? {
       present: true,

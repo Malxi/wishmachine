@@ -35,9 +35,13 @@ who appear again without a revival event, and a protagonist who never appears.
 rules can block a write before it touches the project.
 
 Chapter quality cross-checks the outline chapter and recap presence/location,
+enforces `chapter_config.min_chars` / `target_chars` by CJK character count,
 and warns when the outline title or a listed character never appears in the
-chapter text. Recap quality checks `chapter_id`, outline presence, cast
-presence, location, last line, per-beat anchors and chapter-text presence.
+chapter text. A chapter below `min_chars` is a high finding and blocks
+`book write --apply`; below `target_chars` is a medium warning. Recap quality
+checks `chapter_id`, outline presence, cast presence, location, last line,
+per-beat anchors and chapter-text presence. Recaps whose plot beats are copied
+from outline event text get `quality.recap.outline_copy`.
 
 Output:
 

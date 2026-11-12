@@ -13,6 +13,10 @@ Both dry-run and apply run the deterministic checks; a blocking dry-run returns
 | craft | replace or patch | craft JSON (`--target character|item|location|organization`) |
 | chapter | replace | complete chapter markdown (`--id P1-V1-C1`) |
 | chapter | append | append markdown to an existing chapter (`--id P1-V1-C1`) |
+
+Chapters are checked against `chapter_config.min_chars` and
+`chapter_config.target_chars` using CJK character count. Below `min_chars` is a
+high finding and blocks `--apply`.
 | recap | replace or patch | recap JSON (`--id P1-V1-C1`) |
 
 Useful flags:

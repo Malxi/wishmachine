@@ -154,6 +154,51 @@ const STORYLINES = [
   { title: '归乡与流亡', promise: '主角想回到被封锁的故乡。', escalation: '每靠近一步，故乡就多一条驱逐令。', midpoint: '主角发现故乡已经不需要他。', payoff: '主角选择帮助别人回去，而不是自己留下。', cost: '这个选择会让他再次成为流亡者。' },
 ];
 
+const XIANXIA = {
+  premises: [
+    { title: '命册与真名', statement: '修士以真名入照命册承道，名不在册则术法无应、亲族不识；每隔一甲子，宗门以清册决定谁的名字被勾去。', surface_rule: '只有登记在册的真名能引动宗门术法。', hidden_truth: '照命册不是记录，是配额；被勾去的人不死，只是再无人能记住。', scarcity: '每甲子可用空位有限，名录只能由掌册者添改。', conflict: '掌册长老、巡册使与无名者争夺谁有资格留下。', leverage: '用纸背留痕读出被勾掉的真名。', counter: '把清册改成人人可自书的公册。' },
+    { title: '剑冢与认主', statement: '剑冢每甲子开一次，古剑只认一个真名；被剑认下的人必须替剑主完成未竟之约。', surface_rule: '没有剑契的人不能拔剑，强行拔剑会被剑意反噬。', hidden_truth: '剑认的不是人，是剑主临死前记住的那个名字。', scarcity: '剑冢只开七日，每柄剑只能认一次主。', conflict: '剑冢守人、宗门与散修争夺认主资格。', leverage: '用一段旧剑主记忆篡改认主结果。', counter: '让剑认一个没有名字的人。' },
+    { title: '香火与神位', statement: '山神以香火愿力维持神位，香火账由宗门代管；账上少一笔，神就忘掉一个信徒。', surface_rule: '只有登记在香火账上的信徒能献祭。', hidden_truth: '神位可以买卖，香火账上的名字就是可交易资产。', scarcity: '每座山只能供一位正神，副神名额有限。', conflict: '山神、宗门与村落争夺香火分配权。', leverage: '让一个被除名的村落重新献祭。', counter: '把香火账交给所有信徒共同记账。' },
+    { title: '渡劫与名额', statement: '渡劫需要宗门发放的渡劫名额；名额不是护身符，而是把天劫引到别人身上的许可。', surface_rule: '没有名额者不得在宗门境内渡劫。', hidden_truth: '每个名额都对应一个被预先选定的替劫者。', scarcity: '名额按宗门功勋发放，十年一评。', conflict: '渡劫者、替劫者与宗门争夺名额解释权。', leverage: '公开一份替劫者名单。', counter: '让所有人共同分担一次天劫。' },
+    { title: '纸人与替死', statement: '替身纸人能替人挡一次死劫，但纸人必须继承被替者的名字与因果。', surface_rule: '只有写上真名的纸人才有效。', hidden_truth: '纸人不是替死，是把死劫转给另一个被写进纸里的人。', scarcity: '能写活纸人的符师只剩数人。', conflict: '被替者、纸人与符师争夺名字归属。', leverage: '让纸人开口说出自己被写的名字。', counter: '烧掉所有替身纸人的名册。' },
+    { title: '山门与旧榜', statement: '宗门以榜文对外公布弟子功过，榜文只报天时、人数与结论，不报名字；被除名者会从所有人的记忆里淡去。', surface_rule: '只有榜上有名者算宗门弟子。', hidden_truth: '榜文不是公告，是记忆锚点；撕掉一页，就有一批人被忘记。', scarcity: '旧榜每甲子封存一次，只有掌榜者能改。', conflict: '掌榜者、被除名者与外来巡册使争夺榜文。', leverage: '把旧榜上的名字逐个念出来。', counter: '让每个弟子自己写自己的榜。' },
+  ],
+  resources: [
+    { name: '真名玉册', category: '宗门重器', meaning: '记录修士真名与命数的玉册。', issuer: '悬名宗掌册堂', spend_rule: '每次添改需掌册者朱笔与本人本命血。', scarcity: '玉册只有一册，页数不可增。' },
+    { name: '本命血墨', category: '书写材料', meaning: '以本人本命血调成的墨，能把名字写进命册。', issuer: '各宗自行调制', spend_rule: '写一次伤一次根本，不可连续使用。', scarcity: '取血过多会伤及道基。' },
+    { name: '香火愿力', category: '神力资源', meaning: '信徒香火凝成的愿力，可维持神位与术法。', issuer: '山神与村落', spend_rule: '按香火账分配，账上无名者无法献祭。', scarcity: '每座山的香火总量有限。' },
+    { name: '剑契', category: '契约', meaning: '古剑认主后留下的契约，写明剑主未竟之约。', issuer: '剑冢', spend_rule: '持契者可借剑意一次，必须履约。', scarcity: '一柄剑只能有一份剑契。' },
+    { name: '渡劫名额', category: '许可', meaning: '允许在宗门境内渡劫的凭证，同时指定替劫者。', issuer: '宗门功勋堂', spend_rule: '使用后替劫者承担天劫。', scarcity: '十年只发数枚。' },
+    { name: '替身纸人', category: '消耗品', meaning: '写上真名后可替人挡一次死劫的纸人。', issuer: '符师', spend_rule: '纸人必须继承被替者的名字与因果。', scarcity: '能写活纸人的符师极少。' },
+  ],
+  scenarios: [
+    { title: '第七行空了', pressure: '抄册执事发现命册第七行整行空白，满房人都说本来只有六人。', twist: '纸背浮出的名字，是他自己三十年前被勾掉的真名。' },
+    { title: '洗墨池边的无名客', pressure: '一个无名客每天在池边写同一个字，写到第三笔就停。', twist: '他写的不是字，是三十年前替主角补名的那一笔。' },
+    { title: '剑冢开冢', pressure: '剑冢提前开启，所有古剑同时指向一个没有名字的散修。', twist: '剑认的不是散修，是散修体内被封印的旧剑主。' },
+    { title: '香火账对不上', pressure: '山神发现香火账少了一整页，信徒开始忘记自己的村落。', twist: '少掉的那页被宗门拿去给另一座山买了神位。' },
+    { title: '清册之夜', pressure: '宗门提前三年开清册，名单上第一个名字是掌册长老自己。', twist: '多出来的那个空位，是留给主角的。' },
+    { title: '渡劫替名', pressure: '主角拿到一枚渡劫名额，却发现替劫者是自己唯一的亲人。', twist: '名额本来就是用亲人的命换来的。' },
+  ],
+  engines: [
+    { title: '照命册清册引擎', artifact: '照命册与朱砂判笔', issuer: '悬名宗掌册堂', holder: '掌册长老', stated_purpose: '记录真名、维持宗门术法', hidden_function: '用清册配额决定谁被忘记', loophole: '朱笔只能勾名字，不能勾掉纸背的留痕', cost: '每勾一人，掌册者自己的名字也淡一分', protagonist_role: '能读出纸背旧名的抄册执事', counter_expectation: '主角不把自己写回去，而是让所有人自己写名' },
+    { title: '剑冢认主引擎', artifact: '剑契', issuer: '剑冢守人', holder: '古剑', stated_purpose: '为古剑寻找能履约的新剑主', hidden_function: '把旧剑主的未竟之约转给新剑主', loophole: '剑只认名字，不认名字下面的人', cost: '新剑主必须替旧剑主完成一件旧事', protagonist_role: '没有名字却被古剑认下的散修', counter_expectation: '主角让剑认一个无名者，而不是最强的剑修' },
+    { title: '香火神位引擎', artifact: '香火账', issuer: '山神祠', holder: '山神', stated_purpose: '按香火分配愿力，维持神位', hidden_function: '把信徒的名字当成可交易的神位资产', loophole: '香火账只记名字，不记名字背后的人', cost: '每卖一个神位，就有一整个村落被忘记', protagonist_role: '替山神查账的记名弟子', counter_expectation: '主角把香火账交给所有信徒共同记' },
+    { title: '渡劫名额引擎', artifact: '渡劫名额', issuer: '宗门功勋堂', holder: '渡劫者', stated_purpose: '把天劫引到指定替劫者身上', hidden_function: '用替劫者的命保住宗门天才', loophole: '名额只写替劫者姓名，不写他是否同意', cost: '每次渡劫都会让一个家族失去一个人', protagonist_role: '被选为替劫者的外门弟子', counter_expectation: '主角在渡劫台上公开替劫者名单' },
+    { title: '替身纸人引擎', artifact: '替身纸人', issuer: '符师', holder: '被替者', stated_purpose: '替人挡一次死劫', hidden_function: '把死劫转给纸人里被写进名字的另一个人', loophole: '纸人只认名字，不认因果', cost: '每用一次纸人，就有一个人被从记忆里抹去', protagonist_role: '发现纸人名册的符师学徒', counter_expectation: '主角烧掉所有纸人名册，让替死失效' },
+    { title: '宗门榜文引擎', artifact: '宗门榜文', issuer: '传功阁', holder: '掌榜者', stated_purpose: '公布弟子功过与宗门大事', hidden_function: '用榜文锚定记忆，撕掉一页就有一批人被忘记', loophole: '榜文只报天时、人数和结论，不报名字', cost: '每改一次榜，掌榜者就少一段自己的记忆', protagonist_role: '替掌榜者抄榜的记名弟子', counter_expectation: '主角把榜文改成所有人自己写的公开榜' },
+  ],
+  storylines: [
+    { title: '空名案', promise: '主角想查清一个不存在的人。', escalation: '每查一层，就多一个被从记忆里抹掉的人。', midpoint: '主角发现自己的名字也在被勾掉的名单上。', payoff: '主角查清清册的配额本质。', cost: '公开真相会让宗门术法失效。' },
+    { title: '我是谁的名字', promise: '主角想知道自己是谁。', escalation: '每找回一段旧名，就失去一段现在。', midpoint: '主角发现自己是被补名写回来的。', payoff: '主角拒绝把自己写回去。', cost: '拒绝写回会让他从所有人记忆里消失。' },
+    { title: '宗门清册', promise: '主角想阻止下一次清册。', escalation: '每阻止一次，掌册者就提前一次。', midpoint: '主角发现清册已经运行了六十年。', payoff: '主角把清册改成公册。', cost: '公册需要有人永远坐在册页边上记录。' },
+    { title: '旧脉归名', promise: '主角想找回被整脉抹掉的旧人。', escalation: '每找回一个名字，就惊动一个还在位的既得利益者。', midpoint: '旧脉不是被魔所灭，是被宗门自己抹掉。', payoff: '旧脉姓名被逐个写回。', cost: '写回名字会让当年的执行者无法再躲。' },
+  ],
+};
+
+function selectDeck(genre) {
+  return /仙|修|玄幻|古风|武侠|fantasy|xian/i.test(String(genre || '')) ? XIANXIA : null;
+}
+
 function resultId(prefix, seed, index) {
   return `${prefix}-${seed}-${String(index + 1).padStart(2, '0')}`;
 }
@@ -213,15 +258,21 @@ export function drawIdeas(options = {}) {
     seed = Math.floor(Math.random() * 2147483646) + 1;
   }
   const rng = mulberry32(hashSeed(`${seed}:${type}:${options.genre || ''}`));
+  const deck = selectDeck(options.genre);
+  const premises = deck?.premises || PREMISES;
+  const resources = deck?.resources || RESOURCES;
+  const scenarios = deck?.scenarios || SCENARIOS;
+  const storylines = deck?.storylines || STORYLINES;
+  const engines = deck?.engines || ENGINES;
   let results;
   if (type === 'worldpack') {
     const packs = [];
     for (let packIndex = 0; packIndex < count; packIndex += 1) {
-      const premise = pick(rng, PREMISES);
-      const resources = pickMany(rng, RESOURCES, 2);
-      const scenarios = pickMany(rng, SCENARIOS, 2);
-      const storylines = pickMany(rng, STORYLINES, 2);
-      const engine = pick(rng, ENGINES);
+      const premise = pick(rng, premises);
+      const packResources = pickMany(rng, resources, 2);
+      const packScenarios = pickMany(rng, scenarios, 2);
+      const packStorylines = pickMany(rng, storylines, 2);
+      const engine = pick(rng, engines);
       const cast = namecards(rng, seed + packIndex, 4);
       const packId = `worldpack-${seed}-${String(packIndex + 1).padStart(2, '0')}`;
       packs.push({
@@ -235,9 +286,9 @@ export function drawIdeas(options = {}) {
           scarcity: premise.scarcity,
           central_conflict: premise.conflict,
         },
-        resources: resources.map((item, index) => ({ id: `${packId}-resource-${index + 1}`, ...item })),
-        scenarios: scenarios.map((item, index) => ({ id: `${packId}-scenario-${index + 1}`, ...item })),
-        storylines: storylines.map((item, index) => ({ id: `${packId}-storyline-${index + 1}`, ...item })),
+        resources: packResources.map((item, index) => ({ id: `${packId}-resource-${index + 1}`, ...item })),
+        scenarios: packScenarios.map((item, index) => ({ id: `${packId}-scenario-${index + 1}`, ...item })),
+        storylines: packStorylines.map((item, index) => ({ id: `${packId}-storyline-${index + 1}`, ...item })),
         engine: { id: `${packId}-engine`, ...engine },
         cast,
       });
@@ -246,13 +297,13 @@ export function drawIdeas(options = {}) {
   } else if (type === 'namecard' || type === 'name' || type === 'cast') {
     results = namecards(rng, seed, count);
   } else if (type === 'engine') {
-    results = pickMany(rng, ENGINES, Math.min(count, ENGINES.length)).map((item, index) => ({
+    results = pickMany(rng, engines, Math.min(count, engines.length)).map((item, index) => ({
       id: resultId('engine', seed, index),
       ...item,
       reference_id: options.source || 'wishmachine',
     }));
   } else if (type === 'premise' || type === 'axiom') {
-    results = pickMany(rng, PREMISES, Math.min(count, PREMISES.length)).map((item, index) => ({
+    results = pickMany(rng, premises, Math.min(count, premises.length)).map((item, index) => ({
       id: resultId('premise', seed, index),
       title: item.title,
       statement: item.statement,
@@ -265,7 +316,7 @@ export function drawIdeas(options = {}) {
       reference_id: options.source || 'wishmachine',
     }));
   } else if (type === 'resource' || type === 'itemcard') {
-    results = pickMany(rng, RESOURCES, Math.min(count, RESOURCES.length)).map((item, index) => ({
+    results = pickMany(rng, resources, Math.min(count, resources.length)).map((item, index) => ({
       id: resultId('resource', seed, index),
       ...item,
     }));
@@ -285,12 +336,12 @@ export function drawIdeas(options = {}) {
       ...item,
     }));
   } else if (type === 'storyline') {
-    results = pickMany(rng, STORYLINES, Math.min(count, STORYLINES.length)).map((item, index) => ({
+    results = pickMany(rng, storylines, Math.min(count, storylines.length)).map((item, index) => ({
       id: resultId(type, seed, index),
       ...item,
     }));
   } else if (type === 'scenario' || type === 'reference') {
-    results = pickMany(rng, SCENARIOS, Math.min(count, SCENARIOS.length)).map((item, index) => ({
+    results = pickMany(rng, scenarios, Math.min(count, scenarios.length)).map((item, index) => ({
       id: resultId(type, seed, index),
       ...item,
     }));
@@ -303,6 +354,7 @@ export function drawIdeas(options = {}) {
     query: {
       type,
       genre: options.genre || '',
+      deck: deck ? 'xianxia' : 'default',
       count,
       seed,
       source: options.source || '',
@@ -314,6 +366,7 @@ export function drawIdeas(options = {}) {
     results,
     meta: {
       genre: options.genre || '',
+      deck: deck ? 'xianxia' : 'default',
       mode: type,
       seed,
       replay_command: `wishmachine ideas draw --type ${type}${options.genre ? ` --genre ${options.genre}` : ''} --seed ${seed} --count ${count}`,

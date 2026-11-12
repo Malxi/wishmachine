@@ -12,6 +12,10 @@ function tempDir() {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'wishmachine-test-'));
 }
 
+function longChapter(title = '第一章') {
+  return `# ${title}\n\n${'宋夜航在灯下抄册，墨迹未干。'.repeat(150)}`;
+}
+
 const setup = {
   project_name: '测试小说',
   genres: ['科幻'],
@@ -83,9 +87,9 @@ test('chapter write and read', () => {
   const dir = tempDir();
   initProject({ name: '章节测试', dir, parts: 1, volumes: 1, chapter: 1 });
   let project = loadProject(dir);
-  writeArtifact(project, { section: 'chapter', mode: 'replace', apply: true, id: 'P1-V1-C1', content: '# 第一章\n\n初始版本。' });
+  writeArtifact(project, { section: 'chapter', mode: 'replace', apply: true, id: 'P1-V1-C1', content: longChapter() });
   project = loadProject(dir);
-  const result = writeArtifact(project, { section: 'chapter', mode: 'replace', apply: true, id: 'P1-V1-C1', content: '# 第一章\n\n这是一段足够长的正文。'.repeat(20) });
+  const result = writeArtifact(project, { section: 'chapter', mode: 'replace', apply: true, id: 'P1-V1-C1', content: longChapter() });
   assert.equal(result.applied, true);
   project = loadProject(dir);
   const content = readSection(project, 'chapter', { id: 'P1-V1-C1' });
@@ -269,6 +273,50 @@ test('a character who left cannot appear later without a return', () => {
   assert.ok(result.check.findings.some((item) => item.rule_id === 'quality.outline.character_absent_return'));
 });
 
+test('genre-aware ideas use the xianxia deck', () => {
+  const xianxia = drawIdeas({ type: 'premise', genre: '修仙', count: 2, seed: 42 });
+  assert.equal(xianxia.meta.deck, 'xianxia');
+  assert.ok(xianxia.results.some((item) => /命册|剑冢|香火|清册|渡劫|纸人/.test(item.title)));
+  const scifi = drawIdeas({ type: 'premise', genre: '科幻', count: 2, seed: 42 });
+  assert.equal(scifi.meta.deck, 'default');
+});
+
+test('short chapters are rejected by the minimum length contract', () => {
+  const dir = tempDir();
+  initProject({ name: 'length test', dir, parts: 1, volumes: 1, chapter: 1 });
+  const project = loadProject(dir);
+  const result = writeArtifact(project, {
+    section: 'chapter', id: 'P1-V1-C1', mode: 'replace', apply: true,
+    content: '# 第一章\n\n太短了。',
+  });
+  assert.equal(result.ok, false);
+  assert.equal(result.applied, false);
+  assert.ok(result.check.findings.some((item) => item.rule_id === 'quality.chapter.length' && item.severity === 'high'));
+  assert.equal(fs.existsSync(path.join(dir, 'chapters', 'P1-V1-C1.md')), false);
+});
+
+test('recaps copied from outline events are flagged', () => {
+  const dir = tempDir();
+  initProject({ name: 'recap copy test', dir, parts: 1, volumes: 1, chapter: 2 });
+  const project = loadProject(dir);
+  const copyOutline = JSON.parse(JSON.stringify(outline));
+  copyOutline.parts[0].volumes = [copyOutline.parts[0].volumes[0]];
+  copyOutline.parts[0].volumes[0].chapters[0].events = [{
+    actor: '孟启明', action: 'discover', target: '名单', target_type: 'item', details: '发现名单',
+  }];
+  writeArtifact(project, { section: 'outline', mode: 'replace', apply: true, content: JSON.stringify(copyOutline) });
+  const recap = {
+    chapter_id: 'P1-V1-C1', title: '封锁令', location: '砚港', time: '封锁前夜',
+    present: ['孟启明'], plot_beats: ['孟启明：发现名单'], decisions: [], reveals: [],
+    unresolved: [], promises: [], items: [], status: [], last_line: '他把名单折进内袋。',
+  };
+  const result = writeArtifact(loadProject(dir), {
+    section: 'recap', id: 'P1-V1-C1', mode: 'replace', apply: true, content: JSON.stringify(recap),
+  });
+  assert.equal(result.applied, true);
+  assert.ok(result.check.findings.some((item) => item.rule_id === 'quality.recap.outline_copy'));
+});
+
 test('provocation, law, event, engine and storyline draws are available', () => {
   for (const type of ['provocation', 'law', 'event', 'engine', 'storyline']) {
     const draw = drawIdeas({ type, count: 2, seed: 9 });
@@ -301,7 +349,7 @@ test('end-to-end project flow', () => {
   project = loadProject(dir);
   writeArtifact(project, { section: 'outline', mode: 'replace', apply: true, content: JSON.stringify(outline) });
   project = loadProject(dir);
-  const chapterText = '# 封锁令\n\n孟启明在砚港发现撤离名单的时间戳早于虫潮预警。他把名单折进内袋，决定先去找调度处。';
+  const chapterText = `# 封锁令\n\n${'孟启明在砚港逐页核对撤离名单，发现每一页的时间戳都比虫潮预警早三天。'.repeat(100)}\n\n他把名单折进内袋，决定先去找调度处。`;
   writeArtifact(project, { section: 'chapter', id: 'P1-V1-C1', mode: 'replace', apply: true, content: chapterText });
   project = loadProject(dir);
   const recap = {
@@ -367,7 +415,7 @@ test('builtin custom rules are loaded', () => {
   const dir = tempDir();
   initProject({ name: 'rule test', dir, parts: 1, volumes: 1, chapter: 1 });
   const project = loadProject(dir);
-  const text = `他突然醒来，发现一切都是梦。${'他把这个念头按下去，继续检查氧气。'.repeat(20)}`;
+  const text = `他突然醒来，发现一切都是梦。${'他把这个念头按下去，继续检查氧气，记录时辰。'.repeat(120)}`;
   writeArtifact(project, { section: 'chapter', id: 'P1-V1-C1', mode: 'replace', apply: true, content: text });
   const check = checkProject(loadProject(dir), { profile: 'custom', target: 'chapter', id: 'P1-V1-C1' });
   assert.ok(check.findings.some((item) => item.rule_id === 'builtin.no-deus-ex'));

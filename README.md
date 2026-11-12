@@ -10,7 +10,7 @@
 
 ```bash
 node scripts/wishmachine.js version
-node scripts/wishmachine.js book init "我的书" --dir my-book --parts 1 --volumes 3 --chapter 5
+node scripts/wishmachine.js book init "我的书" --dir my-book --parts 1 --volumes 3 --chapter 5 --chapter-chars 3000 --min-chars 1800
 node scripts/wishmachine.js state --dir my-book --view brief
 node scripts/wishmachine.js audit --dir my-book --view brief
 node scripts/wishmachine.js book status --dir my-book --json

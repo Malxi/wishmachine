@@ -13,7 +13,7 @@ examples_en:
   - "Create a 3-volume × 5-chapter science-fiction project"
   - "Check the outline for blocking findings"
   - "Draw 12 science-fiction name cards"
-version: 0.1.39
+version: 0.1.40
 author: Malxi
 ---
 
@@ -33,7 +33,7 @@ node scripts/wishmachine.js version
 ## 1. 管理小说
 
 ```bash
-node scripts/wishmachine.js book init "我的书" --dir my-book --parts 1 --volumes 3 --chapter 5 --genre 科幻
+node scripts/wishmachine.js book init "我的书" --dir my-book --parts 1 --volumes 3 --chapter 5 --chapter-chars 3000 --min-chars 1800 --genre 科幻
 node scripts/wishmachine.js state --dir my-book --view brief
 node scripts/wishmachine.js audit --dir my-book
 node scripts/wishmachine.js refresh --dir my-book
@@ -85,7 +85,7 @@ all       quality + schema
 
 ```bash
 node scripts/wishmachine.js ideas draw --type namecard --genre 科幻 --count 12 --seed 42
-node scripts/wishmachine.js ideas draw --type premise --genre 科幻 --count 3 --seed 7
+node scripts/wishmachine.js ideas draw --type premise --genre 修仙 --count 3 --seed 7
 node scripts/wishmachine.js ideas draw --type provocation --count 4 --seed 9
 node scripts/wishmachine.js ideas draw --type law --count 4 --seed 9
 node scripts/wishmachine.js ideas draw --type event --count 4 --seed 9

@@ -3,7 +3,7 @@ import { checkProject } from './schema.js';
 import { drawIdeas, ideasTypes } from './ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference, listSkills, readSkill } from './guides.js';
 
-const VERSION = '0.1.39';
+const VERSION = '0.1.40';
 const BOOLEAN_FLAGS = new Set(['apply', 'json', 'help', 'h', 'dry-run', 'force']);
 const COMMANDS = new Set(['book', 'check', 'ideas', 'gen', 'state', 'audit', 'refresh', 'export', 'doctor', 'version', 'help']);
 
@@ -87,7 +87,7 @@ function help() {
   return `wishmachine ${VERSION}
 
 Commands:
-  book init <name> [--dir <dir>] [--parts 1] [--volumes 1] [--chapter 20] [--genre ...]
+  book init <name> [--dir <dir>] [--parts 1] [--volumes 1] [--chapter 20] [--chapter-chars 3000] [--min-chars 1800] [--genre ...]
   book status [--dir <dir>] [--json]
   state [--dir <dir>] [--view brief|full]
   audit [--dir <dir>] [--view brief|full] [--min-severity low|medium|high|critical] [--max-findings 10]
@@ -117,6 +117,8 @@ async function runBook(args, flags) {
       parts: intFlag(flags, 'parts', 1),
       volumes: intFlag(flags, 'volumes', 1),
       chapter: intFlag(flags, 'chapter', 20),
+      chapterChars: intFlag(flags, 'chapter-chars', 3000),
+      minChars: intFlag(flags, 'min-chars', 1800),
       genre: stringFlag(flags, 'genre', ''),
       language: stringFlag(flags, 'language', 'zh'),
     });
@@ -133,6 +135,7 @@ async function runBook(args, flags) {
       process.stdout.write(`Project: ${status.name} (${status.root})\n`);
       process.stdout.write(`Setup: ${status.setup}\n`);
       process.stdout.write(`Structure: ${status.structure.target_parts} parts / ${status.structure.target_volumes} volumes / ${status.structure.target_chapters} chapters per volume, ${written} written\n`);
+      process.stdout.write(`Chapter target: ${status.chapter_config?.target_chars || 3000} chars (min ${status.chapter_config?.min_chars || 1800})\n`);
       if (status.orphan_chapters?.length) {
         process.stdout.write(`Orphan chapters: ${status.orphan_chapters.join(', ')}\n`);
       }

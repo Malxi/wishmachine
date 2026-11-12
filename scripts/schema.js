@@ -345,6 +345,13 @@ function qualityFindings(project, target, id, override = {}) {
             findings.push(finding('quality.recap.presence', 'medium', `${id} recap mentions ${name}, who is not in the outline chapter`, id));
           }
         }
+        const outlineBeats = new Set((found.chapter.events || []).map((event) =>
+          `${event.actor || ''}：${event.details || event.result || event.target || ''}`).filter((beat) => beat !== '：'));
+        for (const beat of recap.plot_beats || []) {
+          if (outlineBeats.has(beat)) {
+            findings.push(finding('quality.recap.outline_copy', 'medium', `${id} recap plot beat is copied from the outline event list`, id, 'Rewrite the recap from what the chapter actually dramatizes.'));
+          }
+        }
         if (found.chapter.location && recap.location && found.chapter.location !== recap.location) {
           findings.push(finding('quality.recap.location', 'low', `${id} recap location ${recap.location} differs from outline location ${found.chapter.location}`, id));
         }
@@ -594,8 +601,14 @@ function qualityFindings(project, target, id, override = {}) {
       if (!fs.existsSync(file)) throw new Error(`chapter not found: ${id}`);
       text = readText(file);
     }
-    if (text.trim().length < 200) {
-      findings.push(finding('quality.chapter.length', 'medium', `${id} is shorter than 200 characters`, id));
+    const chapterConfig = project.config.chapter_config || {};
+    const targetChars = Number(chapterConfig.target_chars) || 3000;
+    const minChars = Number(chapterConfig.min_chars) || 1800;
+    const cjkChars = (text.match(/[\u3400-\u9fff]/g) || []).length;
+    if (cjkChars < minChars) {
+      findings.push(finding('quality.chapter.length', 'high', `${id} has ${cjkChars} CJK characters; minimum is ${minChars}`, id, 'Expand the chapter into scenes before applying it.'));
+    } else if (cjkChars < targetChars) {
+      findings.push(finding('quality.chapter.length_target', 'medium', `${id} has ${cjkChars} CJK characters; target is ${targetChars}`, id, 'Add scene detail, dialogue, or a stronger turn.'));
     }
     const outlineFile = path.join(project.dir, 'story', 'compose', 'outline.json');
     const outline = fs.existsSync(outlineFile) ? readJson(outlineFile) : null;
