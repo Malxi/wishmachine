@@ -184,7 +184,8 @@ Dropped mysteries carry `reason: pending_capacity`; registry status must be
 present in the chapter status set. `book registry` summarizes registry
 versions/counts and thread/mystery drift; `book registry clean` rebuilds the
 mystery registry and removes stale entries. `book registry clean --dry-run`
-previews the before/after counts without writing. `doctor --fix`
+previews before/after counts, removed mystery ids and removed thread links
+without writing. `doctor --fix`
 migrates old projects, synchronizes thread status from resolved mysteries and
 fills abandoned entries; it also downgrades a resolved thread when no matching
 resolved mystery remains. Pending mysteries are sorted by importance and capped; dropped
