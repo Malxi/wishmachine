@@ -4,7 +4,7 @@ import { XIANXIA_ARCHETYPES, SUSPENSE_ARCHETYPES, URBAN_ARCHETYPES, HISTORY_ARCH
 
 const TYPES = [
   'provocation', 'axiom', 'event', 'law', 'scenario', 'engine',
-  'worldpack', 'premise', 'storyline', 'cast', 'namecard',
+  'worldpack', 'plotpack', 'premise', 'storyline', 'cast', 'namecard',
   'resource', 'equipment', 'itemcard', 'location', 'faction', 'motif', 'reference', 'name',
 ];
 
@@ -514,6 +514,109 @@ function buildWorldpack(def, packIndex, seed, cast, sources) {
   };
 }
 
+function buildPlotpack(pack, seed, index) {
+  const premise = pack.premise;
+  const storyline = pack.storylines?.[0] || null;
+  const scenarioA = pack.scenarios?.[0] || null;
+  const scenarioB = pack.scenarios?.[1] || null;
+  const blocking = (pack.cast_relations || []).find((relation) => relation.type === 'blocks') || null;
+  const support = (pack.cast_relations || []).find((relation) => relation.type === 'supports') || null;
+  const beats = [
+    {
+      act: 'Act I',
+      chapter: 1,
+      function: 'setup',
+      beat: premise ? `${premise.title}：先让读者看见${premise.surface_rule}` : '先展示世界规则与主角的日常。',
+      source: 'premise',
+      source_id: pack.id,
+    },
+    {
+      act: 'Act I',
+      chapter: 2,
+      function: 'inciting',
+      beat: scenarioA ? scenarioA.pressure : '一个事件打破日常，主角被迫做出第一次选择。',
+      source: 'scenario',
+      source_id: scenarioA?.id || '',
+    },
+    {
+      act: 'Act II',
+      chapter: 3,
+      function: 'midpoint',
+      beat: scenarioB ? scenarioB.twist : storyline?.midpoint || '主角发现规则背后还有一层规则。',
+      source: 'scenario',
+      source_id: scenarioB?.id || '',
+    },
+    {
+      act: 'Act II',
+      chapter: 4,
+      function: 'crisis',
+      beat: blocking
+        ? `${blocking.stake}；反派让主角第一次付出无法回收的代价。`
+        : storyline?.payoff || '主角必须在两个都不想要的答案之间选择。',
+      source: 'cast_relation',
+      source_id: blocking ? `${blocking.from}->${blocking.to}` : '',
+    },
+    {
+      act: 'Act III',
+      chapter: 5,
+      function: 'climax',
+      beat: storyline ? storyline.payoff : '主角用自己的方式改写规则。',
+      source: 'storyline',
+      source_id: storyline?.title || '',
+    },
+    {
+      act: 'Act III',
+      chapter: 6,
+      function: 'resolution',
+      beat: storyline ? `代价落地：${storyline.cost}` : '胜利留下一个无法撤销的代价。',
+      source: 'storyline',
+      source_id: storyline?.title || '',
+    },
+  ];
+  if (support) {
+    beats[3].support = support.stake;
+  }
+  const id = `plotpack-${seed}-${String(index + 1).padStart(2, '0')}`;
+  return {
+    id,
+    plot_id: id,
+    worldpack_id: pack.id,
+    genre: pack.genre || '',
+    theme: pack.theme,
+    premise,
+    cast: pack.cast,
+    cast_relations: pack.cast_relations,
+    scenarios: pack.scenarios,
+    storyline,
+    events: beats.map((beat) => ({
+      act: beat.act,
+      chapter: beat.chapter,
+      function: beat.function,
+      event: beat.beat,
+    })),
+    beats,
+    keywords: pack.keywords,
+    motif: pack.motif,
+    prompt_pack: pack.prompt_pack,
+    graph: {
+      entities: [
+        ...(pack.entities || []),
+        { id: `${id}:plot`, type: 'plot', label: `${premise?.title || 'plot'} 剧情包` },
+        ...beats.map((beat) => ({
+          id: `${id}:beat-${beat.chapter}`,
+          type: 'beat',
+          label: `${beat.act} · ${beat.function}`,
+        })),
+      ],
+      relations: [
+        ...(pack.relations || []),
+        { from: `${id}:plot`, to: `${id}:beat-1`, type: 'starts_with' },
+        { from: `${id}:plot`, to: `${id}:beat-6`, type: 'ends_with' },
+      ],
+    },
+  };
+}
+
 function resultId(prefix, seed, index) {
   return `${prefix}-${seed}-${String(index + 1).padStart(2, '0')}`;
 }
@@ -605,6 +708,15 @@ export function drawIdeas(options = {}) {
       const cast = namecards(rng, seed + packIndex, 4, ['protagonist', 'antagonist', 'support', 'support'], deck.name);
       return buildWorldpack(def, packIndex, seed, cast, deck);
     });
+  } else if (type === 'plotpack') {
+    const plots = [];
+    for (let index = 0; index < count; index += 1) {
+      const world = drawIdeas({ ...options, type: 'worldpack', count: 1, seed: seed + index });
+      const plot = buildPlotpack(world.results[0], seed + index, index);
+      plot.genre = String(options.genre || '');
+      plots.push(plot);
+    }
+    results = plots;
   } else if (type === 'namecard' || type === 'name' || type === 'cast') {
     results = namecards(rng, seed, count, [], deck.name);
   } else if (type === 'engine') {

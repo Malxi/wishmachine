@@ -392,6 +392,20 @@ test('imported cards and research reports are persisted', () => {
   assert.ok(projectState(project).state.research.some((item) => item.name === imported.saved.id));
 });
 
+test('plotpack combines worldpack, cast relations and chapter beats', () => {
+  const draw = drawIdeas({ type: 'plotpack', genre: '悬疑', count: 1, seed: 42 });
+  assert.equal(draw.meta.deck, 'suspense');
+  const plot = draw.results[0];
+  assert.ok(plot.worldpack_id);
+  assert.equal(plot.beats.length, 6);
+  assert.deepEqual(plot.beats.map((beat) => beat.function), ['setup', 'inciting', 'midpoint', 'crisis', 'climax', 'resolution']);
+  assert.ok(plot.cast.length >= 4);
+  assert.ok(plot.cast_relations.length >= 4);
+  assert.ok(plot.storyline.payoff);
+  assert.ok(plot.prompt_pack.positive);
+  assert.ok(plot.events.length === 6);
+});
+
 test('worldpack cast uses genre-aware archetypes', () => {
   const expected = {
     修仙: ['抄册执事', '剑冢散修', '掌册长老', '香火祠祝', '洗墨人', '巡册使'],

@@ -139,8 +139,8 @@ node scripts/wishmachine.js ideas types
 
 `worldpack` returns one premise, engine, location, faction, equipment, two
 resources, two scenarios, two storylines and four role-tagged cast cards.
-Cast archetypes are selected by genre and by protagonist / antagonist / support
-pools.
+`plotpack` wraps a worldpack with cast relations and six chapter beats
+(setup / inciting / midpoint / crisis / climax / resolution).
 Some packs also include a `motif` and an `inspired_by` graph edge.
 `cast_relations` links the four characters to each other, the faction, the
 location and the first storyline; each relation carries a `stake`.
