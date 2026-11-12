@@ -819,6 +819,29 @@ test('doctor --fix removes stale mystery registry entries', () => {
   assert.ok(!repaired.mystery_registry.some((mystery) => mystery.id === 'stale-mystery'));
 });
 
+test('doctor --fix sorts registry arrays', () => {
+  const dir = tempDir();
+  initProject({ name: 'registry order', dir, parts: 1, volumes: 1, chapter: 10 });
+  const project = loadProject(dir);
+  const outline = drawIdeas({ type: 'outlinepack', genre: '悬疑', count: 1, seed: 42, chapters: 10 }).results[0];
+  writeArtifact(project, { section: 'setup', content: JSON.stringify(outline.setup_draft), apply: true });
+  writeArtifact(project, { section: 'outline', content: JSON.stringify(outline.draft_outline), apply: true });
+  const setupFile = path.join(dir, 'story', 'setup', 'story_setup.json');
+  const outlineFile = path.join(dir, 'story', 'compose', 'outline.json');
+  for (const file of [setupFile, outlineFile]) {
+    const doc = JSON.parse(fs.readFileSync(file, 'utf8'));
+    doc.thread_registry.reverse();
+    doc.mystery_registry.reverse();
+    fs.writeFileSync(file, JSON.stringify(doc, null, 2));
+  }
+  doctorProject(project, { fix: true });
+  const setup = JSON.parse(fs.readFileSync(setupFile, 'utf8'));
+  const repaired = JSON.parse(fs.readFileSync(outlineFile, 'utf8'));
+  assert.equal(setup.thread_registry[0].type, 'main');
+  assert.ok(setup.mystery_registry.every((mystery, index, list) => index === 0 || String(list[index - 1].chapter_id).localeCompare(String(mystery.chapter_id), undefined, { numeric: true }) <= 0));
+  assert.deepEqual(setup.thread_registry.map((thread) => thread.id), repaired.thread_registry.map((thread) => thread.id));
+});
+
 test('saved idea draws are readable from the project', () => {
   const dir = tempDir();
   initProject({ name: 'idea store', dir, parts: 1, volumes: 1, chapter: 1 });

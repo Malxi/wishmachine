@@ -1136,6 +1136,55 @@ function repairThreadStatuses(project) {
   return { actions: ['repaired thread statuses'] };
 }
 
+function sortThreadArray(threads) {
+  return [...threads].sort((left, right) => {
+    if (left.type !== right.type) return left.type === 'main' ? -1 : 1;
+    return String(left.id || '').localeCompare(String(right.id || ''), undefined, { numeric: true });
+  });
+}
+
+function sortMysteryArray(mysteries) {
+  return [...mysteries].sort((left, right) => (
+    String(left.chapter_id || '').localeCompare(String(right.chapter_id || ''), undefined, { numeric: true })
+    || String(left.id || '').localeCompare(String(right.id || ''), undefined, { numeric: true })
+  ));
+}
+
+function needsRegistryOrderRepair(project) {
+  const docs = loadRegistryDocs(project);
+  if (!docs) return false;
+  return [docs.setup, docs.outline].some((doc) => (
+    (Array.isArray(doc.thread_registry) && !sameArray(doc.thread_registry.map((thread) => thread.id), sortThreadArray(doc.thread_registry).map((thread) => thread.id)))
+    || (Array.isArray(doc.mystery_registry) && !sameArray(doc.mystery_registry.map((mystery) => mystery.id), sortMysteryArray(doc.mystery_registry).map((mystery) => mystery.id)))
+  ));
+}
+
+function normalizeRegistryOrder(project) {
+  const docs = loadRegistryDocs(project);
+  if (!docs) return null;
+  let changed = false;
+  for (const doc of [docs.setup, docs.outline]) {
+    if (Array.isArray(doc.thread_registry)) {
+      const sorted = sortThreadArray(doc.thread_registry);
+      if (!sameArray(doc.thread_registry.map((thread) => thread.id), sorted.map((thread) => thread.id))) {
+        doc.thread_registry = sorted;
+        changed = true;
+      }
+    }
+    if (Array.isArray(doc.mystery_registry)) {
+      const sorted = sortMysteryArray(doc.mystery_registry);
+      if (!sameArray(doc.mystery_registry.map((mystery) => mystery.id), sorted.map((mystery) => mystery.id))) {
+        doc.mystery_registry = sorted;
+        changed = true;
+      }
+    }
+  }
+  if (!changed) return null;
+  writeJsonAtomic(docs.setupFile, docs.setup);
+  writeJsonAtomic(docs.outlineFile, docs.outline);
+  return { actions: ['sorted registry order'] };
+}
+
 export function doctorProject(project, options = {}) {
   const issues = [];
   const actions = [];
@@ -1197,6 +1246,13 @@ export function doctorProject(project, options = {}) {
     if (fix) {
       const repaired = repairThreadStatuses(project);
       if (repaired) actions.push(...repaired.actions);
+    }
+  }
+  if (fs.existsSync(setupPath) && fs.existsSync(outlinePath) && needsRegistryOrderRepair(project)) {
+    add('low', 'registry.order_needs_repair', 'registry arrays are not in stable order', 'Run doctor --fix to sort registries.');
+    if (fix) {
+      const normalized = normalizeRegistryOrder(project);
+      if (normalized) actions.push(...normalized.actions);
     }
   }
   let status = { orphan_chapters: [], orphan_recaps: [] };
