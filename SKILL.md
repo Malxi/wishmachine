@@ -186,7 +186,8 @@ versions/counts and thread/mystery drift; `book registry clean` rebuilds the
 mystery registry and removes stale entries. `book registry clean --dry-run`
 previews before/after counts, removed mystery ids and removed thread links
 without writing. `book registry abandon --mystery <id>` manually marks a
-mystery dropped with a reason. Clean also re-runs thread status repair after rebuilding the
+mystery dropped with a reason; add `--dry-run` to preview without writing.
+Clean also re-runs thread status repair after rebuilding the
 registry. `doctor --fix`
 migrates old projects, synchronizes thread status from resolved mysteries and
 fills abandoned entries; it also downgrades a resolved thread when no matching
