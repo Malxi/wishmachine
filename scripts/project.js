@@ -340,16 +340,25 @@ export function restoreRegistryBackup(project, backupName, options = {}) {
       }
     }
   }
+  const setupFile = path.join(project.dir, 'story', 'setup', 'story_setup.json');
+  const outlineFile = path.join(project.dir, 'story', 'compose', 'outline.json');
+  const changedKeys = (current, next) => {
+    const keys = new Set([...Object.keys(current || {}), ...Object.keys(next || {})]);
+    return [...keys].filter((key) => JSON.stringify(current?.[key]) !== JSON.stringify(next?.[key]));
+  };
+  const changes = {
+    setup: changedKeys(readJson(setupFile), readJson(setupSource)),
+    outline: changedKeys(readJson(outlineFile), readJson(outlineSource)),
+  };
   if (options.dryRun) {
     return {
       ok: true,
       action: 'restore-dry-run',
       backup: backupName,
+      changes,
       dryRun: true,
     };
   }
-  const setupFile = path.join(project.dir, 'story', 'setup', 'story_setup.json');
-  const outlineFile = path.join(project.dir, 'story', 'compose', 'outline.json');
   fs.copyFileSync(setupSource, setupFile);
   fs.copyFileSync(outlineSource, outlineFile);
   appendRegistryOperation(project, {
@@ -360,20 +369,31 @@ export function restoreRegistryBackup(project, backupName, options = {}) {
     ok: true,
     action: 'restore',
     backup: backupName,
+    changes,
   };
 }
 
 export function registryBackups(project, options = {}) {
   const dir = path.join(project.dir, 'logs', 'registry-backups');
-  if (!fs.existsSync(dir)) return { ok: true, action: 'registry-backups', count: 0, backups: [], removed: [] };
+  if (!fs.existsSync(dir)) return { ok: true, action: 'registry-backups', count: 0, backups: [], removed: [], protected: [] };
   const keep = Math.max(1, Math.min(100, Number(options.keep) || 10));
   const names = fs.readdirSync(dir)
     .filter((name) => fs.statSync(path.join(dir, name)).isDirectory())
     .sort()
     .reverse();
+  const referenced = new Set(readRegistryOperations(project, 1000)
+    .map((operation) => String(operation.backup || '').split('/').pop())
+    .filter(Boolean));
+  const keepSet = new Set(names.slice(0, keep));
   const removed = [];
+  const protectedBackups = [];
   if (options.prune) {
-    for (const name of names.slice(keep)) {
+    for (const name of names) {
+      if (keepSet.has(name)) continue;
+      if (referenced.has(name)) {
+        protectedBackups.push(name);
+        continue;
+      }
       fs.rmSync(path.join(dir, name), { recursive: true, force: true });
       removed.push(name);
     }
@@ -395,9 +415,10 @@ export function registryBackups(project, options = {}) {
         created_at: manifest?.created_at || null,
         action: manifest?.action || null,
         files: manifest?.files || [],
+        referenced: referenced.has(name),
       };
     });
-  return { ok: true, action: 'registry-backups', count: backups.length, backups, removed };
+  return { ok: true, action: 'registry-backups', count: backups.length, backup: backups, backups, removed, protected: protectedBackups };
 }
 
 function appendRegistryOperation(project, operation) {

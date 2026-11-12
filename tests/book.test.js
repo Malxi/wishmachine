@@ -923,8 +923,10 @@ test('book registry abandon marks a mystery as manually dropped', () => {
   assert.ok(after.parts[0].volumes[0].chapters.some((chapter) => chapter.mysteries.dropped.some((mystery) => mystery.id === target.id)));
   assert.ok(projectRegistryStatus(project).operations.some((operation) => operation.action === 'abandon' && operation.id === target.id));
   assert.ok(registryBackups(project).count > 0);
+  createRegistrySnapshot(project);
   const pruned = registryBackups(project, { keep: 1, prune: true });
-  assert.ok(pruned.count <= 1);
+  assert.ok(pruned.count >= 1);
+  assert.ok(pruned.protected.length > 0);
   assert.ok(registryOperations(project, { limit: 20 }).operations.some((operation) => operation.action === 'abandon'));
   assert.ok(registryOperations(project, { action: 'abandon' }).operations.every((operation) => operation.action === 'abandon'));
   assert.ok(!registryOperations(project, { action: 'clean' }).operations.some((operation) => operation.action === 'abandon'));
@@ -953,6 +955,7 @@ test('manual registry snapshot can be restored', () => {
   fs.writeFileSync(outlineFile, JSON.stringify(before, null, 2));
   const dryRun = restoreRegistryBackup(project, snapshot.backup.split('/').pop(), { dryRun: true });
   assert.equal(dryRun.dryRun, true);
+  assert.ok(dryRun.changes.outline.includes('thread_registry'));
   assert.equal(JSON.parse(fs.readFileSync(outlineFile, 'utf8')).thread_registry.length, 0);
   const restored = restoreRegistryBackup(project, snapshot.backup.split('/').pop());
   assert.equal(restored.ok, true);

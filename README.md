@@ -84,6 +84,7 @@ logs/
 - setup mystery_registry 与 thread_registry 也有排序校验
 - mystery_registry 使用自然章序排序（C2 在 C10 前）
 - check 校验 mystery_registry 排序，doctor 重建后保持稳定顺序
+- prune 保护被 undo 引用的 backup；restore --dry-run 返回 changed keys
 - `book registry check-backups` 批量校验所有 snapshot checksum
 - snapshot manifest 校验和；tampered backup 拒绝 restore
 - `book registry restore --dry-run` 预览恢复，不写入
