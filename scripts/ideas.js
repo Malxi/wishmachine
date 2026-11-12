@@ -654,8 +654,8 @@ function collectMysteryRegistry(chapters) {
     }
   }
   return [...registry.values()].sort((left, right) => (
-    String(left.chapter_id || '').localeCompare(String(right.chapter_id || ''))
-    || String(left.id || '').localeCompare(String(right.id || ''))
+    String(left.chapter_id || '').localeCompare(String(right.chapter_id || ''), undefined, { numeric: true })
+    || String(left.id || '').localeCompare(String(right.id || ''), undefined, { numeric: true })
   ));
 }
 

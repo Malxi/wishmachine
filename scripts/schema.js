@@ -260,8 +260,8 @@ export function validateOutline(outline, config) {
   }
   if (Array.isArray(outline.mystery_registry)) {
     const sorted = [...outline.mystery_registry].sort((left, right) => (
-      String(left.chapter_id || '').localeCompare(String(right.chapter_id || ''))
-      || String(left.id || '').localeCompare(String(right.id || ''))
+      String(left.chapter_id || '').localeCompare(String(right.chapter_id || ''), undefined, { numeric: true })
+      || String(left.id || '').localeCompare(String(right.id || ''), undefined, { numeric: true })
     ));
     if (sorted.some((mystery, index) => mystery.id !== outline.mystery_registry[index]?.id)) {
       findings.push(finding('quality.outline.mystery.registry_order', 'low', 'mystery_registry is not sorted by chapter_id/id', 'Sort the registry or run doctor --fix.'));

@@ -13,7 +13,7 @@ examples_en:
   - "Create a 3-volume × 5-chapter science-fiction project"
   - "Check the outline for blocking findings"
   - "Draw 12 science-fiction name cards"
-version: 0.1.97
+version: 0.1.98
 author: Malxi
 ---
 
@@ -171,7 +171,8 @@ same ids; cast `storyline_refs` use those ids. `thread_registry` entries carry
 both registries carry `*_registry_version: 1`. `check` reports setup/outline
 registry drift (including mystery registry drift), unknown chapter thread ids,
 and thread references to missing or non-registry mystery ids. The mystery
-registry order is checked (chapter_id/id) and doctor rebuild keeps it sorted.
+registry order is checked with natural chapter ordering (C2 before C10) and
+doctor rebuild keeps it sorted.
 `doctor --fix` rebuilds a missing or stale mystery registry from chapter data.
 Checks also flag stale registry entries, final-status mismatches and resolved
 or dropped mysteries that are not linked from their thread. `doctor --fix`

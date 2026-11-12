@@ -398,6 +398,9 @@ test('outlinepack expands plot beats into chapters and a draft outline', () => {
   assert.equal(outline.chapters.length, 10);
   assert.equal(outline.chapters[0].scenes.length, 3);
   assert.equal(outline.chapters[0].target_chars, 2000);
+  const chapter10Index = outline.mystery_registry.findIndex((mystery) => mystery.chapter_id === 'P1-V1-C10');
+  const chapter2Index = outline.mystery_registry.findIndex((mystery) => mystery.chapter_id === 'P1-V1-C2');
+  assert.ok(chapter10Index > chapter2Index);
   assert.deepEqual(outline.chapters.map((chapter) => chapter.id), Array.from({ length: 10 }, (_, index) => `P1-V1-C${index + 1}`));
   assert.equal(outline.draft_outline.parts[0].volumes[0].chapters.length, 10);
   assert.ok(outline.draft_outline.parts[0].volumes[0].chapters[0].events.length > 0);
@@ -485,8 +488,8 @@ test('outlinepack expands into multiple volumes', () => {
   assert.equal(outline.thread_registry_version, 1);
   assert.equal(outline.setup_draft.mystery_registry_version, 1);
   const sortedRegistry = [...outline.mystery_registry].sort((a, b) => (
-    String(a.chapter_id || '').localeCompare(String(b.chapter_id || ''))
-    || String(a.id || '').localeCompare(String(b.id || ''))
+    String(a.chapter_id || '').localeCompare(String(b.chapter_id || ''), undefined, { numeric: true })
+    || String(a.id || '').localeCompare(String(b.id || ''), undefined, { numeric: true })
   ));
   assert.deepEqual(outline.mystery_registry.map((mystery) => mystery.id), sortedRegistry.map((mystery) => mystery.id));
   assert.ok(outline.mystery_registry.some((mystery) => mystery.status === 'resolved'));
