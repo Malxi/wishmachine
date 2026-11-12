@@ -1315,6 +1315,7 @@ export function validateIdeaDraw(draw) {
     const registry = result.thread_registry;
     if (!Array.isArray(registry)) continue;
     const ids = new Set();
+    const chaptersById = new Map((result.chapters || []).map((chapter) => [chapter.id, chapter]));
     for (const thread of registry) {
       if (!thread?.id) {
         add('high', 'idea.thread.missing_id', result.id || 'outlinepack', 'thread registry entry has no id', 'Add a stable thread id.');
@@ -1324,6 +1325,29 @@ export function validateIdeaDraw(draw) {
         add('high', 'idea.thread.duplicate_id', thread.id, 'duplicate thread id', 'Give each thread a unique id.');
       }
       ids.add(thread.id);
+      if (!['active', 'resolved', 'abandoned'].includes(thread.status)) {
+        add('high', 'idea.thread.invalid_status', thread.id, `unknown thread status ${thread.status}`, 'Use active, resolved or abandoned.');
+      }
+      if (thread.status === 'active' && thread.resolved_in) {
+        add('high', 'idea.thread.active_with_resolution', thread.id, 'active thread has resolved_in', 'Clear resolved_in or mark the thread resolved.');
+      }
+      if (thread.status === 'resolved') {
+        if (!thread.resolved_in) {
+          add('high', 'idea.thread.resolved_without_chapter', thread.id, 'resolved thread has no resolved_in', 'Set resolved_in to the resolving chapter.');
+        } else {
+          const chapter = chaptersById.get(thread.resolved_in);
+          if (!chapter) {
+            add('high', 'idea.thread.unknown_resolved_chapter', thread.id, `resolved_in ${thread.resolved_in} is not a chapter`, 'Use an existing chapter id.');
+          } else {
+            if (chapter.thread_id !== thread.id) {
+              add('high', 'idea.thread.resolved_chapter_mismatch', thread.id, `resolved_in ${thread.resolved_in} belongs to ${chapter.thread_id}`, 'Resolve the thread in one of its own chapters.');
+            }
+            if (!['climax', 'resolution'].includes(chapter.beat_function)) {
+              add('high', 'idea.thread.resolved_outside_climax', thread.id, `resolved_in ${thread.resolved_in} is ${chapter.beat_function}`, 'Resolve on a climax or resolution chapter.');
+            }
+          }
+        }
+      }
     }
     for (const storyline of result.setup_draft?.storylines || []) {
       if (!storyline.thread_id || !ids.has(storyline.thread_id)) {

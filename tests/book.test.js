@@ -506,6 +506,23 @@ test('idea validation rejects unknown thread ids', () => {
   assert.ok(result.findings.some((finding) => finding.rule_id === 'idea.thread.unknown_mystery_thread'));
 });
 
+test('idea validation checks thread status consistency', () => {
+  const outline = drawIdeas({ type: 'outlinepack', genre: '悬疑', count: 1, seed: 42, chapters: 10 }).results[0];
+  const bad = JSON.parse(JSON.stringify(outline));
+  bad.thread_registry[0].status = 'active';
+  bad.thread_registry[0].resolved_in = 'P1-V1-C1';
+  const active = validateIdeaDraw({ results: [bad] });
+  assert.ok(active.findings.some((finding) => finding.rule_id === 'idea.thread.active_with_resolution'));
+  const missing = JSON.parse(JSON.stringify(outline));
+  missing.thread_registry[0].status = 'resolved';
+  missing.thread_registry[0].resolved_in = 'missing-chapter';
+  const resolved = validateIdeaDraw({ results: [missing] });
+  assert.ok(resolved.findings.some((finding) => finding.rule_id === 'idea.thread.unknown_resolved_chapter'));
+  const invalid = JSON.parse(JSON.stringify(outline));
+  invalid.thread_registry[0].status = 'paused';
+  assert.ok(validateIdeaDraw({ results: [invalid] }).findings.some((finding) => finding.rule_id === 'idea.thread.invalid_status'));
+});
+
 test('plotpack combines worldpack, cast relations and chapter beats', () => {
   const draw = drawIdeas({ type: 'plotpack', genre: '悬疑', count: 1, seed: 42 });
   assert.equal(draw.meta.deck, 'suspense');
