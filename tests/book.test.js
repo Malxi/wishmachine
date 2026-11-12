@@ -456,7 +456,8 @@ test('outlinepack expands into multiple volumes', () => {
   assert.ok(outline.chapters[1].mysteries.carried[0].importance);
   assert.ok(outline.chapters[1].mysteries.carried[0].thread);
   assert.ok(outline.chapters[1].mysteries.carried[0].related_cast.length > 0);
-  assert.ok(outline.chapters[1].mysteries.carried.some((mystery) => mystery.thread === 'scene'));
+  assert.ok(outline.chapters[1].mysteries.carried.some((mystery) => mystery.thread_type === 'scene'));
+  assert.ok(outline.chapters[1].mysteries.carried[0].thread.length > 0);
   assert.ok(outline.chapters[11].mysteries.resolved.length > 0);
   assert.ok(outline.chapters[11].mysteries.resolved[0].answer);
   assert.ok(outline.volumes[1].chapters[0].mysteries.carried.length > 0);
@@ -473,6 +474,15 @@ test('outlinepack expands into multiple volumes', () => {
   assert.ok(outline.setup_draft.project_name);
   assert.deepEqual(validateSetup(outline.setup_draft), []);
   assert.deepEqual(validateOutline(outline.draft_outline, { structure: {} }), []);
+});
+
+test('long outlinepack records dropped mysteries', () => {
+  const draw = drawIdeas({ type: 'outlinepack', genre: '修仙', count: 1, seed: 42, chapters: 30, scenes: 3 });
+  const outline = draw.results[0];
+  assert.ok(outline.dropped_mysteries.length > 0);
+  assert.ok(outline.dropped_mysteries.every((mystery) => mystery.status === 'dropped'));
+  assert.ok(outline.dropped_mysteries.every((mystery) => mystery.dropped_in));
+  assert.ok(outline.chapters.some((chapter) => chapter.mysteries.dropped.length > 0));
 });
 
 test('plotpack combines worldpack, cast relations and chapter beats', () => {

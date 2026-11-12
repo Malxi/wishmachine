@@ -629,6 +629,13 @@ function buildOutlinePack(plot, seed, options = {}) {
   const targetChars = Math.max(500, Math.min(10000, Number(options.targetChars) || 3000));
   const beats = plot.beats || [];
   const castNames = (plot.cast || []).map((character) => character.name);
+  const leadCast = (plot.cast || [])
+    .filter((character) => ['protagonist', 'antagonist'].includes(character.role_tags?.[0]))
+    .map((character) => character.name);
+  const supportCast = (plot.cast || [])
+    .filter((character) => character.role_tags?.[0] === 'support')
+    .map((character) => character.name);
+  const sceneCast = [...new Set([castNames[0], ...supportCast].filter(Boolean))].slice(0, 2);
   const protagonist = castNames[0] || '主角';
   const pacingByFunction = {
     setup: 'slow build',
@@ -647,6 +654,7 @@ function buildOutlinePack(plot, seed, options = {}) {
   const totalChapters = Number(options.totalChapters) || chapters;
   let previousChapterConsequence = options.previousConsequence || '';
   let pendingMysteries = Array.isArray(options.carriedMysteries) ? options.carriedMysteries.slice() : [];
+  let droppedMysteries = [];
   for (let index = 0; index < chapters; index += 1) {
     const globalIndex = chapterOffset + index;
     const entryFromPrevious = previousChapterConsequence;
@@ -679,6 +687,7 @@ function buildOutlinePack(plot, seed, options = {}) {
       carried: carriedMysteries,
       planted: [],
       resolved: [],
+      dropped: [],
     };
     if (beat.function === 'setup' && plot.premise?.hidden_truth) {
       mysteries.planted.push({
@@ -688,8 +697,9 @@ function buildOutlinePack(plot, seed, options = {}) {
         payoff: plot.storyline?.cost || '',
         mystery: plot.premise.hidden_truth,
         importance: 10,
-        thread: 'premise',
-        related_cast: castNames.slice(0, 3),
+        thread: plot.storyline?.title || 'premise',
+        thread_type: 'premise',
+        related_cast: leadCast,
         planted_in: chapterId,
         status: 'open',
       });
@@ -702,8 +712,9 @@ function buildOutlinePack(plot, seed, options = {}) {
         payoff: plot.storyline?.cost || '',
         mystery: scenarioB.twist,
         importance: 8,
-        thread: 'storyline',
-        related_cast: castNames.slice(0, 3),
+        thread: plot.storyline?.title || 'storyline',
+        thread_type: 'storyline',
+        related_cast: leadCast,
         planted_in: chapterId,
         status: 'open',
       });
@@ -725,7 +736,8 @@ function buildOutlinePack(plot, seed, options = {}) {
         payoff: plot.storyline?.cost || '',
         mystery: plot.storyline?.midpoint || plot.premise?.hidden_truth || '核心谜题',
         importance: 10,
-        thread: 'climax',
+        thread: plot.storyline?.title || 'climax',
+        thread_type: 'climax',
         related_cast: castNames,
         resolved_in: chapterId,
         status: 'resolved',
@@ -763,8 +775,9 @@ function buildOutlinePack(plot, seed, options = {}) {
             payoff: plot.storyline?.cost || '',
             mystery: plot.premise.hidden_truth,
             importance: 4,
-            thread: 'scene',
-            related_cast: castNames.slice(0, 2),
+            thread: plot.storyline?.title || 'scene',
+            thread_type: 'scene',
+            related_cast: sceneCast,
             status: 'open',
           }]
           : sceneIndex === 1
@@ -775,8 +788,9 @@ function buildOutlinePack(plot, seed, options = {}) {
               payoff: plot.storyline?.cost || '',
               mystery: `局部问题：${sceneObstacle}`,
               importance: 4,
-              thread: 'scene',
-              related_cast: castNames.slice(0, 2),
+              thread: plot.storyline?.title || 'scene',
+              thread_type: 'scene',
+              related_cast: sceneCast,
               status: 'open',
             }]
             : [],
@@ -788,8 +802,9 @@ function buildOutlinePack(plot, seed, options = {}) {
             payoff: plot.storyline?.cost || '',
             mystery: plot.storyline?.midpoint || plot.premise?.hidden_truth || '本章疑问',
             importance: 6,
-            thread: 'scene',
-            related_cast: castNames.slice(0, 2),
+            thread: plot.storyline?.title || 'scene',
+            thread_type: 'scene',
+            related_cast: sceneCast,
             status: 'resolved',
           }]
           : [],
@@ -872,6 +887,7 @@ function buildOutlinePack(plot, seed, options = {}) {
           mystery: item.question,
           importance: item.importance,
           thread: item.thread,
+          thread_type: item.thread_type,
           related_cast: item.related_cast,
           from: chapterId,
           status: 'open',
@@ -890,6 +906,7 @@ function buildOutlinePack(plot, seed, options = {}) {
             mystery: item.question,
             importance: item.importance,
             thread: item.thread,
+            thread_type: item.thread_type,
             related_cast: item.related_cast,
             from: chapterId,
             source_scene: `${chapterId}-S${scene.order}`,
@@ -898,9 +915,19 @@ function buildOutlinePack(plot, seed, options = {}) {
         }
       }
     }
-    pendingMysteries = pendingMysteries
-      .sort((left, right) => (right.importance || 0) - (left.importance || 0))
-      .slice(0, 5);
+    const sortedMysteries = pendingMysteries
+      .sort((left, right) => (right.importance || 0) - (left.importance || 0));
+    const keptMysteries = sortedMysteries.slice(0, 5);
+    for (const dropped of sortedMysteries.slice(5)) {
+      const record = {
+        ...dropped,
+        status: 'dropped',
+        dropped_in: chapterId,
+      };
+      mysteries.dropped.push(record);
+      droppedMysteries.push(record);
+    }
+    pendingMysteries = keptMysteries;
   }
   const volume = {
     id: volumeId || 'P1-V1',
@@ -943,6 +970,7 @@ function buildOutlinePack(plot, seed, options = {}) {
     motif: plot.motif,
     plotpack: plot,
     pending_mysteries: pendingMysteries,
+    dropped_mysteries: droppedMysteries,
   };
 }
 
@@ -1027,6 +1055,7 @@ function buildMultiVolumeOutlinePack(plot, seed, options = {}) {
     },
     chapter_config: chapterConfig,
     pending_mysteries: carriedMysteries,
+    dropped_mysteries: bases.flatMap((base) => base.dropped_mysteries || []),
   };
 }
 
