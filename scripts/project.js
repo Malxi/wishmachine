@@ -185,6 +185,67 @@ export function saveImportedIdeas(project, payload, options = {}) {
   return { ...draw, saved: { id, path: path.relative(project.dir, file).replace(/\\/g, '/') } };
 }
 
+function decodeHtml(text) {
+  return String(text)
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'");
+}
+
+export async function ingestSource(project, url, options = {}) {
+  let parsed;
+  try {
+    parsed = new URL(url);
+  } catch {
+    throw new Error(`invalid source URL: ${url}`);
+  }
+  if (!['http:', 'https:'].includes(parsed.protocol)) {
+    throw new Error('source URL must use http or https');
+  }
+  const response = await fetch(parsed.href, {
+    redirect: 'follow',
+    headers: { 'user-agent': 'Wishmachine/0.1 (source ingest)' },
+    signal: AbortSignal.timeout(15000),
+  });
+  if (!response.ok) {
+    throw new Error(`source fetch failed: ${response.status} ${response.statusText}`);
+  }
+  const html = await response.text();
+  const title = decodeHtml(html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] || parsed.hostname).trim();
+  const meta = (name) => {
+    const pattern = new RegExp(`<meta[^>]+(?:name|property)=["']${name}["'][^>]+content=["']([\\s\\S]*?)["']`, 'i');
+    return decodeHtml(html.match(pattern)?.[1] || '').trim();
+  };
+  const description = meta('description') || meta('og:description');
+  const keywordText = meta('keywords');
+  const text = decodeHtml(html
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim());
+  const keywords = keywordText
+    ? keywordText.split(/[,，;；]/).map((item) => item.trim()).filter(Boolean).slice(0, 12)
+    : [...new Set(title.split(/[\s:：·\-—]+/).filter((item) => item.length >= 2))].slice(0, 8);
+  const card = {
+    title,
+    type: 'web-source',
+    source: parsed.href,
+    source_url: parsed.href,
+    retrieved_at: nowIso(),
+    description,
+    keywords,
+    excerpt: text.slice(0, 4000),
+  };
+  return saveImportedIdeas(project, { results: [card] }, {
+    type: options.type || 'source',
+    source: parsed.href,
+  });
+}
+
 export function saveResearchReport(project, id, report) {
   if (!id) throw new Error('research report requires an id');
   if (!report || typeof report !== 'object' || Array.isArray(report)) {

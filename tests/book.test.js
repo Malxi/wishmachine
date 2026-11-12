@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { initProject, loadProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, doctorProject, saveIdeaDraw, saveImportedIdeas, saveResearchReport, writeArtifact, readSection } from '../scripts/project.js';
+import http from 'node:http';
+import { initProject, loadProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, doctorProject, saveIdeaDraw, saveImportedIdeas, saveResearchReport, ingestSource, writeArtifact, readSection } from '../scripts/project.js';
 import { checkProject } from '../scripts/schema.js';
 import { drawIdeas } from '../scripts/ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference } from '../scripts/guides.js';
@@ -277,6 +278,27 @@ test('a character who left cannot appear later without a return', () => {
   const result = writeArtifact(project, { section: 'outline', mode: 'replace', apply: true, content: JSON.stringify(absenceOutline) });
   assert.equal(result.applied, true);
   assert.ok(result.check.findings.some((item) => item.rule_id === 'quality.outline.character_absent_return'));
+});
+
+test('web source ingestion creates a saved source card', async () => {
+  const server = http.createServer((request, response) => {
+    response.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
+    response.end('<!doctype html><html><head><title>测试史料</title><meta name="description" content="一段可核查的史料"><meta name="keywords" content="海船,失踪,日志"></head><body><p>船只被发现时货物完好。</p></body></html>');
+  });
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  try {
+    const address = server.address();
+    const dir = tempDir();
+    initProject({ name: 'ingest test', dir, parts: 1, volumes: 1, chapter: 1 });
+    const project = loadProject(dir);
+    const result = await ingestSource(project, `http://127.0.0.1:${address.port}/source`);
+    assert.equal(result.results[0].title, '测试史料');
+    assert.equal(result.results[0].source_url, `http://127.0.0.1:${address.port}/source`);
+    assert.ok(result.results[0].keywords.includes('海船'));
+    assert.ok(result.saved.id);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
 });
 
 test('imported cards and research reports are persisted', () => {

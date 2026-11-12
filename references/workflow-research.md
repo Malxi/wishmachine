@@ -36,6 +36,15 @@ Prefer primary or reputable public-domain/reference sources. Record the exact
 title and URL you opened. Do not invent a citation or claim that a source says
 something it does not.
 
+If you open a usable page, save a raw source card:
+
+```bash
+node scripts/wishmachine.js ideas ingest --url "https://example.org/source" --dir my-book
+```
+
+It stores the title, URL, retrieval time, keywords and a short excerpt in the
+project card pool. It does not semantically verify the page.
+
 ## 3. Compatibility check
 
 Classify each entity:

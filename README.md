@@ -74,6 +74,7 @@ logs/
 - `ideas namecard/premise/resource/equipment/scenario/provocation/law/event/engine/storyline/location/faction/motif/worldpack`
 - `ideas draw --save` 持久化到 `story/ideas/`，可用 `book read ideas` / `book read idea` 读取
 - `ideas import` 将联网考究/人工整理的卡片写入同一卡池
+- `ideas ingest --url` 抓取网页标题、描述、关键词和短摘录，保存为 source card
 - `book write research` / `book read research` 持久化考究报告
 - `skills/wishmachine-research` 联网考究抽卡实体与关系
 - `gen workflow/reference/skill`
