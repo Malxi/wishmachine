@@ -189,7 +189,8 @@ without writing. `book registry log --limit 20` reads
 `logs/registry-operations.jsonl` directly; `--action abandon|clean` and
 `--since <ISO>` filter the log. `book registry backups [--keep 10] [--prune]`
 lists or prunes `logs/registry-backups/`. `book registry backup` creates a
-manual snapshot; `book registry restore --backup <name>` restores it.
+manual snapshot; `book registry restore --backup <name> [--dry-run]` restores it.
+`book registry backups` also shows manifest metadata.
 `book registry undo [--operation <id>]` restores the selected or most recent
 backed-up operation; each abandon/clean writes a backup and operation id. `book registry abandon --mystery <id>` manually marks a
 mystery dropped with a reason; add `--dry-run` to preview without writing.
