@@ -5,7 +5,7 @@ display_name_en: Novel Wish Machine Research
 description: 对小说许愿机抽出的世界包、历史母题、地点、势力、装备和人物关系做联网考究，标注来源、时代与地区错配，阻止离谱组合进入设定。
 description_zh: 对小说许愿机抽出的世界包、历史母题、地点、势力、装备和人物关系做联网考究，标注来源、时代与地区错配，阻止离谱组合进入设定。
 description_en: Research Wishmachine worldpacks, historical motifs, places, factions, equipment and character relations on the web; cite sources, flag anachronisms, and reject implausible combinations before they enter the story bible.
-version: 0.1.6
+version: 0.1.7
 author: Malxi
 ---
 

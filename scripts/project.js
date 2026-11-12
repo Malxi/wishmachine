@@ -255,11 +255,44 @@ export async function ingestSource(project, url, options = {}) {
     .map((match) => decodeHtml(match[1].replace(/<[^>]+>/g, '')).trim())
     .filter(Boolean)
     .slice(0, 20);
-  const entities = [...new Set([title, ...headings])].map((label, index) => ({
-    id: `source-${index + 1}`,
-    type: 'heading',
-    label,
-  }));
+  const linkMap = new Map();
+  for (const match of html.matchAll(/<a[^>]+href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)) {
+    const label = decodeHtml(match[2].replace(/<[^>]+>/g, '')).trim();
+    if (!label) continue;
+    let href;
+    try {
+      href = new URL(decodeHtml(match[1]), parsed).href;
+    } catch {
+      continue;
+    }
+    if (!/^https?:/i.test(href)) continue;
+    if (!linkMap.has(href)) linkMap.set(href, label);
+    if (linkMap.size >= 30) break;
+  }
+  const sourceId = `source:${parsed.href}`;
+  const entities = [
+    { id: sourceId, type: 'source', label: title },
+    ...headings.map((label, index) => ({ id: `source:heading-${index + 1}`, type: 'heading', label })),
+    ...[...linkMap.entries()].map(([url, label], index) => ({
+      id: `source:link-${index + 1}`,
+      type: 'link',
+      label,
+      url,
+    })),
+  ];
+  const relations = [
+    ...headings.map((label, index) => ({
+      from: sourceId,
+      to: `source:heading-${index + 1}`,
+      type: 'mentions',
+    })),
+    ...[...linkMap.entries()].map(([url, label], index) => ({
+      from: sourceId,
+      to: `source:link-${index + 1}`,
+      type: 'links_to',
+    })),
+  ];
+  const links = [...linkMap.entries()].map(([url, label]) => ({ label, url }));
   const card = {
     title,
     type: 'web-source',
@@ -269,8 +302,9 @@ export async function ingestSource(project, url, options = {}) {
     description,
     keywords,
     headings,
+    links,
     entities,
-    graph: { entities, relations: [] },
+    graph: { entities, relations },
     excerpt: text.slice(0, 4000),
   };
   return saveImportedIdeas(project, { results: [card] }, {

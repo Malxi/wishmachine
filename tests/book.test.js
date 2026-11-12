@@ -335,7 +335,7 @@ test('source search maps Gutenberg results into source cards', async () => {
 test('web source ingestion creates a saved source card', async () => {
   const server = http.createServer((request, response) => {
     response.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
-    response.end('<!doctype html><html><head><title>测试史料</title><meta name="description" content="一段可核查的史料"><meta name="keywords" content="海船,失踪,日志"></head><body><p>船只被发现时货物完好。</p></body></html>');
+    response.end('<!doctype html><html><head><title>测试史料</title><meta name="description" content="一段可核查的史料"><meta name="keywords" content="海船,失踪,日志"></head><body><h1>海船失踪</h1><p>船只被发现时货物完好。</p><a href="/related">相关档案</a></body></html>');
   });
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
   try {
@@ -347,6 +347,8 @@ test('web source ingestion creates a saved source card', async () => {
     assert.equal(result.results[0].title, '测试史料');
     assert.equal(result.results[0].source_url, `http://127.0.0.1:${address.port}/source`);
     assert.ok(result.results[0].keywords.includes('海船'));
+    assert.ok(result.results[0].links.some((link) => link.label === '相关档案'));
+    assert.ok(result.results[0].graph.relations.some((relation) => relation.type === 'links_to'));
     assert.ok(result.saved.id);
     const catalogPath = path.join(dir, 'catalog.json');
     fs.writeFileSync(catalogPath, JSON.stringify([{

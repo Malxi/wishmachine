@@ -42,8 +42,9 @@ If you open a usable page, save a raw source card:
 node scripts/wishmachine.js ideas ingest --url "https://example.org/source" --dir my-book
 ```
 
-It stores the title, URL, retrieval time, keywords and a short excerpt in the
-project card pool. It does not semantically verify the page.
+It stores the title, URL, retrieval time, keywords, headings, links, a short
+excerpt, and a small `source -> mentions/links_to` graph. It does not
+semantically verify the page.
 
 The bundled source catalog can seed a history/myth/novel pass:
 
