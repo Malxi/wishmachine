@@ -32,6 +32,12 @@ const ARCHETYPES = [
   { name: '把救援当生意的船长', personality: ['务实', '讲义气', '对风险有野兽般的直觉'], contradiction: '靠救援赚钱，却总在最后一刻免费多救一个人。', want: '让船和船员都活到下一趟', fear: '自己迟早要为一次免费救援赔上整条船', mask: '只谈价钱，不谈良心', speech: '先报价，再问人数', body: '谈价时会用指节敲舱壁', backstory: '第一次免费救援，救上来的是仇人的女儿。' },
 ];
 
+const ROLE_ARCHETYPES = {
+  protagonist: ['过度理性的救援者', '被规则养大的叛徒', '把账本当武器的会计', '失去名字的守门人', '替罪羊律师', '失去痛觉的战士', '靠假死活着的继承人', '把救援当生意的船长'],
+  antagonist: ['温柔的控制者', '把灾难当项目的管理者', '把谎言当基础设施的广播员', '只会赢小局的棋手', '只会翻译坏消息的外交官'],
+  support: ['只看证据的审讯者', '把失败当样本的工程师', '靠记忆活着的复制人', '替人记住承诺的档案员', '相信预言的飞行员', '自愿成为样本的医生', '把敌人当读者的说客'],
+};
+
 const PREMISES = [
   { title: '劳动与违约：机甲驾驶员雇佣契', statement: '机甲驾驶员雇佣契由深空公会签发，表面约定工作内容、报酬与违约责任，实际用竞业条款锁死技能。', surface_rule: '雇佣契只在战损之后生效；没有契约，任何主张都不被承认。', hidden_truth: '契约真正出售的不是劳动，而是离开的权利。', scarcity: '只有深空公会签发的契约被承认；绕过它要支付未来十年的劳动。', conflict: '打捞员与公会争夺契约解释权。', leverage: '用仲裁程序冻结敌人的战舰。', counter: '把合同公开，让敌人无法继续雇佣任何人。' },
   { title: '配给与生存：氧气与冷却剂配给券', statement: '氧气与冷却剂配给券由深空后勤处签发，表面保证关键人员优先补给，实际用热量控制行为。', surface_rule: '配给券只在虫潮封锁之后生效；没有券，任何主张都不被承认。', hidden_truth: '配给点故意保持长期短缺，短缺本身就是治理工具。', scarcity: '只有后勤处签发的券被承认；绕过它要支付一年寿命。', conflict: '居民与后勤处争夺配给解释权。', leverage: '让敌人领取一份被做了标记的配给。', counter: '公开配给账本，让所有人看到谁在囤积。' },
@@ -496,7 +502,7 @@ function resultId(prefix, seed, index) {
   return `${prefix}-${seed}-${String(index + 1).padStart(2, '0')}`;
 }
 
-function namecards(rng, seed, count) {
+function namecards(rng, seed, count, roles = []) {
   const surnames = pickMany(rng, SURNAMES, Math.min(count, SURNAMES.length));
   const given = pickMany(rng, GIVEN, Math.min(count, GIVEN.length));
   const results = [];
@@ -513,7 +519,11 @@ function namecards(rng, seed, count) {
       attempt += 1;
     }
     used.add(name);
-    const archetype = ARCHETYPES[Math.floor(rng() * ARCHETYPES.length)];
+    const role = roles[i] || (i === 0 ? 'protagonist' : 'support');
+    const pool = (ROLE_ARCHETYPES[role] || [])
+      .map((archetypeName) => ARCHETYPES.find((item) => item.name === archetypeName))
+      .filter(Boolean);
+    const archetype = (pool.length ? pick(rng, pool) : ARCHETYPES[Math.floor(rng() * ARCHETYPES.length)]);
     const id = resultId('name', seed, i);
     results.push({
       id,
@@ -521,6 +531,7 @@ function namecards(rng, seed, count) {
       surname,
       given_name: givenName,
       naming_style: pick(rng, ['hard', 'literary', 'plain']),
+      role_tags: [role],
       archetype: archetype.name,
       personality: archetype.personality,
       contradiction: archetype.contradiction,
@@ -531,7 +542,6 @@ function namecards(rng, seed, count) {
       body_language: archetype.body,
       backstory_hook: archetype.backstory,
       naming_logic: `先定原型“${archetype.name}”，再选音感；姓氏“${surname}”与名字“${givenName}”组合为“${name}”。`,
-      role_tags: [i === 0 ? 'protagonist' : 'support'],
       derivation: ['archetype', 'personality', 'contradiction', 'naming_style', 'surname', 'given_name'],
     });
   }
@@ -565,10 +575,7 @@ export function drawIdeas(options = {}) {
     const packDefs = deck.packs;
     const selected = pickMany(rng, packDefs, Math.min(count, packDefs.length));
     results = selected.map((def, packIndex) => {
-      const cast = namecards(rng, seed + packIndex, 4);
-      cast.forEach((character, index) => {
-        character.role_tags = [index === 0 ? 'protagonist' : index === 1 ? 'antagonist' : 'support'];
-      });
+      const cast = namecards(rng, seed + packIndex, 4, ['protagonist', 'antagonist', 'support', 'support']);
       return buildWorldpack(def, packIndex, seed, cast, deck);
     });
   } else if (type === 'namecard' || type === 'name' || type === 'cast') {

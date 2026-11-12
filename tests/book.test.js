@@ -229,6 +229,8 @@ test('worldpack bundles premise, resources and scenarios', () => {
   assert.ok(pack.results[0].equipment.name);
   assert.equal(pack.results[0].cast[0].role_tags[0], 'protagonist');
   assert.equal(pack.results[0].cast[1].role_tags[0], 'antagonist');
+  assert.equal(pack.results[0].cast[2].role_tags[0], 'support');
+  assert.equal(pack.results[0].cast[3].role_tags[0], 'support');
   assert.ok(pack.results[0].cast.length >= 1);
 });
 
