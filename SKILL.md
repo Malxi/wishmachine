@@ -181,7 +181,8 @@ Checks also flag stale registry entries, final-status mismatches and resolved
 or dropped mysteries that are not linked from their thread. `doctor --fix`
 removes stale registry entries.
 Dropped mysteries carry `reason: pending_capacity`; registry status must be
-present in the chapter status set. `doctor --fix`
+present in the chapter status set. `book registry` summarizes registry
+versions/counts and thread/mystery drift. `doctor --fix`
 migrates old projects, synchronizes thread status from resolved mysteries and
 fills abandoned entries; it also downgrades a resolved thread when no matching
 resolved mystery remains. Pending mysteries are sorted by importance and capped; dropped
