@@ -1091,6 +1091,8 @@ function buildMultiVolumeOutlinePack(plot, seed, options = {}) {
   const setupDraft = buildSetupDraft({ ...plot, storylines }, { chapter_config: chapterConfig });
   const allDropped = bases.flatMap((base) => base.dropped_mysteries || []);
   const abandonedIds = new Set(allDropped.map((mystery) => mystery.thread_id));
+  const abandonedThreads = allDropped.map((item) => item.abandoned_thread).filter(Boolean);
+  setupDraft.abandoned_threads = abandonedThreads;
   const threadRegistry = storylines.map((item, index) => {
     const id = item.id || `thread-${index + 1}`;
     const threadChapters = chapters.filter((chapter) => chapter.thread_id === id);
@@ -1118,6 +1120,7 @@ function buildMultiVolumeOutlinePack(plot, seed, options = {}) {
     thread_registry: threadRegistry,
     draft_outline: {
       thread_registry: threadRegistry,
+      abandoned_threads: abandonedThreads,
       parts: [{
         id: 'P1',
         title: plot.premise?.title || '未命名故事',
@@ -1128,7 +1131,7 @@ function buildMultiVolumeOutlinePack(plot, seed, options = {}) {
     chapter_config: chapterConfig,
     pending_mysteries: carriedMysteries,
     dropped_mysteries: allDropped,
-    abandoned_threads: allDropped.map((item) => item.abandoned_thread).filter(Boolean),
+    abandoned_threads: abandonedThreads,
   };
 }
 

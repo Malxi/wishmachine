@@ -134,6 +134,17 @@ export function validateSetup(setup) {
           findings.push(finding('quality.setup.thread_registry.unknown', 'high', `storyline ${storyline.name || storyline.thread_id} references unknown thread ${storyline.thread_id}`, storyline.thread_id));
         }
       }
+      if (setup.abandoned_threads !== undefined) {
+        if (!Array.isArray(setup.abandoned_threads)) {
+          findings.push(finding('schema.setup.abandoned_threads', 'high', 'abandoned_threads must be an array'));
+        } else {
+          for (const thread of setup.abandoned_threads) {
+            if (!thread?.thread_id || !ids.has(thread.thread_id)) {
+              findings.push(finding('quality.setup.abandoned_threads.unknown', 'high', `abandoned thread ${thread?.thread_id || '(missing)'} is not in thread_registry`, thread?.thread_id || ''));
+            }
+          }
+        }
+      }
     }
   }
   return findings;
@@ -149,6 +160,7 @@ export function validateOutline(outline, config) {
   }
   const ids = new Set();
   const threadIds = new Set();
+  const threadMap = new Map();
   if (outline.thread_registry !== undefined) {
     if (!Array.isArray(outline.thread_registry)) {
       findings.push(finding('schema.outline.thread_registry', 'high', 'thread_registry must be an array'));
@@ -162,10 +174,23 @@ export function validateOutline(outline, config) {
           findings.push(finding('quality.outline.thread_registry.duplicate', 'high', `duplicate thread id ${thread.id}`, thread.id));
         }
         threadIds.add(thread.id);
+        threadMap.set(thread.id, thread);
+      }
+      if (outline.abandoned_threads !== undefined) {
+        if (!Array.isArray(outline.abandoned_threads)) {
+          findings.push(finding('schema.outline.abandoned_threads', 'high', 'abandoned_threads must be an array'));
+        } else {
+          for (const thread of outline.abandoned_threads) {
+            if (!thread?.thread_id || !threadIds.has(thread.thread_id)) {
+              findings.push(finding('quality.outline.abandoned_threads.unknown', 'high', `abandoned thread ${thread?.thread_id || '(missing)'} is not in thread_registry`, thread?.thread_id || ''));
+            }
+          }
+        }
       }
     }
   }
   const chapterIds = [];
+  const chaptersById = new Map();
   let volumeCount = 0;
   let chapterCount = 0;
   outline.parts.forEach((part, pi) => {
@@ -215,6 +240,7 @@ export function validateOutline(outline, config) {
           return;
         }
         chapterIds.push(chapter.id);
+        chaptersById.set(chapter.id, chapter);
         for (const key of ['id', 'title', 'summary', 'conflict', 'pacing']) {
           if (typeof chapter[key] !== 'string' || !chapter[key].trim()) {
             findings.push(finding(`schema.outline.chapter.${key}`, 'high', `${chapterId}.${key} must be a non-empty string`, chapterId));
@@ -298,6 +324,27 @@ export function validateOutline(outline, config) {
       });
     });
   });
+  for (const thread of threadMap.values()) {
+    if (thread.status === 'active' && thread.resolved_in) {
+      findings.push(finding('quality.outline.thread.active_with_resolution', 'high', `${thread.id} is active but has resolved_in`, thread.id));
+    }
+    if (thread.status === 'resolved') {
+      if (!thread.resolved_in) {
+        findings.push(finding('quality.outline.thread.resolved_without_chapter', 'high', `${thread.id} is resolved without resolved_in`, thread.id));
+      } else {
+        const chapter = chaptersById.get(thread.resolved_in);
+        if (!chapter) {
+          findings.push(finding('quality.outline.thread.unknown_resolved_chapter', 'high', `${thread.id} resolved_in ${thread.resolved_in} is not a chapter`, thread.id));
+        } else if (!(chapter.mysteries?.resolved || []).some((mystery) => mystery.thread_id === thread.id)) {
+          findings.push(finding('quality.outline.thread_resolution_missing', 'high', `${thread.id} resolves in ${thread.resolved_in} without a matching resolved mystery`, thread.id));
+        }
+      }
+    }
+    if (thread.status === 'abandoned') {
+      const listed = (outline.abandoned_threads || []).some((item) => item.thread_id === thread.id);
+      if (!listed) findings.push(finding('quality.outline.abandoned_thread_missing', 'high', `${thread.id} is abandoned but missing from abandoned_threads`, thread.id));
+    }
+  }
   if (config?.structure?.target_volumes && volumeCount !== config.structure.target_volumes) {
     findings.push(finding('quality.outline.volume_count', 'medium', `outline has ${volumeCount} volumes; target is ${config.structure.target_volumes}`));
   }

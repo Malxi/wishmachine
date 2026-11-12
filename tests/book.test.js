@@ -511,6 +511,20 @@ test('idea validation rejects unknown thread ids', () => {
   assert.ok(result.findings.some((finding) => finding.rule_id === 'idea.thread.unknown_mystery_thread'));
 });
 
+test('outline validation checks thread resolution and abandoned threads', () => {
+  const outline = drawIdeas({ type: 'outlinepack', genre: '悬疑', count: 1, seed: 42, chapters: 10 }).results[0];
+  const bad = JSON.parse(JSON.stringify(outline.draft_outline));
+  const resolved = bad.thread_registry.find((thread) => thread.status === 'resolved');
+  assert.ok(resolved);
+  const resolvedChapter = bad.parts[0].volumes[0].chapters.find((chapter) => chapter.id === resolved.resolved_in);
+  resolvedChapter.mysteries.resolved = [];
+  assert.ok(validateOutline(bad, { structure: {} }).some((finding) => finding.rule_id === 'quality.outline.thread_resolution_missing'));
+  const abandoned = JSON.parse(JSON.stringify(outline.draft_outline));
+  abandoned.thread_registry[0].status = 'abandoned';
+  abandoned.abandoned_threads = [];
+  assert.ok(validateOutline(abandoned, { structure: {} }).some((finding) => finding.rule_id === 'quality.outline.abandoned_thread_missing'));
+});
+
 test('idea validation checks thread status consistency', () => {
   const outline = drawIdeas({ type: 'outlinepack', genre: '悬疑', count: 1, seed: 42, chapters: 10 }).results[0];
   const bad = JSON.parse(JSON.stringify(outline));

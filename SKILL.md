@@ -13,7 +13,7 @@ examples_en:
   - "Create a 3-volume × 5-chapter science-fiction project"
   - "Check the outline for blocking findings"
   - "Draw 12 science-fiction name cards"
-version: 0.1.84
+version: 0.1.85
 author: Malxi
 ---
 
@@ -174,7 +174,8 @@ setup/outline registry drift (`registry_missing_setup`, `registry_missing_outlin
 that lack `thread_registry` by deriving stable thread ids from setup storylines;
 it also fills missing chapter thread ids by matching thread names in chapter
 text, preserves resolved status from outline, and repairs setup/outline registry
-drift. Pending mysteries are sorted by importance and capped; dropped
+drift. Checks also verify that resolved threads have a matching resolved mystery
+and that abandoned threads are listed in `abandoned_threads`. Pending mysteries are sorted by importance and capped; dropped
 mysteries are recorded in `dropped_mysteries` and `abandoned_threads`.
 The saved pack also contains `setup_draft` with main/subplot
 storylines, premise progression and a world timeline.
