@@ -944,6 +944,78 @@ function migrateThreadRegistry(project) {
   };
 }
 
+function threadResolutionMap(outline) {
+  const map = new Map();
+  for (const chapter of outlineChapters(outline)) {
+    for (const mystery of chapter.mysteries?.resolved || []) {
+      if (mystery?.thread_id) map.set(mystery.thread_id, chapter.id);
+    }
+  }
+  return map;
+}
+
+function loadRegistryDocs(project) {
+  const setupFile = path.join(project.dir, 'story', 'setup', 'story_setup.json');
+  const outlineFile = path.join(project.dir, 'story', 'compose', 'outline.json');
+  if (!fs.existsSync(setupFile) || !fs.existsSync(outlineFile)) return null;
+  try {
+    return {
+      setupFile,
+      outlineFile,
+      setup: readJson(setupFile),
+      outline: readJson(outlineFile),
+    };
+  } catch {
+    return null;
+  }
+}
+
+function needsThreadStatusRepair(project) {
+  const docs = loadRegistryDocs(project);
+  if (!docs) return false;
+  const setupRegistry = Array.isArray(docs.setup.thread_registry) ? docs.setup.thread_registry : [];
+  const outlineRegistry = Array.isArray(docs.outline.thread_registry) ? docs.outline.thread_registry : [];
+  if (!setupRegistry.length || !outlineRegistry.length) return false;
+  const resolved = threadResolutionMap(docs.outline);
+  const abandoned = new Set((docs.outline.abandoned_threads || []).map((item) => item.thread_id));
+  return [...setupRegistry, ...outlineRegistry].some((thread) => (
+    (thread.status === 'active' && resolved.has(thread.id))
+    || (thread.status === 'abandoned' && !abandoned.has(thread.id))
+  ));
+}
+
+function repairThreadStatuses(project) {
+  const docs = loadRegistryDocs(project);
+  if (!docs) return null;
+  const resolved = threadResolutionMap(docs.outline);
+  let changed = false;
+  for (const doc of [docs.setup, docs.outline]) {
+    const registry = Array.isArray(doc.thread_registry) ? doc.thread_registry : [];
+    const abandoned = Array.isArray(doc.abandoned_threads) ? doc.abandoned_threads : [];
+    for (const thread of registry) {
+      if (thread.status === 'active' && resolved.has(thread.id)) {
+        thread.status = 'resolved';
+        thread.resolved_in = resolved.get(thread.id);
+        changed = true;
+      }
+      if (thread.status === 'abandoned' && !abandoned.some((item) => item.thread_id === thread.id)) {
+        abandoned.push({
+          thread_id: thread.id,
+          thread: thread.name,
+          question: thread.name,
+          importance: thread.importance,
+        });
+        changed = true;
+      }
+    }
+    if (abandoned.length) doc.abandoned_threads = abandoned;
+  }
+  if (!changed) return null;
+  writeJsonAtomic(docs.setupFile, docs.setup);
+  writeJsonAtomic(docs.outlineFile, docs.outline);
+  return { actions: ['repaired thread statuses'] };
+}
+
 export function doctorProject(project, options = {}) {
   const issues = [];
   const actions = [];
@@ -998,6 +1070,13 @@ export function doctorProject(project, options = {}) {
     if (fix) {
       const migration = migrateThreadRegistry(project);
       if (migration) actions.push(...migration.actions);
+    }
+  }
+  if (fs.existsSync(setupPath) && fs.existsSync(outlinePath) && needsThreadStatusRepair(project)) {
+    add('medium', 'thread.status_needs_repair', 'thread status does not match resolved/abandoned evidence', 'Run doctor --fix to synchronize thread status.');
+    if (fix) {
+      const repaired = repairThreadStatuses(project);
+      if (repaired) actions.push(...repaired.actions);
     }
   }
   let status = { orphan_chapters: [], orphan_recaps: [] };

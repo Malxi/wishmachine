@@ -670,6 +670,30 @@ test('doctor --fix repairs setup/outline registry drift', () => {
   assert.equal(JSON.stringify(setup.thread_registry), JSON.stringify(repaired.thread_registry));
 });
 
+test('doctor --fix repairs thread status from resolved mysteries', () => {
+  const dir = tempDir();
+  initProject({ name: 'thread status repair', dir, parts: 1, volumes: 1, chapter: 10 });
+  const project = loadProject(dir);
+  const outline = drawIdeas({ type: 'outlinepack', genre: '悬疑', count: 1, seed: 42, chapters: 10 }).results[0];
+  writeArtifact(project, { section: 'setup', content: JSON.stringify(outline.setup_draft), apply: true });
+  writeArtifact(project, { section: 'outline', content: JSON.stringify(outline.draft_outline), apply: true });
+  const setupFile = path.join(dir, 'story', 'setup', 'story_setup.json');
+  const outlineFile = path.join(dir, 'story', 'compose', 'outline.json');
+  for (const file of [setupFile, outlineFile]) {
+    const doc = JSON.parse(fs.readFileSync(file, 'utf8'));
+    doc.thread_registry[0].status = 'active';
+    doc.thread_registry[0].resolved_in = null;
+    fs.writeFileSync(file, JSON.stringify(doc, null, 2));
+  }
+  const report = doctorProject(project, { fix: true });
+  assert.equal(report.fixed, true);
+  const repairedSetup = JSON.parse(fs.readFileSync(setupFile, 'utf8'));
+  const repairedOutline = JSON.parse(fs.readFileSync(outlineFile, 'utf8'));
+  assert.equal(repairedSetup.thread_registry[0].status, 'resolved');
+  assert.equal(repairedOutline.thread_registry[0].status, 'resolved');
+  assert.ok(repairedSetup.thread_registry[0].resolved_in);
+});
+
 test('saved idea draws are readable from the project', () => {
   const dir = tempDir();
   initProject({ name: 'idea store', dir, parts: 1, volumes: 1, chapter: 1 });

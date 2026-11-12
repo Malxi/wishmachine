@@ -328,6 +328,14 @@ export function validateOutline(outline, config) {
     if (thread.status === 'active' && thread.resolved_in) {
       findings.push(finding('quality.outline.thread.active_with_resolution', 'high', `${thread.id} is active but has resolved_in`, thread.id));
     }
+    if (thread.status === 'active') {
+      const resolvedChapter = [...chaptersById.values()].find((chapter) => (
+        (chapter.mysteries?.resolved || []).some((mystery) => mystery.thread_id === thread.id)
+      ));
+      if (resolvedChapter) {
+        findings.push(finding('quality.outline.thread_should_resolve', 'medium', `${thread.id} is active but resolved in ${resolvedChapter.id}`, thread.id));
+      }
+    }
     if (thread.status === 'resolved') {
       if (!thread.resolved_in) {
         findings.push(finding('quality.outline.thread.resolved_without_chapter', 'high', `${thread.id} is resolved without resolved_in`, thread.id));
