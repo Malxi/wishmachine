@@ -77,6 +77,7 @@ logs/
 - `ideas ingest --url` 抓取网页标题、描述、关键词和短摘录，保存为 source card
 - `ideas discover --topic` 从内置历史/神话/小说来源目录批量抓取 source cards
 - `ideas search --provider wikipedia|gutenberg` 联网搜索来源并保存 source cards
+- `book read graph` 聚合所有已保存卡片的 entity / relation / keyword 图
 - `book write research` / `book read research` 持久化考究报告
 - `skills/wishmachine-research` 联网考究抽卡实体与关系
 - `gen workflow/reference/skill`

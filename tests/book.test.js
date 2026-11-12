@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import http from 'node:http';
-import { initProject, loadProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, doctorProject, saveIdeaDraw, saveImportedIdeas, saveResearchReport, ingestSource, discoverSources, searchSources, writeArtifact, readSection } from '../scripts/project.js';
+import { initProject, loadProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, doctorProject, saveIdeaDraw, saveImportedIdeas, saveResearchReport, ingestSource, discoverSources, searchSources, buildProjectGraph, writeArtifact, readSection } from '../scripts/project.js';
 import { checkProject } from '../scripts/schema.js';
 import { drawIdeas } from '../scripts/ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference } from '../scripts/guides.js';
@@ -278,6 +278,26 @@ test('a character who left cannot appear later without a return', () => {
   const result = writeArtifact(project, { section: 'outline', mode: 'replace', apply: true, content: JSON.stringify(absenceOutline) });
   assert.equal(result.applied, true);
   assert.ok(result.check.findings.some((item) => item.rule_id === 'quality.outline.character_absent_return'));
+});
+
+test('project graph merges saved cards and rejects dangling relations', () => {
+  const dir = tempDir();
+  initProject({ name: 'graph test', dir, parts: 1, volumes: 1, chapter: 1 });
+  const project = loadProject(dir);
+  saveIdeaDraw(project, drawIdeas({ type: 'worldpack', genre: '修仙', count: 1, seed: 42 }));
+  saveImportedIdeas(project, { results: [{ title: '外部来源', source: 'web', keywords: ['外源'] }] }, { type: 'source' });
+  const graph = buildProjectGraph(project);
+  assert.ok(graph.counts.entities > 0);
+  assert.ok(graph.counts.relations > 0);
+  assert.ok(graph.prompt.length > 0);
+  assert.equal(graph.blocking, false);
+  assert.ok(readSection(project, 'graph').graph.counts.entities > 0);
+  assert.throws(() => saveImportedIdeas(project, {
+    results: [{
+      title: '坏图',
+      graph: { entities: [{ id: 'a', type: 'x', label: 'A' }], relations: [{ from: 'a', to: 'missing', type: 'x' }] },
+    }],
+  }), /missing entity/);
 });
 
 test('source search maps Gutenberg results into source cards', async () => {

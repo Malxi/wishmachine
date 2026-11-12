@@ -5,7 +5,7 @@ display_name_en: Novel Wish Machine Research
 description: 对小说许愿机抽出的世界包、历史母题、地点、势力、装备和人物关系做联网考究，标注来源、时代与地区错配，阻止离谱组合进入设定。
 description_zh: 对小说许愿机抽出的世界包、历史母题、地点、势力、装备和人物关系做联网考究，标注来源、时代与地区错配，阻止离谱组合进入设定。
 description_en: Research Wishmachine worldpacks, historical motifs, places, factions, equipment and character relations on the web; cite sources, flag anachronisms, and reject implausible combinations before they enter the story bible.
-version: 0.1.4
+version: 0.1.5
 author: Malxi
 ---
 
@@ -72,6 +72,15 @@ For each `relation`:
 ```text
 does the target's method/resource/cost fit the source's rule and period?
 ```
+
+After saving cards, inspect the merged project graph:
+
+```bash
+node scripts/wishmachine.js book read graph --dir my-book
+```
+
+If it reports `graph.dangling_relation` or `graph.entity_conflict`, fix the
+imported graph before treating it as canon.
 
 ## Output
 

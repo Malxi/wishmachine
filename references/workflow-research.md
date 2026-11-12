@@ -117,6 +117,14 @@ story/ideas/<type>-<seed>-<stamp>.json
 ```
 
 List them with `book read ideas`; read one with `book read idea --id`.
+Inspect the merged project graph with:
+
+```bash
+node scripts/wishmachine.js book read graph --dir my-book
+```
+
+It reports dangling relations and entity-id conflicts across all saved cards.
+
 Save the research report with:
 
 ```bash

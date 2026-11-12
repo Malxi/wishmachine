@@ -145,20 +145,38 @@ export function saveImportedIdeas(project, payload, options = {}) {
   if (!raw || !Array.isArray(raw.results) || raw.results.length === 0) {
     throw new Error('ideas import expects an array or an object with a non-empty results array');
   }
-  const type = options.type || raw.type || 'reference';
-  const results = raw.results.map((item, index) => {
-    if (!item || typeof item !== 'object' || Array.isArray(item)) {
+  for (const [index, card] of raw.results.entries()) {
+    if (!card || typeof card !== 'object' || Array.isArray(card)) {
       throw new Error(`ideas import item ${index + 1} must be an object`);
     }
-    if (!item.title && !item.name) {
+    if (!card.title && !card.name) {
       throw new Error(`ideas import item ${index + 1} needs a title or name`);
     }
-    return {
-      ...item,
-      source: item.source || options.source || '',
-      imported_at: nowIso(),
-    };
-  });
+    const graph = card.graph;
+    if (graph) {
+      if (!Array.isArray(graph.entities) || !Array.isArray(graph.relations)) {
+        throw new Error(`ideas import item ${index + 1} graph needs entities and relations arrays`);
+      }
+      const ids = new Set();
+      for (const entity of graph.entities) {
+        if (!entity?.id || !entity?.type || !entity?.label) {
+          throw new Error(`ideas import item ${index + 1} graph entity needs id, type and label`);
+        }
+        ids.add(entity.id);
+      }
+      for (const relation of graph.relations) {
+        if (!relation?.from || !relation?.to || !ids.has(relation.from) || !ids.has(relation.to)) {
+          throw new Error(`ideas import item ${index + 1} graph relation references a missing entity`);
+        }
+      }
+    }
+  }
+  const type = options.type || raw.type || 'reference';
+  const results = raw.results.map((item) => ({
+    ...item,
+    source: item.source || options.source || '',
+    imported_at: nowIso(),
+  }));
   const draw = {
     ok: true,
     section: 'ideas',
@@ -377,6 +395,90 @@ export async function discoverSources(project, options = {}) {
   };
 }
 
+export function buildProjectGraph(project) {
+  const dir = path.join(project.dir, 'story', 'ideas');
+  const files = fs.existsSync(dir) ? fs.readdirSync(dir).filter((name) => name.endsWith('.json')).sort() : [];
+  const entities = new Map();
+  const relations = new Map();
+  const keywordCounts = new Map();
+  const findings = [];
+  let cards = 0;
+  for (const file of files) {
+    let draw;
+    try {
+      draw = readJson(path.join(dir, file));
+    } catch {
+      findings.push({
+        rule_id: 'graph.invalid_draw',
+        severity: 'high',
+        target_id: file,
+        issue: 'saved idea draw is not valid JSON',
+        suggestion: 'Re-export or remove the broken draw.',
+      });
+      continue;
+    }
+    for (const card of draw.results || []) {
+      cards += 1;
+      for (const keyword of card.keywords || []) {
+        keywordCounts.set(keyword, (keywordCounts.get(keyword) || 0) + 1);
+      }
+      for (const entity of card.graph?.entities || card.entities || []) {
+        if (!entity?.id) continue;
+        const existing = entities.get(entity.id);
+        if (existing && existing.label !== entity.label) {
+          findings.push({
+            rule_id: 'graph.entity_conflict',
+            severity: 'medium',
+            target_id: entity.id,
+            issue: `entity ${entity.id} has conflicting labels: ${existing.label} / ${entity.label}`,
+            suggestion: 'Rename one entity or merge it explicitly.',
+          });
+        } else {
+          entities.set(entity.id, { ...entity, draw: file });
+        }
+      }
+      for (const relation of card.graph?.relations || card.relations || []) {
+        if (!relation?.from || !relation?.to) continue;
+        const key = `${relation.from}|${relation.type || 'related_to'}|${relation.to}`;
+        if (!relations.has(key)) relations.set(key, { ...relation, type: relation.type || 'related_to', draw: file });
+      }
+    }
+  }
+  for (const relation of relations.values()) {
+    if (!entities.has(relation.from) || !entities.has(relation.to)) {
+      findings.push({
+        rule_id: 'graph.dangling_relation',
+        severity: 'high',
+        target_id: relation.from || relation.to,
+        issue: `relation ${relation.from} -> ${relation.to} references a missing entity`,
+        suggestion: 'Add the missing entity or remove the relation before using this graph.',
+      });
+    }
+  }
+  const keywords = [...keywordCounts.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .map(([keyword, count]) => ({ keyword, count }));
+  const labels = [...entities.values()].slice(0, 12).map((entity) => entity.label);
+  const prompt = [...new Set([...labels, ...keywords.slice(0, 12).map((item) => item.keyword)])].join('；');
+  const blocking = findings.some((finding) => finding.severity === 'high' || finding.severity === 'critical');
+  return {
+    ok: !blocking,
+    blocking,
+    draws: files.length,
+    cards,
+    counts: {
+      entities: entities.size,
+      relations: relations.size,
+      keywords: keywords.length,
+    },
+    entities: [...entities.values()],
+    relations: [...relations.values()],
+    keywords,
+    prompt,
+    findings,
+  };
+}
+
 export function saveResearchReport(project, id, report) {
   if (!id) throw new Error('research report requires an id');
   if (!report || typeof report !== 'object' || Array.isArray(report)) {
@@ -458,6 +560,10 @@ export function projectState(project, options = {}) {
     orphan_recaps: status.orphan_recaps || [],
     ideas: files(path.join(project.dir, 'story', 'ideas')),
     research: files(path.join(project.dir, 'story', 'research')),
+    graph: (() => {
+      const graph = buildProjectGraph(project);
+      return { draws: graph.draws, cards: graph.cards, counts: graph.counts, blocking: graph.blocking };
+    })(),
     craft: files(craftDir),
     recaps: files(recapDir),
     next: status.next,
@@ -817,6 +923,9 @@ export function readSection(project, section, options = {}) {
         }))
         : [];
       return { ok: true, section, results };
+    }
+    case 'graph': {
+      return { ok: true, section, graph: buildProjectGraph(project) };
     }
     case 'craft': {
       const dir = path.join(project.dir, 'story', 'craft');

@@ -13,7 +13,7 @@ examples_en:
   - "Create a 3-volume × 5-chapter science-fiction project"
   - "Check the outline for blocking findings"
   - "Draw 12 science-fiction name cards"
-version: 0.1.47
+version: 0.1.48
 author: Malxi
 ---
 
@@ -127,6 +127,7 @@ node scripts/wishmachine.js ideas discover --dir my-book --topic history --limit
 node scripts/wishmachine.js ideas search --dir my-book --provider wikipedia --query "Mary Celeste" --limit 3
 node scripts/wishmachine.js book read ideas --dir my-book
 node scripts/wishmachine.js book read idea --id <saved-id> --dir my-book
+node scripts/wishmachine.js book read graph --dir my-book
 node scripts/wishmachine.js book write research --dir my-book --id <pack-id> < report.json
 node scripts/wishmachine.js book read research --dir my-book --id <pack-id>
 node scripts/wishmachine.js ideas types
