@@ -13,7 +13,7 @@ examples_en:
   - "Create a 3-volume × 5-chapter science-fiction project"
   - "Check the outline for blocking findings"
   - "Draw 12 science-fiction name cards"
-version: 0.2.0
+version: 0.2.1
 author: Malxi
 ---
 
@@ -174,7 +174,8 @@ and thread references to missing or non-registry mystery ids. The mystery
 registry order is checked with natural chapter ordering (C2 before C10), setup
 mystery registries are order-checked, and thread registries must be main/sub
 then id sorted. Doctor rebuild keeps them sorted and `doctor --fix` reorders
-setup/outline registries.
+setup/outline registries. Thread `resolved_mysteries` and `abandoned_mysteries`
+are also sorted by chapter/id.
 `doctor --fix` rebuilds a missing or stale mystery registry from chapter data.
 Checks also flag stale registry entries, final-status mismatches and resolved
 or dropped mysteries that are not linked from their thread. `doctor --fix`

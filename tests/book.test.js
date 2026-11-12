@@ -573,6 +573,12 @@ test('outline validation checks thread resolution and abandoned threads', () => 
   const unlinkedThread = unlinked.thread_registry.find((thread) => thread.status === 'resolved');
   unlinkedThread.resolved_mysteries = [];
   assert.ok(validateOutline(unlinked, { structure: {} }).some((finding) => finding.rule_id === 'quality.outline.thread.resolution_not_linked'));
+  const unsortedLinks = JSON.parse(JSON.stringify(outline.draft_outline));
+  const linkThread = unsortedLinks.thread_registry.find((thread) => thread.resolved_mysteries.length > 1);
+  if (linkThread) {
+    linkThread.resolved_mysteries.reverse();
+    assert.ok(validateOutline(unsortedLinks, { structure: {} }).some((finding) => finding.rule_id === 'quality.outline.thread.mystery_link_order'));
+  }
 });
 
 test('idea validation checks thread status consistency', () => {

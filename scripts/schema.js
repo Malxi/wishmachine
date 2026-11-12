@@ -478,6 +478,13 @@ export function validateOutline(outline, config) {
       ['resolved_mysteries', 'quality.outline.thread.resolved_mystery_missing'],
       ['abandoned_mysteries', 'quality.outline.thread.abandoned_mystery_missing'],
     ]) {
+      const sortedLinks = [...(thread[key] || [])].sort((left, right) => (
+        String(left.chapter_id || '').localeCompare(String(right.chapter_id || ''), undefined, { numeric: true })
+        || String(left.id || '').localeCompare(String(right.id || ''), undefined, { numeric: true })
+      ));
+      if (sortedLinks.some((mystery, index) => mystery.id !== thread[key]?.[index]?.id)) {
+        findings.push(finding('quality.outline.thread.mystery_link_order', 'low', `${thread.id}.${key} is not sorted`, thread.id));
+      }
       for (const mystery of thread[key] || []) {
         if (!mystery?.id || !mysteryChapter.has(mystery.id)) {
           findings.push(finding(rule, 'high', `${thread.id}.${key} references unknown mystery ${mystery?.id || '(missing)'}`, thread.id));

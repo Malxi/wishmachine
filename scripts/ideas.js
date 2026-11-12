@@ -623,6 +623,13 @@ function buildPlotpack(pack, seed, index) {
   };
 }
 
+function sortMysteryLinks(links) {
+  return [...links].sort((left, right) => (
+    String(left.chapter_id || '').localeCompare(String(right.chapter_id || ''), undefined, { numeric: true })
+    || String(left.id || '').localeCompare(String(right.id || ''), undefined, { numeric: true })
+  ));
+}
+
 function chapterResolvedMysteries(chapter) {
   return [
     ...(chapter.mysteries?.resolved || []),
@@ -1046,9 +1053,9 @@ function buildOutlinePack(plot, seed, options = {}) {
       status: resolvedIn ? 'resolved' : abandonedHistory ? 'abandoned' : 'active',
       resolved_in: resolvedIn,
       resolved_chapters: resolvedChapters,
-      resolved_mysteries: resolvedMysteries,
+      resolved_mysteries: sortMysteryLinks(resolvedMysteries),
       abandoned_history: abandonedHistory,
-      abandoned_mysteries: abandonedMysteries,
+      abandoned_mysteries: sortMysteryLinks(abandonedMysteries),
     };
   });
   const mysteryRegistry = collectMysteryRegistry(chapterList);
@@ -1181,9 +1188,9 @@ function buildMultiVolumeOutlinePack(plot, seed, options = {}) {
       status: resolvedIn ? 'resolved' : abandonedHistory ? 'abandoned' : 'active',
       resolved_in: resolvedIn,
       resolved_chapters: resolvedChapters,
-      resolved_mysteries: resolvedMysteries,
+      resolved_mysteries: sortMysteryLinks(resolvedMysteries),
       abandoned_history: abandonedHistory,
-      abandoned_mysteries: abandonedMysteries,
+      abandoned_mysteries: sortMysteryLinks(abandonedMysteries),
     };
   });
   setupDraft.thread_registry = threadRegistry;

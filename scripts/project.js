@@ -1111,13 +1111,13 @@ function repairThreadStatuses(project) {
       const wasAbandoned = thread.status === 'abandoned' || thread.abandoned_history === true;
       const listed = abandoned.some((item) => item.thread_id === thread.id);
       thread.resolved_chapters = chapters;
-      thread.resolved_mysteries = resolvedMysteries.get(thread.id) || [];
+      thread.resolved_mysteries = sortMysteryLinks(resolvedMysteries.get(thread.id) || []);
       thread.resolved_in = hasResolution ? chapters[chapters.length - 1] : null;
       thread.status = hasResolution ? 'resolved' : (wasAbandoned ? 'abandoned' : 'active');
       thread.abandoned_history = Boolean(wasAbandoned || listed);
-      thread.abandoned_mysteries = droppedMysteries
+      thread.abandoned_mysteries = sortMysteryLinks(droppedMysteries
         .filter((mystery) => mystery.thread_id === thread.id)
-        .map((mystery) => ({ id: mystery.id, chapter_id: mystery.dropped_in, question: mystery.question }));
+        .map((mystery) => ({ id: mystery.id, chapter_id: mystery.dropped_in, question: mystery.question })));
       if (thread.status === 'abandoned' && !listed) {
         abandoned.push({
           thread_id: thread.id,
@@ -1134,6 +1134,13 @@ function repairThreadStatuses(project) {
   writeJsonAtomic(docs.setupFile, docs.setup);
   writeJsonAtomic(docs.outlineFile, docs.outline);
   return { actions: ['repaired thread statuses'] };
+}
+
+function sortMysteryLinks(links) {
+  return [...links].sort((left, right) => (
+    String(left.chapter_id || '').localeCompare(String(right.chapter_id || ''), undefined, { numeric: true })
+    || String(left.id || '').localeCompare(String(right.id || ''), undefined, { numeric: true })
+  ));
 }
 
 function sortThreadArray(threads) {
