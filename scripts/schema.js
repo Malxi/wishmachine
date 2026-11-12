@@ -250,7 +250,7 @@ export function validateOutline(outline, config) {
   const chapterIds = [];
   const chaptersById = new Map();
   const mysteryChapter = new Map();
-  const mysteryStatus = new Map();
+  const mysteryFinalStatus = new Map();
   let volumeCount = 0;
   let chapterCount = 0;
   outline.parts.forEach((part, pi) => {
@@ -306,8 +306,11 @@ export function validateOutline(outline, config) {
             if (mystery?.id) {
               mysteryChapter.set(mystery.id, chapter.id);
               if (mystery.status) {
-                if (!mysteryStatus.has(mystery.id)) mysteryStatus.set(mystery.id, new Set());
-                mysteryStatus.get(mystery.id).add(mystery.status);
+                const priority = { open: 0, dropped: 1, resolved: 2 };
+                const previous = mysteryFinalStatus.get(mystery.id);
+                if (previous === undefined || (priority[mystery.status] || 0) >= (priority[previous] || 0)) {
+                  mysteryFinalStatus.set(mystery.id, mystery.status);
+                }
               }
             }
           }
@@ -318,8 +321,11 @@ export function validateOutline(outline, config) {
               if (mystery?.id) {
                 mysteryChapter.set(mystery.id, chapter.id);
                 if (mystery.status) {
-                  if (!mysteryStatus.has(mystery.id)) mysteryStatus.set(mystery.id, new Set());
-                  mysteryStatus.get(mystery.id).add(mystery.status);
+                  const priority = { open: 0, dropped: 1, resolved: 2 };
+                  const previous = mysteryFinalStatus.get(mystery.id);
+                  if (previous === undefined || (priority[mystery.status] || 0) >= (priority[previous] || 0)) {
+                    mysteryFinalStatus.set(mystery.id, mystery.status);
+                  }
                 }
               }
             }
@@ -409,8 +415,20 @@ export function validateOutline(outline, config) {
     });
   });
   for (const mystery of outline.mystery_registry || []) {
-    if (mystery?.id && mysteryStatus.has(mystery.id) && !mysteryStatus.get(mystery.id).has(mystery.status)) {
-      findings.push(finding('quality.outline.mystery.status_mismatch', 'medium', `${mystery.id} registry status ${mystery.status} is not present in chapter statuses ${[...mysteryStatus.get(mystery.id)].join(', ')}`, mystery.id));
+    if (!mystery?.id) continue;
+    if (!mysteryChapter.has(mystery.id)) {
+      findings.push(finding('quality.outline.mystery.stale_registry', 'high', `${mystery.id} is in mystery_registry but no chapter contains it`, mystery.id));
+      continue;
+    }
+    const finalStatus = mysteryFinalStatus.get(mystery.id);
+    if (finalStatus && mystery.status !== finalStatus) {
+      findings.push(finding('quality.outline.mystery.status_mismatch', 'medium', `${mystery.id} registry status ${mystery.status} differs from final chapter status ${finalStatus}`, mystery.id));
+    }
+    if (mystery.status === 'resolved' && mystery.thread_id) {
+      const thread = threadMap.get(mystery.thread_id);
+      if (thread && !(thread.resolved_mysteries || []).some((item) => item.id === mystery.id)) {
+        findings.push(finding('quality.outline.thread.resolution_not_linked', 'medium', `${mystery.id} is resolved but not linked from ${thread.id}.resolved_mysteries`, thread.id));
+      }
     }
   }
   for (const thread of threadMap.values()) {

@@ -541,6 +541,13 @@ test('outline validation checks thread resolution and abandoned threads', () => 
   const resolvedMystery = statusMismatch.mystery_registry.find((mystery) => mystery.status === 'resolved' && mystery.id.endsWith('-mystery-core'));
   resolvedMystery.status = 'open';
   assert.ok(validateOutline(statusMismatch, { structure: {} }).some((finding) => finding.rule_id === 'quality.outline.mystery.status_mismatch'));
+  const stale = JSON.parse(JSON.stringify(outline.draft_outline));
+  stale.mystery_registry.push({ id: 'stale-mystery', status: 'open' });
+  assert.ok(validateOutline(stale, { structure: {} }).some((finding) => finding.rule_id === 'quality.outline.mystery.stale_registry'));
+  const unlinked = JSON.parse(JSON.stringify(outline.draft_outline));
+  const unlinkedThread = unlinked.thread_registry.find((thread) => thread.status === 'resolved');
+  unlinkedThread.resolved_mysteries = [];
+  assert.ok(validateOutline(unlinked, { structure: {} }).some((finding) => finding.rule_id === 'quality.outline.thread.resolution_not_linked'));
 });
 
 test('idea validation checks thread status consistency', () => {
@@ -725,6 +732,9 @@ test('doctor --fix downgrades resolved threads without a resolved mystery', () =
   const thread = doc.thread_registry.find((item) => item.status === 'resolved');
   for (const chapter of doc.parts[0].volumes[0].chapters) {
     chapter.mysteries.resolved = (chapter.mysteries.resolved || []).filter((item) => item.thread_id !== thread.id);
+    for (const scene of chapter.scenes || []) {
+      scene.mysteries.resolved = (scene.mysteries.resolved || []).filter((item) => item.thread_id !== thread.id);
+    }
   }
   fs.writeFileSync(outlineFile, JSON.stringify(doc, null, 2));
   const setup = JSON.parse(fs.readFileSync(setupFile, 'utf8'));

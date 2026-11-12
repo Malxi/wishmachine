@@ -623,6 +623,13 @@ function buildPlotpack(pack, seed, index) {
   };
 }
 
+function chapterResolvedMysteries(chapter) {
+  return [
+    ...(chapter.mysteries?.resolved || []),
+    ...(chapter.scenes || []).flatMap((scene) => scene.mysteries?.resolved || []),
+  ];
+}
+
 function collectMysteryRegistry(chapters) {
   const registry = new Map();
   const priority = { open: 0, dropped: 1, resolved: 2 };
@@ -1014,14 +1021,14 @@ function buildOutlinePack(plot, seed, options = {}) {
     const id = item.id || `thread-${index + 1}`;
     const threadChapters = chapterList.filter((chapter) => chapter.thread_id === id);
     const resolvedChapters = chapterList
-      .filter((chapter) => (chapter.mysteries?.resolved || []).some((mystery) => mystery.thread_id === id))
+      .filter((chapter) => chapterResolvedMysteries(chapter).some((mystery) => mystery.thread_id === id))
       .map((chapter) => chapter.id);
     const lastChapter = threadChapters[threadChapters.length - 1];
     const resolvedIn = resolvedChapters[resolvedChapters.length - 1]
       || (lastChapter && ['climax', 'resolution'].includes(lastChapter.beat_function) ? lastChapter.id : null);
     const abandonedHistory = abandonedIds.has(id);
     const resolvedMysteries = chapterList.flatMap((chapter) => (
-      (chapter.mysteries?.resolved || [])
+      chapterResolvedMysteries(chapter)
         .filter((mystery) => mystery.thread_id === id)
         .map((mystery) => ({ id: mystery.id, chapter_id: chapter.id }))
     ));
@@ -1145,14 +1152,14 @@ function buildMultiVolumeOutlinePack(plot, seed, options = {}) {
     const id = item.id || `thread-${index + 1}`;
     const threadChapters = chapters.filter((chapter) => chapter.thread_id === id);
     const resolvedChapters = chapters
-      .filter((chapter) => (chapter.mysteries?.resolved || []).some((mystery) => mystery.thread_id === id))
+      .filter((chapter) => chapterResolvedMysteries(chapter).some((mystery) => mystery.thread_id === id))
       .map((chapter) => chapter.id);
     const lastChapter = threadChapters[threadChapters.length - 1];
     const resolvedIn = resolvedChapters[resolvedChapters.length - 1]
       || (lastChapter && ['climax', 'resolution'].includes(lastChapter.beat_function) ? lastChapter.id : null);
     const abandonedHistory = abandonedIds.has(id);
     const resolvedMysteries = chapters.flatMap((chapter) => (
-      (chapter.mysteries?.resolved || [])
+      chapterResolvedMysteries(chapter)
         .filter((mystery) => mystery.thread_id === id)
         .map((mystery) => ({ id: mystery.id, chapter_id: chapter.id }))
     ));

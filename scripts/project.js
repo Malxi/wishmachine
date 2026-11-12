@@ -1003,10 +1003,17 @@ function loadRegistryDocs(project) {
   }
 }
 
+function chapterResolvedMysteries(chapter) {
+  return [
+    ...(chapter.mysteries?.resolved || []),
+    ...(chapter.scenes || []).flatMap((scene) => scene.mysteries?.resolved || []),
+  ];
+}
+
 function threadResolutionChapters(outline) {
   const map = new Map();
   for (const chapter of outlineChapters(outline)) {
-    for (const mystery of chapter.mysteries?.resolved || []) {
+    for (const mystery of chapterResolvedMysteries(chapter)) {
       if (!mystery?.thread_id) continue;
       if (!map.has(mystery.thread_id)) map.set(mystery.thread_id, []);
       map.get(mystery.thread_id).push(chapter.id);
@@ -1028,7 +1035,7 @@ function needsThreadStatusRepair(project) {
   const resolvedChapters = threadResolutionChapters(docs.outline);
   const resolvedMysteries = new Map();
   for (const chapter of outlineChapters(docs.outline)) {
-    for (const mystery of chapter.mysteries?.resolved || []) {
+    for (const mystery of chapterResolvedMysteries(chapter)) {
       if (!mystery?.thread_id) continue;
       if (!resolvedMysteries.has(mystery.thread_id)) resolvedMysteries.set(mystery.thread_id, []);
       resolvedMysteries.get(mystery.thread_id).push({ id: mystery.id, chapter_id: chapter.id });
@@ -1063,7 +1070,7 @@ function repairThreadStatuses(project) {
   const resolvedChapters = threadResolutionChapters(docs.outline);
   const resolvedMysteries = new Map();
   for (const chapter of outlineChapters(docs.outline)) {
-    for (const mystery of chapter.mysteries?.resolved || []) {
+    for (const mystery of chapterResolvedMysteries(chapter)) {
       if (!mystery?.thread_id) continue;
       if (!resolvedMysteries.has(mystery.thread_id)) resolvedMysteries.set(mystery.thread_id, []);
       resolvedMysteries.get(mystery.thread_id).push({ id: mystery.id, chapter_id: chapter.id });
