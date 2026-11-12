@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import http from 'node:http';
-import { initProject, loadProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, doctorProject, saveIdeaDraw, saveImportedIdeas, saveResearchReport, ingestSource, discoverSources, searchSources, buildProjectGraph, projectRegistryStatus, writeArtifact, readSection } from '../scripts/project.js';
+import { initProject, loadProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, doctorProject, saveIdeaDraw, saveImportedIdeas, saveResearchReport, ingestSource, discoverSources, searchSources, buildProjectGraph, projectRegistryStatus, cleanRegistry, writeArtifact, readSection } from '../scripts/project.js';
 import { checkProject, validateOutline, validateSetup } from '../scripts/schema.js';
 import { drawIdeas, validateIdeaDraw } from '../scripts/ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference } from '../scripts/guides.js';
@@ -865,6 +865,29 @@ test('project registry status summarizes setup and outline registries', () => {
   assert.equal(status.outline.thread_registry_version, 2);
   assert.ok(status.setup.thread_count > 0);
   assert.ok(status.outline.mystery_count > 0);
+});
+
+test('book registry clean removes stale registry entries', () => {
+  const dir = tempDir();
+  initProject({ name: 'registry clean', dir, parts: 1, volumes: 1, chapter: 10 });
+  const project = loadProject(dir);
+  const outline = drawIdeas({ type: 'outlinepack', genre: '悬疑', count: 1, seed: 42, chapters: 10 }).results[0];
+  writeArtifact(project, { section: 'setup', content: JSON.stringify(outline.setup_draft), apply: true });
+  writeArtifact(project, { section: 'outline', content: JSON.stringify(outline.draft_outline), apply: true });
+  const setupFile = path.join(dir, 'story', 'setup', 'story_setup.json');
+  const outlineFile = path.join(dir, 'story', 'compose', 'outline.json');
+  for (const file of [setupFile, outlineFile]) {
+    const doc = JSON.parse(fs.readFileSync(file, 'utf8'));
+    doc.mystery_registry.push({ id: 'stale-mystery', status: 'open' });
+    fs.writeFileSync(file, JSON.stringify(doc, null, 2));
+  }
+  const result = cleanRegistry(project);
+  assert.equal(result.ok, true);
+  const setup = JSON.parse(fs.readFileSync(setupFile, 'utf8'));
+  const repaired = JSON.parse(fs.readFileSync(outlineFile, 'utf8'));
+  assert.ok(!setup.mystery_registry.some((mystery) => mystery.id === 'stale-mystery'));
+  assert.ok(!repaired.mystery_registry.some((mystery) => mystery.id === 'stale-mystery'));
+  assert.equal(setup.mystery_registry_version, 2);
 });
 
 test('saved idea draws are readable from the project', () => {

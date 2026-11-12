@@ -140,6 +140,27 @@ export function projectStatus(project) {
   };
 }
 
+export function cleanRegistry(project) {
+  const docs = loadRegistryDocs(project);
+  if (!docs) throw new Error('setup and outline are required before cleaning registries');
+  const expected = collectOutlineMysteryRegistry(docs.outline);
+  const before = (Array.isArray(docs.outline.mystery_registry) ? docs.outline.mystery_registry.length : 0)
+    + (Array.isArray(docs.setup.mystery_registry) ? docs.setup.mystery_registry.length : 0);
+  docs.setup.mystery_registry = expected;
+  docs.outline.mystery_registry = expected;
+  docs.setup.mystery_registry_version = 2;
+  docs.outline.mystery_registry_version = 2;
+  writeJsonAtomic(docs.setupFile, docs.setup);
+  writeJsonAtomic(docs.outlineFile, docs.outline);
+  return {
+    ok: true,
+    action: 'clean',
+    before,
+    after: expected.length * 2,
+    entries: expected.length,
+  };
+}
+
 export function projectRegistryStatus(project) {
   const setupFile = path.join(project.dir, 'story', 'setup', 'story_setup.json');
   const outlineFile = path.join(project.dir, 'story', 'compose', 'outline.json');
