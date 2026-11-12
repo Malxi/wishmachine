@@ -687,7 +687,9 @@ function buildOutlinePack(plot, seed, options = {}) {
         answer: plot.storyline?.payoff || '答案浮出水面。',
       });
     }
-    const scenes = Array.from({ length: scenesPerChapter }, (_, sceneIndex) => {
+    const scenes = [];
+    let previousConsequence = '';
+    for (let sceneIndex = 0; sceneIndex < scenesPerChapter; sceneIndex += 1) {
       const lastScene = sceneIndex === scenesPerChapter - 1;
       const sceneObstacle = sceneIndex === 0
         ? chapterObstacle
@@ -703,20 +705,22 @@ function buildOutlinePack(plot, seed, options = {}) {
       const sceneGoal = sceneIndex === 0
         ? beat.beat
         : lastScene
-          ? `承受并处理：${chapterObstacle}`
-          : `验证一个判断：${scenarioB?.twist || blocking?.stake || chapterObstacle}`;
+          ? `处理上一场后果，并承受：${chapterObstacle}`
+          : `承接“${previousConsequence}”，验证：${scenarioB?.twist || blocking?.stake || chapterObstacle}`;
       const consequence = lastScene
         ? (plot.storyline?.cost || '本章代价落地，主角带着不可撤回的结果进入下一章。')
-        : (scenarioA?.pressure || '局面被推进，但新的问题被留下。');
+        : `因为“${turnEvent}”，${scenarioA?.pressure || '局面被推进，但新的问题被留下。'}`;
       const sceneMysteries = {
         planted: sceneIndex === 0 && plot.premise?.hidden_truth
           ? [{ mystery: plot.premise.hidden_truth, status: 'open' }]
-          : [],
+          : sceneIndex === 1
+            ? [{ mystery: `局部问题：${sceneObstacle}`, status: 'open' }]
+            : [],
         resolved: lastScene
           ? [{ mystery: plot.storyline?.midpoint || plot.premise?.hidden_truth || '本章疑问', answer: plot.storyline?.payoff || '答案在场景末出现' }]
           : [],
       };
-      return {
+      scenes.push({
         order: sceneIndex + 1,
         pov: protagonist,
         goal: sceneGoal,
@@ -732,8 +736,9 @@ function buildOutlinePack(plot, seed, options = {}) {
         tone: beat.act,
         mysteries: sceneMysteries,
         beats: [beat.function, lastScene ? 'turn' : 'pressure'],
-      };
-    });
+      });
+      previousConsequence = consequence;
+    }
     const events = scenes.map((scene, sceneIndex) => ({
       type: 'plot',
       characters: scene.characters,
@@ -759,6 +764,11 @@ function buildOutlinePack(plot, seed, options = {}) {
       act: beat.act,
       target_chars: targetChars,
       scenes,
+      scene_chain: scenes.map((scene) => ({
+        scene: scene.order,
+        turn: scene.turn_event,
+        consequence: scene.consequence,
+      })),
       chapter_payoff: {
         desire: plot.storyline?.promise || '主角想改变现状。',
         pressure: plot.premise?.central_conflict || '规则不允许。',
