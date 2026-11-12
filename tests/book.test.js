@@ -480,6 +480,9 @@ test('outlinepack expands into multiple volumes', () => {
   const resolvedThread = outline.thread_registry.find((thread) => thread.status === 'resolved');
   assert.ok(resolvedThread.resolved_mysteries.length > 0);
   assert.ok(resolvedThread.resolved_mysteries.every((mystery) => mystery.id && mystery.chapter_id));
+  assert.ok(outline.mystery_registry.length > 0);
+  assert.ok(outline.setup_draft.mystery_registry.length > 0);
+  assert.equal(outline.draft_outline.mystery_registry.length, outline.mystery_registry.length);
   assert.ok(outline.setup_draft.core_cast[0].storyline_refs.includes(outline.setup_draft.storylines[0].thread_id));
   assert.equal(validateIdeaDraw({ results: [outline] }).ok, true);
   assert.equal(outline.setup_draft.premises[0].progression.length, 4);
@@ -530,6 +533,9 @@ test('outline validation checks thread resolution and abandoned threads', () => 
   const resolvedThread = unknownMystery.thread_registry.find((thread) => thread.status === 'resolved');
   resolvedThread.resolved_mysteries[0].id = 'missing-mystery';
   assert.ok(validateOutline(unknownMystery, { structure: {} }).some((finding) => finding.rule_id === 'quality.outline.thread.resolved_mystery_missing'));
+  const missingRegistry = JSON.parse(JSON.stringify(outline.draft_outline));
+  missingRegistry.mystery_registry = [];
+  assert.ok(validateOutline(missingRegistry, { structure: {} }).some((finding) => finding.rule_id === 'quality.outline.thread.mystery_not_in_registry'));
 });
 
 test('idea validation checks thread status consistency', () => {

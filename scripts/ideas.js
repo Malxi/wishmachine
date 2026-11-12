@@ -623,6 +623,29 @@ function buildPlotpack(pack, seed, index) {
   };
 }
 
+function collectMysteryRegistry(chapters) {
+  const registry = new Map();
+  const add = (mystery, chapterId, source) => {
+    if (!mystery?.id || registry.has(mystery.id)) return;
+    registry.set(mystery.id, {
+      ...mystery,
+      chapter_id: chapterId,
+      source,
+    });
+  };
+  for (const chapter of chapters) {
+    for (const key of ['carried', 'planted', 'resolved', 'dropped']) {
+      for (const mystery of chapter.mysteries?.[key] || []) add(mystery, chapter.id, `chapter.${key}`);
+    }
+    for (const scene of chapter.scenes || []) {
+      for (const key of ['planted', 'resolved']) {
+        for (const mystery of scene.mysteries?.[key] || []) add(mystery, chapter.id, `scene.${key}`);
+      }
+    }
+  }
+  return [...registry.values()];
+}
+
 function buildOutlinePack(plot, seed, options = {}) {
   const chapters = Math.max(3, Math.min(60, Number(options.chapters) || 10));
   const scenesPerChapter = Math.max(1, Math.min(5, Number(options.scenes) || 3));
@@ -1013,6 +1036,7 @@ function buildOutlinePack(plot, seed, options = {}) {
       abandoned_mysteries: abandonedMysteries,
     };
   });
+  const mysteryRegistry = collectMysteryRegistry(chapterList);
   return {
     id,
     outline_id: id,
@@ -1023,6 +1047,7 @@ function buildOutlinePack(plot, seed, options = {}) {
     cast: plot.cast,
     cast_relations: plot.cast_relations,
     chapters: chapterList,
+    mystery_registry: mysteryRegistry,
     thread_registry: threadRegistry,
     draft_outline: draftOutline,
     chapter_config: {
@@ -1094,6 +1119,7 @@ function buildMultiVolumeOutlinePack(plot, seed, options = {}) {
   }
   const volumeList = bases.map((base) => base.draft_outline.parts[0].volumes[0]);
   const chapters = volumeList.flatMap((volume) => volume.chapters);
+  const mysteryRegistry = collectMysteryRegistry(chapters);
   const id = `outlinepack-${seed}-${String((options.index || 0) + 1).padStart(2, '0')}`;
   const chapterConfig = {
     target_chars: Math.max(500, Math.min(10000, Number(options.targetChars) || 3000)),
@@ -1109,6 +1135,7 @@ function buildMultiVolumeOutlinePack(plot, seed, options = {}) {
   const abandonedThreads = allDropped.map((item) => item.abandoned_thread).filter(Boolean);
   setupDraft.abandoned_threads = abandonedThreads;
   setupDraft.dropped_mysteries = allDropped;
+  setupDraft.mystery_registry = mysteryRegistry;
   const threadRegistry = storylines.map((item, index) => {
     const id = item.id || `thread-${index + 1}`;
     const threadChapters = chapters.filter((chapter) => chapter.thread_id === id);
@@ -1148,11 +1175,13 @@ function buildMultiVolumeOutlinePack(plot, seed, options = {}) {
     volumes: volumeList,
     chapters,
     setup_draft: setupDraft,
+    mystery_registry: mysteryRegistry,
     thread_registry: threadRegistry,
     draft_outline: {
       thread_registry: threadRegistry,
       abandoned_threads: abandonedThreads,
       dropped_mysteries: allDropped,
+      mystery_registry: mysteryRegistry,
       parts: [{
         id: 'P1',
         title: plot.premise?.title || '未命名故事',

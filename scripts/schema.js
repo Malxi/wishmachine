@@ -156,6 +156,21 @@ export function validateSetup(setup) {
           }
         }
       }
+      if (setup.mystery_registry !== undefined) {
+        if (!Array.isArray(setup.mystery_registry)) {
+          findings.push(finding('schema.setup.mystery_registry', 'high', 'mystery_registry must be an array'));
+        } else {
+          const mysteryIds = new Set();
+          for (const mystery of setup.mystery_registry) {
+            if (!mystery?.id) {
+              findings.push(finding('schema.setup.mystery_registry.id', 'high', 'mystery registry entry needs an id'));
+              continue;
+            }
+            if (mysteryIds.has(mystery.id)) findings.push(finding('quality.setup.mystery_registry.duplicate', 'high', `duplicate mystery id ${mystery.id}`, mystery.id));
+            mysteryIds.add(mystery.id);
+          }
+        }
+      }
     }
   }
   return findings;
@@ -172,6 +187,24 @@ export function validateOutline(outline, config) {
   const ids = new Set();
   const threadIds = new Set();
   const threadMap = new Map();
+  const mysteryRegistryIds = new Set();
+  const hasMysteryRegistry = outline.mystery_registry !== undefined;
+  if (outline.mystery_registry !== undefined) {
+    if (!Array.isArray(outline.mystery_registry)) {
+      findings.push(finding('schema.outline.mystery_registry', 'high', 'mystery_registry must be an array'));
+    } else {
+      for (const mystery of outline.mystery_registry) {
+        if (!mystery?.id) {
+          findings.push(finding('schema.outline.mystery_registry.id', 'high', 'mystery registry entry needs an id'));
+          continue;
+        }
+        if (mysteryRegistryIds.has(mystery.id)) {
+          findings.push(finding('quality.outline.mystery_registry.duplicate', 'high', `duplicate mystery id ${mystery.id}`, mystery.id));
+        }
+        mysteryRegistryIds.add(mystery.id);
+      }
+    }
+  }
   if (outline.thread_registry !== undefined) {
     if (!Array.isArray(outline.thread_registry)) {
       findings.push(finding('schema.outline.thread_registry', 'high', 'thread_registry must be an array'));
@@ -370,6 +403,8 @@ export function validateOutline(outline, config) {
       for (const mystery of thread[key] || []) {
         if (!mystery?.id || !mysteryChapter.has(mystery.id)) {
           findings.push(finding(rule, 'high', `${thread.id}.${key} references unknown mystery ${mystery?.id || '(missing)'}`, thread.id));
+        } else if (hasMysteryRegistry && !mysteryRegistryIds.has(mystery.id)) {
+          findings.push(finding('quality.outline.thread.mystery_not_in_registry', 'high', `${thread.id}.${key} references ${mystery.id}, which is not in mystery_registry`, thread.id));
         } else if (mystery.chapter_id && mysteryChapter.get(mystery.id) !== mystery.chapter_id) {
           findings.push(finding('quality.outline.thread.mystery_chapter_mismatch', 'medium', `${thread.id}.${key} says ${mystery.id} is in ${mystery.chapter_id}, but it is in ${mysteryChapter.get(mystery.id)}`, thread.id));
         }
