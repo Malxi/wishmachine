@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { randomUUID } from 'node:crypto';
 import {
   ensureDir, readJson, readText, writeJsonAtomic, writeTextAtomic,
   resolveProjectDir, nowIso, stamp, deepMerge, safeSegment, parseJson,
@@ -238,9 +239,11 @@ function createRegistryBackup(project, action) {
   return path.relative(project.dir, dir).replace(/\\/g, '/');
 }
 
-export function undoRegistryOperation(project) {
+export function undoRegistryOperation(project, options = {}) {
   const operations = readRegistryOperations(project, 200);
-  const target = [...operations].reverse().find((operation) => operation.backup && operation.action !== 'undo');
+  const target = options.operationId
+    ? operations.find((operation) => operation.id === options.operationId)
+    : [...operations].reverse().find((operation) => operation.backup && operation.action !== 'undo');
   if (!target) throw new Error('no registry operation with a backup to undo');
   const backupDir = path.resolve(project.dir, target.backup);
   const root = path.resolve(project.dir);
@@ -289,7 +292,7 @@ export function registryBackups(project, options = {}) {
 function appendRegistryOperation(project, operation) {
   const dir = path.join(project.dir, 'logs');
   ensureDir(dir);
-  fs.appendFileSync(path.join(dir, 'registry-operations.jsonl'), `${JSON.stringify({ at: nowIso(), ...operation })}\n`, 'utf8');
+  fs.appendFileSync(path.join(dir, 'registry-operations.jsonl'), `${JSON.stringify({ id: randomUUID(), at: nowIso(), ...operation })}\n`, 'utf8');
 }
 
 function readRegistryOperations(project, limit = 5, filters = {}) {

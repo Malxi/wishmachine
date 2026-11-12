@@ -13,7 +13,7 @@ examples_en:
   - "Create a 3-volume × 5-chapter science-fiction project"
   - "Check the outline for blocking findings"
   - "Draw 12 science-fiction name cards"
-version: 0.2.15
+version: 0.2.16
 author: Malxi
 ---
 
@@ -188,8 +188,8 @@ previews before/after counts, removed mystery ids and removed thread links
 without writing. `book registry log --limit 20` reads
 `logs/registry-operations.jsonl` directly; `--action abandon|clean` and
 `--since <ISO>` filter the log. `book registry backups [--keep 10] [--prune]`
-lists or prunes `logs/registry-backups/`. `book registry undo` restores the
-most recent backed-up operation; each abandon/clean writes a backup. `book registry abandon --mystery <id>` manually marks a
+lists or prunes `logs/registry-backups/`. `book registry undo [--operation <id>]` restores the selected or most recent
+backed-up operation; each abandon/clean writes a backup and operation id. `book registry abandon --mystery <id>` manually marks a
 mystery dropped with a reason; add `--dry-run` to preview without writing.
 Clean also re-runs thread status repair after rebuilding the
 registry. `doctor --fix`

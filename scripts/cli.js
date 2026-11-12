@@ -4,7 +4,7 @@ import { readJson } from './util.js';
 import { drawIdeas, ideasTypes, validateIdeaDraw } from './ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference, listSkills, readSkill } from './guides.js';
 
-const VERSION = '0.2.15';
+const VERSION = '0.2.16';
 const BOOLEAN_FLAGS = new Set(['apply', 'json', 'help', 'h', 'dry-run', 'force', 'ingest']);
 const COMMANDS = new Set(['book', 'check', 'ideas', 'gen', 'state', 'audit', 'refresh', 'export', 'doctor', 'version', 'help']);
 
@@ -99,7 +99,7 @@ Commands:
   book registry [--dir <project>]
   book registry clean [--dir <project>] [--dry-run]
   book registry log [--limit 20] [--action abandon|clean] [--since ISO] [--dir <project>]
-  book registry undo [--dir <project>]
+  book registry undo [--operation <id>] [--dir <project>]
   book registry backups [--keep 10] [--prune] [--dir <project>]
   book registry abandon --mystery <id> [--reason <text>] [--dry-run] [--dir <project>]
   book write <setup|outline|craft|chapter|recap|research> [--mode replace|patch|append] [--apply] [--id <id>] [--from-idea <id>]
@@ -169,7 +169,7 @@ async function runBook(args, flags) {
       return 0;
     }
     if (args[1] === 'undo') {
-      print(undoRegistryOperation(project));
+      print(undoRegistryOperation(project, { operationId: stringFlag(flags, 'operation', '') }));
       return 0;
     }
     if (args[1] === 'log') {
