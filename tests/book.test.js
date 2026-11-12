@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import http from 'node:http';
 import { initProject, loadProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, doctorProject, saveIdeaDraw, saveImportedIdeas, saveResearchReport, ingestSource, discoverSources, searchSources, buildProjectGraph, writeArtifact, readSection } from '../scripts/project.js';
-import { checkProject, validateOutline } from '../scripts/schema.js';
+import { checkProject, validateOutline, validateSetup } from '../scripts/schema.js';
 import { drawIdeas } from '../scripts/ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference } from '../scripts/guides.js';
 
@@ -418,6 +418,8 @@ test('outlinepack expands into multiple volumes', () => {
   assert.equal(outline.chapters[0].id, 'P1-V1-C1');
   assert.equal(outline.chapters[11].id, 'P1-V3-C4');
   assert.equal(outline.volumes[2].payoff_contract.big_win.length > 0, true);
+  assert.ok(outline.setup_draft.project_name);
+  assert.deepEqual(validateSetup(outline.setup_draft), []);
   assert.deepEqual(validateOutline(outline.draft_outline, { structure: {} }), []);
 });
 

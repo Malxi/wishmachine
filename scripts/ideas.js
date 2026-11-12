@@ -590,6 +590,7 @@ function buildPlotpack(pack, seed, index) {
     engine: pack.engine,
     cast: pack.cast,
     cast_relations: pack.cast_relations,
+    resources: pack.resources,
     scenarios: pack.scenarios,
     storyline,
     events: beats.map((beat) => ({
@@ -749,12 +750,22 @@ function buildMultiVolumeOutlinePack(plot, seed, options = {}) {
   const volumeList = bases.map((base) => base.draft_outline.parts[0].volumes[0]);
   const chapters = volumeList.flatMap((volume) => volume.chapters);
   const id = `outlinepack-${seed}-${String((options.index || 0) + 1).padStart(2, '0')}`;
+  const chapterConfig = {
+    target_chars: Math.max(500, Math.min(10000, Number(options.targetChars) || 3000)),
+    min_chars: Math.floor(Math.max(500, Math.min(10000, Number(options.targetChars) || 3000)) * 0.6),
+    volumes,
+    chapters_per_volume: chaptersPerVolume,
+    chapters: chapters.length,
+    scenes_per_chapter: Math.max(1, Math.min(5, Number(options.scenes) || 3)),
+  };
+  const setupDraft = buildSetupDraft(plot, { chapter_config: chapterConfig });
   return {
     ...bases[0],
     id,
     outline_id: id,
     volumes: volumeList,
     chapters,
+    setup_draft: setupDraft,
     draft_outline: {
       parts: [{
         id: 'P1',
@@ -763,14 +774,93 @@ function buildMultiVolumeOutlinePack(plot, seed, options = {}) {
         volumes: volumeList,
       }],
     },
-    chapter_config: {
-      target_chars: Math.max(500, Math.min(10000, Number(options.targetChars) || 3000)),
-      min_chars: Math.floor(Math.max(500, Math.min(10000, Number(options.targetChars) || 3000)) * 0.6),
-      volumes,
-      chapters_per_volume: chaptersPerVolume,
-      chapters: chapters.length,
-      scenes_per_chapter: Math.max(1, Math.min(5, Number(options.scenes) || 3)),
+    chapter_config: chapterConfig,
+  };
+}
+
+function buildSetupDraft(plot, outline) {
+  const storyline = plot.storyline || {};
+  const cast = (plot.cast || []).map((character, index) => ({
+    id: `cast_${index + 1}`,
+    name: character.name,
+    role: character.role_tags?.[0] || (index === 0 ? 'protagonist' : 'support'),
+    importance: index === 0 ? 10 : index === 1 ? 8 : 5,
+    story_function: character.archetype || 'story character',
+    relationship_to_lead: index === 0 ? 'self' : index === 1 ? 'opposes the lead' : 'supports the lead',
+    relationship_arc: `${character.contradiction || 'is changed by the plot'} -> ${character.want || 'gets a choice'}`,
+    entry_phase: 'opening',
+    payoff: character.want || 'their want is tested',
+    storyline_refs: [storyline.title || plot.premise?.title || 'main'],
+  }));
+  return {
+    project_name: plot.premise?.title || '未命名故事',
+    genres: [plot.genre || '未分类'],
+    premise: [plot.premise?.statement, plot.premise?.surface_rule].filter(Boolean).join(' '),
+    theme: plot.premise?.hidden_truth || storyline.promise || '规则与选择',
+    rules: [plot.premise?.surface_rule, plot.premise?.scarcity, plot.premise?.central_conflict].filter(Boolean),
+    target_audience: 'general',
+    tone: plot.prompt_pack?.style || '克制、具体',
+    tense: 'past',
+    pov_style: 'third_person_limited',
+    long_form_plan: {
+      target_chapters: outline.chapter_config.chapters,
+      target_volumes: outline.chapter_config.volumes,
+      main_loop: storyline.promise || '主角在规则压力下做出选择',
+      escalation_ladder: [storyline.promise, storyline.escalation, storyline.midpoint, storyline.payoff].filter(Boolean),
+      reader_promises: [storyline.promise, storyline.payoff].filter(Boolean),
+      payoff_cadence: '每卷一次阶段性回收，每章留下一个具体钩子',
+      volume_pattern: ['建立规则', '规则反噬', '改写规则'],
+      midpoint_mutation: storyline.midpoint || '主角发现规则背后还有一层规则',
+      endgame_promise: storyline.payoff || '主角改写规则并付出代价',
     },
+    core_cast: cast,
+    storylines: [{
+      name: storyline.title || '主线',
+      description: storyline.promise || '主角试图改变现状',
+      type: 'main',
+      importance: 10,
+      scope: 'book',
+      payoff_style: 'staged_reveal',
+      setup_role: plot.premise?.surface_rule || 'establish the rule',
+      repeatable_pressure: storyline.escalation || 'the rule keeps extracting a price',
+      payoff_cadence: 'per volume',
+      mutation: storyline.midpoint || 'the rule is not what it seems',
+      failure_mode: storyline.cost || 'the cost cannot be undone',
+      desire: storyline.promise || 'change the current order',
+      opposition: plot.premise?.central_conflict || 'the rule resists',
+      stakes: storyline.cost || 'someone is left behind',
+      turn: storyline.midpoint || 'the rule turns against the lead',
+      payoff: storyline.payoff || 'the lead changes the rule',
+      open_question: storyline.cost || 'what remains after the change?',
+      pressure_points: [plot.premise?.scarcity, plot.premise?.central_conflict].filter(Boolean),
+      appeal_engine: {
+        appeal: storyline.promise || 'a rule that can be bent',
+        surface_limit: plot.premise?.surface_rule || 'the rule seems absolute',
+        exploit: plot.premise?.leverage || 'find the exception',
+        signature_win: storyline.payoff || 'a visible win',
+        upgrade_path: storyline.escalation || 'the stakes rise',
+        opponent_misread: plot.premise?.hidden_truth || 'the opponent misreads the cost',
+        reward_type: 'consequence',
+      },
+    }],
+    premises: [{
+      name: plot.premise?.title || '核心前提',
+      description: plot.premise?.statement || '核心前提',
+      category: 'core',
+      progression: [],
+      appeal_engine: {
+        appeal: plot.premise?.statement || 'the premise',
+        surface_limit: plot.premise?.surface_rule || 'the rule',
+        exploit: plot.premise?.leverage || 'the loophole',
+        signature_win: storyline.payoff || 'the win',
+      },
+    }],
+    world_resources: (plot.resources || []).map((resource) => ({
+      name: resource.name,
+      category: '材料',
+      scarcity: '稀有',
+      description: resource.meaning || resource.category || 'world resource',
+    })),
   };
 }
 

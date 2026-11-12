@@ -4,7 +4,7 @@ import { readJson } from './util.js';
 import { drawIdeas, ideasTypes } from './ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference, listSkills, readSkill } from './guides.js';
 
-const VERSION = '0.1.59';
+const VERSION = '0.1.60';
 const BOOLEAN_FLAGS = new Set(['apply', 'json', 'help', 'h', 'dry-run', 'force', 'ingest']);
 const COMMANDS = new Set(['book', 'check', 'ideas', 'gen', 'state', 'audit', 'refresh', 'export', 'doctor', 'version', 'help']);
 
@@ -200,11 +200,12 @@ async function runBook(args, flags) {
     const project = loadProject(stringFlag(flags, 'dir', ''));
     const fromIdea = stringFlag(flags, 'from-idea', '');
     let content;
-    if (section === 'outline' && fromIdea) {
+    if ((section === 'outline' || section === 'setup') && fromIdea) {
       const draw = readSection(project, 'idea', { id: fromIdea }).draw;
-      const outlineResult = (draw.results || []).find((item) => item.draft_outline);
-      if (!outlineResult) fail(`saved idea ${fromIdea} has no draft_outline`);
-      content = JSON.stringify(outlineResult.draft_outline);
+      const field = section === 'outline' ? 'draft_outline' : 'setup_draft';
+      const result = (draw.results || []).find((item) => item[field]);
+      if (!result) fail(`saved idea ${fromIdea} has no ${field}`);
+      content = JSON.stringify(result[field]);
     } else {
       content = await stdinText();
     }
