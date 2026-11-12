@@ -187,7 +187,8 @@ mystery registry and removes stale entries. `book registry clean --dry-run`
 previews before/after counts, removed mystery ids and removed thread links
 without writing. `book registry` also returns the latest operations from
 `logs/registry-operations.jsonl`; `book registry log --limit 20` reads them
-directly. `book registry abandon --mystery <id>` manually marks a
+directly. `--action abandon|clean` and `--since <ISO>` filter the log.
+`book registry abandon --mystery <id>` manually marks a
 mystery dropped with a reason; add `--dry-run` to preview without writing.
 Clean also re-runs thread status repair after rebuilding the
 registry. `doctor --fix`
