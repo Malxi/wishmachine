@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { initProject, loadProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, doctorProject, saveIdeaDraw, writeArtifact, readSection } from '../scripts/project.js';
+import { initProject, loadProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, doctorProject, saveIdeaDraw, saveImportedIdeas, saveResearchReport, writeArtifact, readSection } from '../scripts/project.js';
 import { checkProject } from '../scripts/schema.js';
 import { drawIdeas } from '../scripts/ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference } from '../scripts/guides.js';
@@ -277,6 +277,28 @@ test('a character who left cannot appear later without a return', () => {
   const result = writeArtifact(project, { section: 'outline', mode: 'replace', apply: true, content: JSON.stringify(absenceOutline) });
   assert.equal(result.applied, true);
   assert.ok(result.check.findings.some((item) => item.rule_id === 'quality.outline.character_absent_return'));
+});
+
+test('imported cards and research reports are persisted', () => {
+  const dir = tempDir();
+  initProject({ name: 'import test', dir, parts: 1, volumes: 1, chapter: 1 });
+  const project = loadProject(dir);
+  const imported = saveImportedIdeas(project, {
+    results: [{ title: '敦煌藏经洞的封门', type: '历史事件', source: '测试来源' }],
+  }, { type: 'motif', source: 'web' });
+  assert.ok(imported.saved.id);
+  assert.equal(imported.results[0].source, '测试来源');
+  const loaded = readSection(project, 'idea', { id: imported.saved.id });
+  assert.equal(loaded.draw.results[0].title, '敦煌藏经洞的封门');
+  const report = saveResearchReport(project, imported.saved.id, {
+    pack_id: imported.saved.id,
+    entities: [{ id: 'e1', status: 'verified', source: '测试来源' }],
+    relations: [],
+  });
+  assert.ok(report.path);
+  const research = readSection(project, 'research', { id: imported.saved.id });
+  assert.equal(research.report.entities[0].status, 'verified');
+  assert.ok(projectState(project).state.research.some((item) => item.name === imported.saved.id));
 });
 
 test('saved idea draws are readable from the project', () => {

@@ -13,7 +13,7 @@ examples_en:
   - "Create a 3-volume × 5-chapter science-fiction project"
   - "Check the outline for blocking findings"
   - "Draw 12 science-fiction name cards"
-version: 0.1.43
+version: 0.1.44
 author: Malxi
 ---
 
@@ -121,8 +121,11 @@ node scripts/wishmachine.js ideas draw --type equipment --count 4 --seed 9
 node scripts/wishmachine.js ideas draw --type motif --count 4 --seed 9
 node scripts/wishmachine.js ideas draw --type worldpack --genre 科幻 --count 1 --seed 42
 node scripts/wishmachine.js ideas draw --type worldpack --genre 修仙 --count 1 --seed 42 --dir my-book --save
+node scripts/wishmachine.js ideas import --dir my-book --type motif --source "web research" --file cards.json
 node scripts/wishmachine.js book read ideas --dir my-book
 node scripts/wishmachine.js book read idea --id <saved-id> --dir my-book
+node scripts/wishmachine.js book write research --dir my-book --id <pack-id> < report.json
+node scripts/wishmachine.js book read research --dir my-book --id <pack-id>
 node scripts/wishmachine.js ideas types
 ```
 
@@ -151,6 +154,7 @@ node scripts/wishmachine.js gen workflow read research
 - 不生成 setup/outline/正文。
 - 不调用 LLM。
 - 抽卡结果默认只输出；加 `--save` 才写入 `story/ideas/`。
+- `ideas import` 可导入人工/联网考究后的卡片；`book write research` 保存考究报告。
 - 不做历史考据；考据由 `wishmachine-research` skill 联网完成，主 skill 只负责保存抽卡结果和确定性检查。
 - 不包含 RPG 模拟；`check --profile rpg` 会明确报未实现。
 - 不做 MCP；只提供 CLI，方便作为 Skill 的 `scripts/` 直接运行。

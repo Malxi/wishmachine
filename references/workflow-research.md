@@ -89,6 +89,17 @@ story/ideas/<type>-<seed>-<stamp>.json
 ```
 
 List them with `book read ideas`; read one with `book read idea --id`.
-Research reports may be kept in the project's `drafts/research/` directory or
-returned to the user; do not write unverified claims into `story/setup` or
-`story/compose` as facts.
+Save the research report with:
+
+```bash
+node scripts/wishmachine.js book write research --dir my-book --id <pack-id> < report.json
+node scripts/wishmachine.js book read research --dir my-book --id <pack-id>
+```
+
+Research-produced replacement cards can be imported with:
+
+```bash
+node scripts/wishmachine.js ideas import --dir my-book --type motif --source "web research" --file replacement-cards.json
+```
+
+Do not write unverified claims into `story/setup` or `story/compose` as facts.

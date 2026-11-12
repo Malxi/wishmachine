@@ -1,9 +1,10 @@
-import { loadProject, initProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, doctorProject, saveIdeaDraw, readSection, writeArtifact } from './project.js';
+import { loadProject, initProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, doctorProject, saveIdeaDraw, saveImportedIdeas, saveResearchReport, readSection, writeArtifact } from './project.js';
 import { checkProject } from './schema.js';
+import { readJson } from './util.js';
 import { drawIdeas, ideasTypes } from './ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference, listSkills, readSkill } from './guides.js';
 
-const VERSION = '0.1.43';
+const VERSION = '0.1.44';
 const BOOLEAN_FLAGS = new Set(['apply', 'json', 'help', 'h', 'dry-run', 'force']);
 const COMMANDS = new Set(['book', 'check', 'ideas', 'gen', 'state', 'audit', 'refresh', 'export', 'doctor', 'version', 'help']);
 
@@ -95,9 +96,10 @@ Commands:
   export [--dir <dir>] [--output drafts/manuscript.md] [--format book|plain]
   doctor [--dir <dir>] [--fix]
   book read <setup|outline|craft|chapter|recap|context|logs|ideas|idea|research> [--id <id>] [--view index|full]
-  book write <setup|outline|craft|chapter|recap> [--mode replace|patch|append] [--apply] [--id <id>]
+  book write <setup|outline|craft|chapter|recap|research> [--mode replace|patch|append] [--apply] [--id <id>]
   check [--profile quality|schema|custom|all] [--target setup|outline|chapter] [--id <id>]
   ideas draw --type namecard|premise|resource|scenario ... [--count 5] [--seed 42] [--dir <project> --save]
+  ideas import --file <cards.json> [--dir <project>] [--type <type>] [--source <source>]
   ideas types
   gen workflow list|read <name>
   gen skill list|read <name>
@@ -193,6 +195,12 @@ async function runBook(args, flags) {
     if (!section) fail('book write requires a section');
     const project = loadProject(stringFlag(flags, 'dir', ''));
     const content = await stdinText();
+    if (section === 'research') {
+      const id = stringFlag(flags, 'id', '');
+      const report = JSON.parse(content.charCodeAt(0) === 0xfeff ? content.slice(1) : content);
+      print(saveResearchReport(project, id, report));
+      return 0;
+    }
     const result = writeArtifact(project, {
       section,
       mode: stringFlag(flags, 'mode', 'replace'),
@@ -229,6 +237,18 @@ function runIdeas(args, flags) {
   const sub = args[0] || 'draw';
   if (sub === 'types') {
     print({ ok: true, section: 'ideas', count: ideasTypes().length, results: ideasTypes() });
+    return 0;
+  }
+  if (sub === 'import') {
+    const file = stringFlag(flags, 'file', '');
+    if (!file) fail('ideas import requires --file');
+    const project = loadProject(stringFlag(flags, 'dir', ''));
+    const payload = readJson(file);
+    print(saveImportedIdeas(project, payload, {
+      type: stringFlag(flags, 'type', ''),
+      genre: stringFlag(flags, 'genre', ''),
+      source: stringFlag(flags, 'source', ''),
+    }));
     return 0;
   }
   if (sub !== 'draw') fail(`unknown ideas subcommand: ${sub}`);

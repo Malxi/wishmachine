@@ -5,7 +5,7 @@ display_name_en: Novel Wish Machine Research
 description: 对小说许愿机抽出的世界包、历史母题、地点、势力、装备和人物关系做联网考究，标注来源、时代与地区错配，阻止离谱组合进入设定。
 description_zh: 对小说许愿机抽出的世界包、历史母题、地点、势力、装备和人物关系做联网考究，标注来源、时代与地区错配，阻止离谱组合进入设定。
 description_en: Research Wishmachine worldpacks, historical motifs, places, factions, equipment and character relations on the web; cite sources, flag anachronisms, and reject implausible combinations before they enter the story bible.
-version: 0.1.0
+version: 0.1.1
 author: Malxi
 ---
 
@@ -59,6 +59,19 @@ does the target's method/resource/cost fit the source's rule and period?
   "rejected": [{"entity": "...", "reason": "anachronism|unsupported|genre_mismatch"}],
   "safe_prompt": "..."
 }
+```
+
+Save the report:
+
+```bash
+node scripts/wishmachine.js book write research --dir my-book --id <pack-id> < report.json
+node scripts/wishmachine.js book read research --dir my-book --id <pack-id>
+```
+
+If research produces replacement cards, import them into the project deck:
+
+```bash
+node scripts/wishmachine.js ideas import --dir my-book --type motif --source "web research" --file replacement-cards.json
 ```
 
 Do not present `anachronism`, `unsupported` or `rejected` entities as canon.

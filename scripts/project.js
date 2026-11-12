@@ -137,6 +137,71 @@ export function projectStatus(project) {
   };
 }
 
+export function saveImportedIdeas(project, payload, options = {}) {
+  const raw = Array.isArray(payload) ? { results: payload } : payload;
+  if (!raw || !Array.isArray(raw.results) || raw.results.length === 0) {
+    throw new Error('ideas import expects an array or an object with a non-empty results array');
+  }
+  const type = options.type || raw.type || 'reference';
+  const results = raw.results.map((item, index) => {
+    if (!item || typeof item !== 'object' || Array.isArray(item)) {
+      throw new Error(`ideas import item ${index + 1} must be an object`);
+    }
+    if (!item.title && !item.name) {
+      throw new Error(`ideas import item ${index + 1} needs a title or name`);
+    }
+    return {
+      ...item,
+      source: item.source || options.source || '',
+      imported_at: nowIso(),
+    };
+  });
+  const draw = {
+    ok: true,
+    section: 'ideas',
+    query: {
+      type,
+      genre: options.genre || '',
+      source: options.source || '',
+      imported: true,
+      count: results.length,
+    },
+    count: results.length,
+    results,
+    meta: {
+      deck: 'imported',
+      source: options.source || '',
+      usage: [
+        'Imported cards are references, not canon.',
+        'Check source and period before turning them into setup/outline facts.',
+      ],
+    },
+  };
+  const id = `import-${stamp()}`;
+  const dir = path.join(project.dir, 'story', 'ideas');
+  ensureDir(dir);
+  const file = path.join(dir, `${id}.json`);
+  writeJsonAtomic(file, draw);
+  return { ...draw, saved: { id, path: path.relative(project.dir, file).replace(/\\/g, '/') } };
+}
+
+export function saveResearchReport(project, id, report) {
+  if (!id) throw new Error('research report requires an id');
+  if (!report || typeof report !== 'object' || Array.isArray(report)) {
+    throw new Error('research report must be a JSON object');
+  }
+  const dir = path.join(project.dir, 'story', 'research');
+  ensureDir(dir);
+  const file = path.join(dir, `${safeSegment(id)}.json`);
+  writeJsonAtomic(file, report);
+  return {
+    ok: true,
+    action: 'research',
+    id: safeSegment(id),
+    path: path.relative(project.dir, file).replace(/\\/g, '/'),
+  };
+}
+
 export function saveIdeaDraw(project, draw) {
   const type = String(draw?.query?.type || 'ideas');
   const seed = draw?.query?.seed || 0;
@@ -548,6 +613,11 @@ export function readSection(project, section, options = {}) {
     }
     case 'research': {
       const dir = path.join(project.dir, 'story', 'research');
+      if (id) {
+        const file = path.join(dir, `${id}.json`);
+        if (!fs.existsSync(file)) throw new Error(`research report not found: ${id}`);
+        return { ok: true, section, id, report: readJson(file) };
+      }
       const results = fs.existsSync(dir)
         ? fs.readdirSync(dir).filter((name) => name.endsWith('.json')).sort().map((name) => ({
           id: name.slice(0, -5),
