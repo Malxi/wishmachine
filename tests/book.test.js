@@ -425,6 +425,10 @@ test('outlinepack expands into multiple volumes', () => {
   assert.ok(outline.volumes[0].closing_beat);
   assert.ok(outline.volumes[0].mysteries.planted.length > 0);
   assert.ok(outline.volumes[0].timeline.anchor);
+  assert.ok(outline.volumes[0].beat_map.length > 0);
+  assert.ok(outline.chapters[0].obstacle);
+  assert.ok(outline.chapters[0].mysteries.planted.length > 0);
+  assert.ok(outline.chapters[11].mysteries.resolved.length > 0);
   assert.ok(outline.chapters[0].scenes[0].obstacle);
   assert.equal(outline.chapters[0].scenes[0].turn, 'choice');
   assert.equal(outline.chapters[0].scenes[2].turn, 'reversal');

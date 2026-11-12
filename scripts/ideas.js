@@ -638,6 +638,9 @@ function buildOutlinePack(plot, seed, options = {}) {
     climax: 'climax',
     resolution: 'falling',
   };
+  const scenarioA = plot.scenarios?.[0] || null;
+  const scenarioB = plot.scenarios?.[1] || null;
+  const blocking = (plot.cast_relations || []).find((relation) => relation.type === 'blocks') || null;
   const chapterList = [];
   const volumeId = options.volumeId || 'P1-V1';
   const chapterOffset = Number(options.chapterOffset) || 0;
@@ -647,11 +650,48 @@ function buildOutlinePack(plot, seed, options = {}) {
     const beat = beats[Math.min(beats.length - 1, Math.floor((globalIndex * beats.length) / totalChapters))] || beats[0] || {
       act: 'Act I', function: 'setup', beat: '主角进入故事。',
     };
+    const chapterId = `${volumeId}-C${index + 1}`;
+    const obstacleByFunction = {
+      setup: scenarioA?.pressure,
+      inciting: scenarioA?.twist,
+      midpoint: scenarioB?.twist,
+      crisis: blocking?.stake,
+      climax: plot.storyline?.cost,
+      resolution: plot.storyline?.cost,
+    };
+    const chapterObstacle = obstacleByFunction[beat.function]
+      || plot.premise?.central_conflict
+      || '规则阻止主角推进';
+    const mysteries = {
+      planted: [],
+      resolved: [],
+    };
+    if (beat.function === 'setup' && plot.premise?.hidden_truth) {
+      mysteries.planted.push({
+        mystery: plot.premise.hidden_truth,
+        planted_in: chapterId,
+        status: 'open',
+      });
+    }
+    if (beat.function === 'midpoint' && scenarioB?.twist) {
+      mysteries.planted.push({
+        mystery: scenarioB.twist,
+        planted_in: chapterId,
+        status: 'open',
+      });
+    }
+    if (beat.function === 'climax' || beat.function === 'resolution') {
+      mysteries.resolved.push({
+        mystery: plot.storyline?.midpoint || plot.premise?.hidden_truth || '核心谜题',
+        resolved_in: chapterId,
+        answer: plot.storyline?.payoff || '答案浮出水面。',
+      });
+    }
     const scenes = Array.from({ length: scenesPerChapter }, (_, sceneIndex) => ({
       order: sceneIndex + 1,
       pov: protagonist,
       goal: sceneIndex === 0 ? beat.beat : `${beat.beat}（推进 ${sceneIndex + 1}）`,
-      obstacle: plot.premise?.central_conflict || '规则阻止主角推进',
+      obstacle: chapterObstacle,
       turn: sceneIndex === 0 ? 'choice' : sceneIndex === scenesPerChapter - 1 ? 'reversal' : 'complication',
       stakes: plot.storyline?.cost || '这一章必须付出代价',
       location: plot.location?.name || '关键地点',
@@ -671,11 +711,13 @@ function buildOutlinePack(plot, seed, options = {}) {
       order: sceneIndex + 1,
     }));
     chapterList.push({
-      id: `${volumeId}-C${index + 1}`,
+      id: chapterId,
       title: `第${index + 1}章 · ${beat.function}`,
       summary: beat.beat,
       characters: castNames,
       location: plot.location?.name || '关键地点',
+      obstacle: chapterObstacle,
+      mysteries,
       events,
       conflict: plot.premise?.central_conflict || plot.premise?.conflict || '主角必须做出选择。',
       pacing: pacingByFunction[beat.function] || 'rising',
@@ -699,6 +741,11 @@ function buildOutlinePack(plot, seed, options = {}) {
     title: '第一卷',
     summary: plot.storyline?.promise || plot.premise?.title || '故事的第一卷。',
     chapters: chapterList,
+    beat_map: chapterList.map((chapter) => ({
+      chapter: chapter.id,
+      function: chapter.beat_function,
+      act: chapter.act,
+    })),
   };
   const draftOutline = {
     parts: [{
