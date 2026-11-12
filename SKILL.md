@@ -190,8 +190,9 @@ without writing. `book registry log --limit 20` reads
 `--since <ISO>` filter the log. `book registry backups [--keep 10] [--prune]`
 lists or prunes `logs/registry-backups/`. `book registry backup` creates a
 manual snapshot; `book registry restore --backup <name> [--dry-run]` restores it.
-`book registry backups` also shows manifest metadata, and restore verifies
-manifest checksums before overwriting setup/outline.
+`book registry backups` lists/prunes snapshots, protects backups referenced by
+undo and shows manifest metadata. Restore dry-run reports changed top-level keys
+and verifies manifest checksums before overwriting setup/outline.
 `book registry check-backups` verifies every snapshot manifest and file checksum.
 `book registry undo [--operation <id>]` restores the selected or most recent
 backed-up operation; each abandon/clean writes a backup and operation id. `book registry abandon --mystery <id>` manually marks a
