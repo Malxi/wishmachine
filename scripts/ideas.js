@@ -687,19 +687,43 @@ function buildOutlinePack(plot, seed, options = {}) {
         answer: plot.storyline?.payoff || '答案浮出水面。',
       });
     }
-    const scenes = Array.from({ length: scenesPerChapter }, (_, sceneIndex) => ({
-      order: sceneIndex + 1,
-      pov: protagonist,
-      goal: sceneIndex === 0 ? beat.beat : `${beat.beat}（推进 ${sceneIndex + 1}）`,
-      obstacle: chapterObstacle,
-      turn: sceneIndex === 0 ? 'choice' : sceneIndex === scenesPerChapter - 1 ? 'reversal' : 'complication',
-      stakes: plot.storyline?.cost || '这一章必须付出代价',
-      location: plot.location?.name || '关键地点',
-      characters: castNames.slice(0, Math.min(3, castNames.length)),
-      words: Math.ceil(targetChars / scenesPerChapter),
-      tone: beat.act,
-      beats: [beat.function, sceneIndex === scenesPerChapter - 1 ? 'turn' : 'pressure'],
-    }));
+    const scenes = Array.from({ length: scenesPerChapter }, (_, sceneIndex) => {
+      const lastScene = sceneIndex === scenesPerChapter - 1;
+      const sceneObstacle = sceneIndex === 0
+        ? chapterObstacle
+        : lastScene
+          ? (plot.storyline?.cost || chapterObstacle)
+          : (scenarioB?.twist || blocking?.stake || plot.premise?.hidden_truth || chapterObstacle);
+      const sceneTurn = sceneIndex === 0 ? 'choice' : lastScene ? 'reversal' : 'complication';
+      const turnEvent = sceneIndex === 0
+        ? `主角选择进入：${beat.beat}`
+        : lastScene
+          ? `反转：${plot.storyline?.midpoint || scenarioB?.twist || '原本的理解被推翻'}`
+          : `复杂化：${scenarioB?.twist || blocking?.stake || '新的阻力出现'}`;
+      const sceneMysteries = {
+        planted: sceneIndex === 0 && plot.premise?.hidden_truth
+          ? [{ mystery: plot.premise.hidden_truth, status: 'open' }]
+          : [],
+        resolved: lastScene
+          ? [{ mystery: plot.storyline?.midpoint || plot.premise?.hidden_truth || '本章疑问', answer: plot.storyline?.payoff || '答案在场景末出现' }]
+          : [],
+      };
+      return {
+        order: sceneIndex + 1,
+        pov: protagonist,
+        goal: sceneIndex === 0 ? beat.beat : `${beat.beat}（推进 ${sceneIndex + 1}）`,
+        obstacle: sceneObstacle,
+        turn: sceneTurn,
+        turn_event: turnEvent,
+        stakes: plot.storyline?.cost || '这一章必须付出代价',
+        location: plot.location?.name || '关键地点',
+        characters: castNames.slice(0, Math.min(3, castNames.length)),
+        words: Math.ceil(targetChars / scenesPerChapter),
+        tone: beat.act,
+        mysteries: sceneMysteries,
+        beats: [beat.function, lastScene ? 'turn' : 'pressure'],
+      };
+    });
     const events = scenes.map((scene, sceneIndex) => ({
       type: 'plot',
       characters: scene.characters,

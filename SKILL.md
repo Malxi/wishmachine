@@ -13,7 +13,7 @@ examples_en:
   - "Create a 3-volume × 5-chapter science-fiction project"
   - "Check the outline for blocking findings"
   - "Draw 12 science-fiction name cards"
-version: 0.1.64
+version: 0.1.65
 author: Malxi
 ---
 
@@ -153,8 +153,9 @@ are distributed across the whole book instead of repeating per volume, and each
 volume uses a different storyline when the pack has one. Volumes carry
 opening/closing beats, mysteries and timeline anchors. Chapters carry an
 obstacle, planted/resolved mysteries and a beat map; scenes carry
-goal/obstacle/turn/stakes. The saved pack also contains `setup_draft` with
-main/subplot storylines, premise progression and a world timeline.
+goal/obstacle/turn/stakes. Scenes also carry `turn_event` and planted/resolved
+scene mysteries. The saved pack also contains `setup_draft` with main/subplot
+storylines, premise progression and a world timeline.
 Some packs also include a `motif` and an `inspired_by` graph edge.
 `cast_relations` links the four characters to each other, the faction, the
 location and the first storyline; each relation carries a `stake`.

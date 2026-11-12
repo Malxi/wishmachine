@@ -78,8 +78,8 @@ logs/
 - `plotpack` 把 worldpack、cast 关系、六个章节 beat（setup/inciting/midpoint/crisis/climax/resolution）打包
 - `outlinepack --chapters --scenes --target-chars` 展开为带 scenes、字数目标和 draft_outline 的章节骨架
 - `outlinepack --volumes --chapters-per-volume` 全局分布 6 个 beat，并生成多卷 opening/closing、mysteries、timeline
+- `outlinepack` 每个 scene 带 goal/obstacle/turn/turn_event/stakes 与 scene mysteries
 - `outlinepack` 每章带 obstacle、mysteries.planted/resolved 与 volume.beat_map
-- `outlinepack` 每个 scene 带 goal/obstacle/turn/stakes，不再只有 goal
 - `outlinepack` 同时带 `setup_draft` 和 `draft_outline`
 - `book write outline --from-idea <id>` 把 outlinepack 的 draft_outline 送入正常候选检查
 - `book write setup --from-idea <id>` 把 outlinepack 的 setup_draft 送入正常候选检查
