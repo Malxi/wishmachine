@@ -477,6 +477,9 @@ test('outlinepack expands into multiple volumes', () => {
   assert.ok(outline.thread_registry.every((thread) => thread.status !== 'resolved' || thread.resolved_in));
   assert.ok(outline.chapters.every((chapter) => chapter.thread_id));
   assert.ok(outline.thread_registry.some((thread) => thread.status === 'resolved'));
+  const resolvedThread = outline.thread_registry.find((thread) => thread.status === 'resolved');
+  assert.ok(resolvedThread.resolved_mysteries.length > 0);
+  assert.ok(resolvedThread.resolved_mysteries.every((mystery) => mystery.id && mystery.chapter_id));
   assert.ok(outline.setup_draft.core_cast[0].storyline_refs.includes(outline.setup_draft.storylines[0].thread_id));
   assert.equal(validateIdeaDraw({ results: [outline] }).ok, true);
   assert.equal(outline.setup_draft.premises[0].progression.length, 4);

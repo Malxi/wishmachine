@@ -992,6 +992,14 @@ function buildOutlinePack(plot, seed, options = {}) {
     const resolvedIn = resolvedChapters[resolvedChapters.length - 1]
       || (lastChapter && ['climax', 'resolution'].includes(lastChapter.beat_function) ? lastChapter.id : null);
     const abandonedHistory = abandonedIds.has(id);
+    const resolvedMysteries = chapterList.flatMap((chapter) => (
+      (chapter.mysteries?.resolved || [])
+        .filter((mystery) => mystery.thread_id === id)
+        .map((mystery) => ({ id: mystery.id, chapter_id: chapter.id }))
+    ));
+    const abandonedMysteries = droppedMysteries
+      .filter((mystery) => mystery.thread_id === id)
+      .map((mystery) => ({ id: mystery.id, chapter_id: mystery.dropped_in, question: mystery.question }));
     return {
       id,
       name: item.title || `storyline ${index + 1}`,
@@ -1000,7 +1008,9 @@ function buildOutlinePack(plot, seed, options = {}) {
       status: resolvedIn ? 'resolved' : abandonedHistory ? 'abandoned' : 'active',
       resolved_in: resolvedIn,
       resolved_chapters: resolvedChapters,
+      resolved_mysteries: resolvedMysteries,
       abandoned_history: abandonedHistory,
+      abandoned_mysteries: abandonedMysteries,
     };
   });
   return {
@@ -1098,6 +1108,7 @@ function buildMultiVolumeOutlinePack(plot, seed, options = {}) {
   const abandonedIds = new Set(allDropped.map((mystery) => mystery.thread_id));
   const abandonedThreads = allDropped.map((item) => item.abandoned_thread).filter(Boolean);
   setupDraft.abandoned_threads = abandonedThreads;
+  setupDraft.dropped_mysteries = allDropped;
   const threadRegistry = storylines.map((item, index) => {
     const id = item.id || `thread-${index + 1}`;
     const threadChapters = chapters.filter((chapter) => chapter.thread_id === id);
@@ -1108,6 +1119,14 @@ function buildMultiVolumeOutlinePack(plot, seed, options = {}) {
     const resolvedIn = resolvedChapters[resolvedChapters.length - 1]
       || (lastChapter && ['climax', 'resolution'].includes(lastChapter.beat_function) ? lastChapter.id : null);
     const abandonedHistory = abandonedIds.has(id);
+    const resolvedMysteries = chapters.flatMap((chapter) => (
+      (chapter.mysteries?.resolved || [])
+        .filter((mystery) => mystery.thread_id === id)
+        .map((mystery) => ({ id: mystery.id, chapter_id: chapter.id }))
+    ));
+    const abandonedMysteries = allDropped
+      .filter((mystery) => mystery.thread_id === id)
+      .map((mystery) => ({ id: mystery.id, chapter_id: mystery.dropped_in, question: mystery.question }));
     return {
       id,
       name: item.title || `storyline ${index + 1}`,
@@ -1116,7 +1135,9 @@ function buildMultiVolumeOutlinePack(plot, seed, options = {}) {
       status: resolvedIn ? 'resolved' : abandonedHistory ? 'abandoned' : 'active',
       resolved_in: resolvedIn,
       resolved_chapters: resolvedChapters,
+      resolved_mysteries: resolvedMysteries,
       abandoned_history: abandonedHistory,
+      abandoned_mysteries: abandonedMysteries,
     };
   });
   setupDraft.thread_registry = threadRegistry;
@@ -1131,6 +1152,7 @@ function buildMultiVolumeOutlinePack(plot, seed, options = {}) {
     draft_outline: {
       thread_registry: threadRegistry,
       abandoned_threads: abandonedThreads,
+      dropped_mysteries: allDropped,
       parts: [{
         id: 'P1',
         title: plot.premise?.title || '未命名故事',

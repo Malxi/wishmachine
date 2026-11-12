@@ -134,6 +134,11 @@ export function validateSetup(setup) {
         if (thread.abandoned_history !== undefined && typeof thread.abandoned_history !== 'boolean') {
           findings.push(finding('schema.setup.thread_registry.abandoned_history', 'medium', `${thread.id}.abandoned_history must be boolean`, thread.id));
         }
+        for (const key of ['resolved_mysteries', 'abandoned_mysteries']) {
+          if (thread[key] !== undefined && (!Array.isArray(thread[key]) || thread[key].some((item) => typeof item !== 'object' || Array.isArray(item)))) {
+            findings.push(finding(`schema.setup.thread_registry.${key}`, 'medium', `${thread.id}.${key} must be an array of objects`, thread.id));
+          }
+        }
       }
       for (const storyline of setup.storylines || []) {
         if (storyline?.thread_id && !ids.has(storyline.thread_id)) {
@@ -189,6 +194,11 @@ export function validateOutline(outline, config) {
         }
         if (thread.abandoned_history !== undefined && typeof thread.abandoned_history !== 'boolean') {
           findings.push(finding('schema.outline.thread_registry.abandoned_history', 'medium', `${thread.id}.abandoned_history must be boolean`, thread.id));
+        }
+        for (const key of ['resolved_mysteries', 'abandoned_mysteries']) {
+          if (thread[key] !== undefined && (!Array.isArray(thread[key]) || thread[key].some((item) => typeof item !== 'object' || Array.isArray(item)))) {
+            findings.push(finding(`schema.outline.thread_registry.${key}`, 'medium', `${thread.id}.${key} must be an array of objects`, thread.id));
+          }
         }
       }
       if (outline.abandoned_threads !== undefined) {

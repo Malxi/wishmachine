@@ -983,18 +983,33 @@ function needsThreadStatusRepair(project) {
   const outlineRegistry = Array.isArray(docs.outline.thread_registry) ? docs.outline.thread_registry : [];
   if (!setupRegistry.length || !outlineRegistry.length) return false;
   const resolvedChapters = threadResolutionChapters(docs.outline);
+  const resolvedMysteries = new Map();
+  for (const chapter of outlineChapters(docs.outline)) {
+    for (const mystery of chapter.mysteries?.resolved || []) {
+      if (!mystery?.thread_id) continue;
+      if (!resolvedMysteries.has(mystery.thread_id)) resolvedMysteries.set(mystery.thread_id, []);
+      resolvedMysteries.get(mystery.thread_id).push({ id: mystery.id, chapter_id: chapter.id });
+    }
+  }
+  const droppedMysteries = Array.isArray(docs.outline.dropped_mysteries) ? docs.outline.dropped_mysteries : [];
   const abandoned = new Set((docs.outline.abandoned_threads || []).map((item) => item.thread_id));
   return [...setupRegistry, ...outlineRegistry].some((thread) => {
     const chapters = resolvedChapters.get(thread.id) || [];
     const hasResolution = chapters.length > 0;
     const listed = abandoned.has(thread.id);
     const expectedIn = hasResolution ? chapters[chapters.length - 1] : null;
+    const expectedMysteries = resolvedMysteries.get(thread.id) || [];
+    const expectedAbandoned = droppedMysteries
+      .filter((mystery) => mystery.thread_id === thread.id)
+      .map((mystery) => ({ id: mystery.id, chapter_id: mystery.dropped_in, question: mystery.question }));
     return (thread.status === 'active' && hasResolution)
       || (thread.status === 'resolved' && !hasResolution)
       || (thread.status === 'abandoned' && !listed)
       || (thread.status === 'abandoned' && hasResolution)
       || (thread.resolved_in || null) !== expectedIn
       || !sameArray(thread.resolved_chapters, chapters)
+      || !sameArray(thread.resolved_mysteries, expectedMysteries)
+      || !sameArray(thread.abandoned_mysteries, expectedAbandoned)
       || Boolean(thread.abandoned_history) !== (listed || thread.status === 'abandoned');
   });
 }
@@ -1003,6 +1018,15 @@ function repairThreadStatuses(project) {
   const docs = loadRegistryDocs(project);
   if (!docs) return null;
   const resolvedChapters = threadResolutionChapters(docs.outline);
+  const resolvedMysteries = new Map();
+  for (const chapter of outlineChapters(docs.outline)) {
+    for (const mystery of chapter.mysteries?.resolved || []) {
+      if (!mystery?.thread_id) continue;
+      if (!resolvedMysteries.has(mystery.thread_id)) resolvedMysteries.set(mystery.thread_id, []);
+      resolvedMysteries.get(mystery.thread_id).push({ id: mystery.id, chapter_id: chapter.id });
+    }
+  }
+  const droppedMysteries = Array.isArray(docs.outline.dropped_mysteries) ? docs.outline.dropped_mysteries : [];
   let changed = false;
   for (const doc of [docs.setup, docs.outline]) {
     const registry = Array.isArray(doc.thread_registry) ? doc.thread_registry : [];
@@ -1014,9 +1038,13 @@ function repairThreadStatuses(project) {
       const wasAbandoned = thread.status === 'abandoned' || thread.abandoned_history === true;
       const listed = abandoned.some((item) => item.thread_id === thread.id);
       thread.resolved_chapters = chapters;
+      thread.resolved_mysteries = resolvedMysteries.get(thread.id) || [];
       thread.resolved_in = hasResolution ? chapters[chapters.length - 1] : null;
       thread.status = hasResolution ? 'resolved' : (wasAbandoned ? 'abandoned' : 'active');
       thread.abandoned_history = Boolean(wasAbandoned || listed);
+      thread.abandoned_mysteries = droppedMysteries
+        .filter((mystery) => mystery.thread_id === thread.id)
+        .map((mystery) => ({ id: mystery.id, chapter_id: mystery.dropped_in, question: mystery.question }));
       if (thread.status === 'abandoned' && !listed) {
         abandoned.push({
           thread_id: thread.id,
