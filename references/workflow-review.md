@@ -1,12 +1,37 @@
 # Review workflow
 
-Use this when the user asks whether an outline or chapter is ready.
+Use this when the user asks whether a setup, outline, or chapter is ready.
+
+## 1. Deterministic pass
 
 Whole-project audit:
 
 ```bash
 node scripts/wishmachine.js audit
 ```
+
+Outline review:
+
+```bash
+node scripts/wishmachine.js check --profile all --target outline --max-findings 20
+```
+
+## 2. Editorial pass
+
+Deterministic checks do not judge whether the setting or plot is good. Load the
+review checklist and the actual artifacts:
+
+```bash
+node scripts/wishmachine.js gen reference read review-checklist
+node scripts/wishmachine.js state
+node scripts/wishmachine.js book read setup
+node scripts/wishmachine.js book read outline --view index
+```
+
+Review **setting** for genre promise, causal spine, rule cost/loophole, cast
+roles, resource scarcity, theme and terminology. Review **outline** for global
+arc, chapter function, event causality, character agency, mystery discipline,
+continuity, pacing and expandability.
 
 For prose, read the chapter before trusting the score. Check:
 
@@ -24,22 +49,15 @@ Then run:
 node scripts/wishmachine.js check --profile all --target chapter --id P1-V1-C1
 ```
 
-Outline review:
+## 3. Report
 
-```bash
-node scripts/wishmachine.js check --profile all --target outline --max-findings 20
+Separate:
+
+```text
+deterministic violation
+editorial judgment
 ```
 
-Chapter review:
-
-```bash
-node scripts/wishmachine.js check --profile quality --target chapter --id P1-V1-C1
-```
-
-Report blocking findings first, then medium/low. Repair through `book write`:
-
-```bash
-node scripts/wishmachine.js book write outline --mode patch --target volume --id P1-V1 --apply < patch.json
-```
-
-This port has no RPG simulation. `--profile rpg` is intentionally unsupported.
+Do not claim a structural 100 means the novel is good. Report blocking findings
+first, then patterns (repetition, compressed chapters, weak causality), then
+optional polish.

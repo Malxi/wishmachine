@@ -71,7 +71,7 @@ logs/
 - `refresh` 重建 setup/outline markdown
 - `export` 将已写章节导出为带目录、人物和规则的阅读版（`--format plain` 输出纯章节拼接）
 - `doctor` 检查项目目录、配置、setup/outline/craft/recap JSON 有效性、缺失 JSON 和 orphan 文件；`--fix` 会创建缺失目录并写入规范化 structure
-- `ideas namecard/premise/resource/scenario/provocation/law/event/engine/storyline/worldpack`
+- `ideas namecard/premise/resource/equipment/scenario/provocation/law/event/engine/storyline/location/faction/worldpack`
 - `gen workflow/reference/skill`
 
 没有：

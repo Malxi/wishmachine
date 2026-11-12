@@ -13,7 +13,7 @@ examples_en:
   - "Create a 3-volume × 5-chapter science-fiction project"
   - "Check the outline for blocking findings"
   - "Draw 12 science-fiction name cards"
-version: 0.1.41
+version: 0.1.42
 author: Malxi
 ---
 
@@ -60,6 +60,28 @@ node scripts/wishmachine.js book write chapter --dir my-book --id P1-V1-C1 --mod
 
 默认 dry-run；只有 `--apply` 写盘。写入前会运行确定性检查。
 
+## 创作流
+
+```text
+book init
+  -> ideas draw / worldpack（可选参考）
+  -> 写 setup -> check setup
+  -> 写 outline -> check outline
+  -> 逐章：读上一章 recap + 本章 outline
+          -> WorkBuddy 写正文
+          -> book write chapter（先 dry-run）
+          -> book write chapter --apply
+          -> check chapter
+          -> 从正文写 recap -> book write recap
+  -> audit
+  -> 设定/大纲编辑性审查（review-checklist）
+  -> refresh
+  -> export --format book
+```
+
+Wishmachine 只负责项目状态、确定性检查、参考抽卡和写入；正文始终由
+WorkBuddy 创作。
+
 ## 2. 检查
 
 ```bash
@@ -92,11 +114,17 @@ node scripts/wishmachine.js ideas draw --type law --count 4 --seed 9
 node scripts/wishmachine.js ideas draw --type event --count 4 --seed 9
 node scripts/wishmachine.js ideas draw --type engine --count 4 --seed 9
 node scripts/wishmachine.js ideas draw --type storyline --count 4 --seed 9
+node scripts/wishmachine.js ideas draw --type location --count 4 --seed 9
+node scripts/wishmachine.js ideas draw --type faction --count 4 --seed 9
+node scripts/wishmachine.js ideas draw --type equipment --count 4 --seed 9
 node scripts/wishmachine.js ideas draw --type worldpack --genre 科幻 --count 1 --seed 42
 node scripts/wishmachine.js ideas types
 ```
 
 抽卡是确定性的；保留 seed 可复现。
+
+`worldpack` returns one premise, engine, location, faction, equipment, two
+resources, two scenarios, two storylines and four role-tagged cast cards.
 
 ## 4. 读取指导
 
@@ -105,9 +133,11 @@ node scripts/wishmachine.js gen workflow list
 node scripts/wishmachine.js gen workflow read outline
 node scripts/wishmachine.js gen reference list
 node scripts/wishmachine.js gen reference read outline-schema
+node scripts/wishmachine.js gen reference read review-checklist
 ```
 
 第一次写 setup 前读 `setup-schema`；第一次写 outline 前读 `outline-schema`。
+设定和大纲的编辑性审查使用 `review-checklist`，它不会替代确定性检查。
 
 ## 边界
 

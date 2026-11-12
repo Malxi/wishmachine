@@ -3,7 +3,7 @@ import { hashSeed, mulberry32, pickMany, pick } from './util.js';
 const TYPES = [
   'provocation', 'axiom', 'event', 'law', 'scenario', 'engine',
   'worldpack', 'premise', 'storyline', 'cast', 'namecard',
-  'resource', 'itemcard', 'reference', 'name',
+  'resource', 'equipment', 'itemcard', 'location', 'faction', 'reference', 'name',
 ];
 
 const SURNAMES = ['孟', '沈', '程', '韩', '钟', '江', '谢', '许', '方', '周', '罗', '顾', '陆', '宋', '闻', '裴', '秦', '唐', '温', '叶'];
@@ -71,6 +71,33 @@ const RESOURCES = [
   { name: '姓名继承权', category: '身份资产', meaning: '继承死者姓名及其债务、契约和社会关系。', issuer: '姓名登记处', spend_rule: '一个姓名只能有一个合法继承人。', scarcity: '血亲、复制人与债权人会争夺同一姓名。' },
   { name: '救援税单', category: '债务凭证', meaning: '用未来劳动换取优先救援资格。', issuer: '救援公司', spend_rule: '签署后进入优先序列，未来十年工资被扣除。', scarcity: '优先名额按区域配额分配。' },
   { name: '灾难直播权', category: '媒体资产', meaning: '灾区主信号的独家播放权。', issuer: '灾区媒体理事会', spend_rule: '收益一部分用于救援，一部分分红。', scarcity: '灾区带宽有限，只有一份主信号。' },
+];
+
+const LOCATIONS = [
+  { name: '长庚号舰桥', type: '舰船', description: '废弃旗舰的指挥层，舷窗被虫潮磨成毛玻璃。', function: '指挥、谈判、最后的撤离决定。', danger: '结构老化，重力分区随时失效。' },
+  { name: '三号休眠舱段', type: '舰船', description: '一排排休眠舱与永远亮着的编号灯。', function: '开场、身份核验、倒计时开始。', danger: '舱位数量与名单永远对不上。' },
+  { name: '砚港星门', type: '星门', description: '边境星门，收费口比门本身更大。', function: '跃迁、封锁、筛选谁有资格离开。', danger: '配额与虫潮同时到达。' },
+  { name: '候补舱', type: '禁区', description: '节目与航运公司都不承认存在的舱段。', function: '藏匿被划掉的人、保存原始名册。', danger: '没有维生配额，也没有出口。' },
+  { name: '母港调度台', type: '港口', description: '全星域最忙的调度中心，屏幕永远不够用。', function: '展示谁在等、谁被排到下一班。', danger: '一个签名可以改掉整支舰队的优先级。' },
+  { name: '虫巢边缘', type: '异星', description: '虫群母巢外围，回响在这里凝结成可读的碎片。', function: '揭示虫族如何沿人类航线追踪。', danger: '任何信号都会吸引整群虫潮。' },
+];
+
+const FACTIONS = [
+  { name: '联邦航运理事会', type: '政府机构', goal: '维持星门秩序与配额分配。', resource: '星门通行配额', method: '用优先级和审查拖住不受欢迎的舰队。', secret: '理事会自己也在黑市买卖配额。' },
+  { name: '深空公会', type: '行业组织', goal: '保护签约船员的工作与竞业利益。', resource: '可执行工时', method: '用合同和仲裁冻结不听话的舰船。', secret: '公会高层把救援延迟当成谈判筹码。' },
+  { name: '灾区媒体理事会', type: '媒体联盟', goal: '控制灾难直播权与观众注意力。', resource: '灾难直播权', method: '用镜头决定谁先被看见。', secret: '主信号可以延迟十一秒再播出。' },
+  { name: '复制人互助会', type: '地下网络', goal: '让复制人获得姓名与人格登记。', resource: '姓名继承权', method: '伪造回收记录、替人签字。', secret: '部分成员是原件安插的线人。' },
+  { name: '深空保险公司', type: '企业', goal: '把灾难变成可计算的保费。', resource: '全损保单', method: '用理赔数据预测并提前撤走资产。', secret: '公司会制造小事故来校准模型。' },
+  { name: '虫群母巢', type: '异族', goal: '吞噬完整自我模型并繁殖高复杂度神经元。', resource: '回响残片', method: '沿人类跃迁泄漏的航线提前设伏。', secret: '母巢内部存在可交流个体。' },
+];
+
+const EQUIPMENT = [
+  { name: '腕牌', type: '身份设备', function: '显示倒计时、在册人数与个人配额。', cost: '摘除即失去舱位与维生资格。', limit: '不能转让，不能伪造，但可以借给没有腕牌的人看。' },
+  { name: '舱门切割器', type: '工程装备', function: '切开没有爆炸螺栓的舱门。', cost: '使用时会暴露位置与氧气消耗。', limit: '只能切一道门，刀头会烧毁。' },
+  { name: '引航快照', type: '导航耗材', function: '让飞船锁定星门坐标。', cost: '烧毁一份人类意识快照。', limit: '未登记快照不能使用。' },
+  { name: '记忆读取器', type: '审讯设备', function: '读出神经回响中的残留记忆。', cost: '被读取者会失去对应片段。', limit: '只能读取最近一次跃迁的残片。' },
+  { name: '救援信标', type: '求生设备', function: '向最近舰队发送位置与幸存者名单。', cost: '开启后所有势力都会收到信号。', limit: '电池只够发送一次。' },
+  { name: '舰载机甲', type: '战斗装备', function: '在舰内与虫潮中执行救援和突破。', cost: '驾驶员的神经负荷会永久累积。', limit: '需要两人协同，单人启动会烧毁接口。' },
 ];
 
 const SCENARIOS = [  { title: '封锁令比虫潮早到三天', pressure: '主角发现撤离名单的时间戳早于虫潮预警，必须在封锁前决定救谁。', twist: '名单不是预测，而是有人提前写好的交易。' },
@@ -193,10 +220,189 @@ const XIANXIA = {
     { title: '宗门清册', promise: '主角想阻止下一次清册。', escalation: '每阻止一次，掌册者就提前一次。', midpoint: '主角发现清册已经运行了六十年。', payoff: '主角把清册改成公册。', cost: '公册需要有人永远坐在册页边上记录。' },
     { title: '旧脉归名', promise: '主角想找回被整脉抹掉的旧人。', escalation: '每找回一个名字，就惊动一个还在位的既得利益者。', midpoint: '旧脉不是被魔所灭，是被宗门自己抹掉。', payoff: '旧脉姓名被逐个写回。', cost: '写回名字会让当年的执行者无法再躲。' },
   ],
+  locations: [
+    { name: '悬名宗·录事房', type: '宗门', description: '抄册执事日夜誊写真名的低矮房间，灯永远添到第三盏。', function: '发现空行、抄录旧名、把私账带出去。', danger: '每一页都可能是下一次清册的名单。' },
+    { name: '洗墨池', type: '宗门', description: '废弃的洗笔池，水面浮着一层洗不掉的旧墨。', function: '遇见无名客、读出回环。', danger: '池边的人说不出自己的名字。' },
+    { name: '沉剑谷', type: '旧战场', description: '照夜一脉被整册清零的谷地，屋舍停在最后一件事的姿态。', function: '揭示六十年前的旧案。', danger: '谷中旧名会一层层压在纸背上。' },
+    { name: '藏册阁', type: '禁地', description: '只问三个问题、从不摘左手手套的守门人看守的旧档库。', function: '取得《应名录》残页。', danger: '第三问会让人自己说出要找的名字。' },
+    { name: '剑冢', type: '禁地', description: '古剑插满山坡，每柄剑都在等一个真名。', function: '认主、取得剑契。', danger: '没有名字的人会被剑意反噬。' },
+    { name: '山门·旧榜墙', type: '宗门', description: '贴满历代榜文的石墙，朱印一层叠一层。', function: '公开真相、改榜。', danger: '撕掉一页，就有一批人被忘记。' },
+  ],
+  factions: [
+    { name: '悬名宗掌册堂', type: '宗门机构', goal: '维持照命册与清册秩序。', resource: '真名玉册', method: '用朱笔勾名、用清册配额筛选。', secret: '掌册长老知道清册真正压住的是什么。' },
+    { name: '巡册司', type: '外部监察', goal: '核对各宗清册账目。', resource: '巡册账', method: '逐笔核对，必要时替宗门掩盖。', secret: '巡册使的真实差事是保证清册按时完成。' },
+    { name: '藏册阁', type: '守门人', goal: '守住旧档与三个固定问题。', resource: '旧档残页', method: '只让答对第三问的人进入。', secret: '守门人自己也是被抹名的人。' },
+    { name: '剑冢守人', type: '中立势力', goal: '让古剑找到能履约的剑主。', resource: '剑契', method: '每甲子开冢一次，只认真名。', secret: '剑认的是旧剑主临终记住的名字。' },
+    { name: '香火祠', type: '民间信仰', goal: '按香火账分配愿力与神位。', resource: '香火愿力', method: '用香火账决定谁还能被神记住。', secret: '神位可以买卖。' },
+    { name: '照夜一脉', type: '旧宗门', goal: '拒绝清册，保住整脉姓名。', resource: '旧榜与验状', method: '以整脉清零为代价拒绝一次清册。', secret: '他们不是被魔所灭，是被宗门自己抹掉。' },
+  ],
+  equipment: [
+    { name: '朱砂判笔', type: '宗门法器', function: '在照命册上勾去或补回真名。', cost: '每勾一人，掌册者自己的名字也淡一分。', limit: '只能勾名字，勾不掉纸背留痕。' },
+    { name: '本命血墨', type: '书写耗材', function: '把名字写进命册或纸人。', cost: '伤及道基，不可连续使用。', limit: '只能写本人或自愿让出名字的人。' },
+    { name: '剑契', type: '契约凭证', function: '借古剑剑意一次。', cost: '必须替旧剑主完成未竟之约。', limit: '一柄剑只有一份剑契。' },
+    { name: '替身纸人', type: '消耗品', function: '替人挡一次死劫。', cost: '把死劫转给纸人里被写名的另一个人。', limit: '纸人只认名字，不认因果。' },
+    { name: '渡劫名额', type: '许可', function: '允许在宗门境内渡劫，并指定替劫者。', cost: '替劫者承担天劫。', limit: '十年只发数枚。' },
+    { name: '照命册残页', type: '文书', function: '保留被勾掉的真名痕迹。', cost: '携带者会被掌册堂追踪。', limit: '离开命册越久，字迹越淡。' },
+  ],
 };
+
+const XIANXIA_THEMES = {
+  '命册与真名': 'name', '剑冢与认主': 'sword', '香火与神位': 'incense',
+  '渡劫与名额': 'tribulation', '纸人与替死': 'paper', '山门与旧榜': 'roster',
+  '真名玉册': 'name', '本命血墨': 'name', '香火愿力': 'incense', '剑契': 'sword',
+  '渡劫名额': 'tribulation', '替身纸人': 'paper',
+  '第七行空了': 'name', '洗墨池边的无名客': 'name', '剑冢开冢': 'sword',
+  '香火账对不上': 'incense', '清册之夜': 'roster', '渡劫替名': 'tribulation',
+  '照命册清册引擎': 'name', '剑冢认主引擎': 'sword', '香火神位引擎': 'incense',
+  '渡劫名额引擎': 'tribulation', '替身纸人引擎': 'paper', '宗门榜文引擎': 'roster',
+  '空名案': 'name', '我是谁的名字': 'name', '宗门清册': 'roster', '旧脉归名': 'roster',
+  '悬名宗·录事房': 'name', '洗墨池': 'name', '沉剑谷': 'roster', '藏册阁': 'roster',
+  '剑冢': 'sword', '山门·旧榜墙': 'roster',
+  '悬名宗掌册堂': 'name', '巡册司': 'roster', '藏册阁': 'roster',
+  '剑冢守人': 'sword', '香火祠': 'incense', '照夜一脉': 'roster',
+  '朱砂判笔': 'name', '本命血墨': 'name', '剑契': 'sword',
+  '替身纸人': 'paper', '渡劫名额': 'tribulation', '照命册残页': 'name',
+};
+
+function themeOf(card) {
+  return card?.theme || XIANXIA_THEMES[card?.title] || XIANXIA_THEMES[card?.name] || '';
+}
 
 function selectDeck(genre) {
   return /仙|修|玄幻|古风|武侠|fantasy|xian/i.test(String(genre || '')) ? XIANXIA : null;
+}
+
+const DEFAULT_PACKS = [
+  {
+    theme: 'evacuation',
+    premise: '账本与真相：被改写的伤亡表',
+    engine: '全损保险引擎',
+    resources: ['撤离舱位券', '引航体快照'],
+    scenarios: ['封锁令比虫潮早到三天', '公开账本'],
+    storylines: ['逃生与救援', '身份与继承'],
+    location: '长庚号舰桥',
+    faction: '深空保险公司',
+    equipment: '救援信标',
+  },
+  {
+    theme: 'identity',
+    premise: '身份与耗材：复制人的姓名登记',
+    engine: '复制人租赁引擎',
+    resources: ['声纹护照', '可执行工时'],
+    scenarios: ['最后一班撤离船', '证词拍卖'],
+    storylines: ['身份与继承', '交易与背叛'],
+    location: '三号休眠舱段',
+    faction: '复制人互助会',
+    equipment: '腕牌',
+  },
+  {
+    theme: 'gate',
+    premise: '劳动与违约：机甲驾驶员雇佣契',
+    engine: '星门通行配额引擎',
+    resources: ['可执行工时', '跃迁配额'],
+    scenarios: ['按舱位收费的人', '星门收费'],
+    storylines: ['成长与代价', '救援与牺牲'],
+    location: '砚港星门',
+    faction: '深空公会',
+    equipment: '舱门切割器',
+  },
+];
+
+const XIANXIA_PACKS = [
+  {
+    theme: 'name',
+    premise: '命册与真名',
+    engine: '照命册清册引擎',
+    resources: ['真名玉册', '本命血墨'],
+    scenarios: ['第七行空了', '清册之夜'],
+    storylines: ['空名案', '宗门清册'],
+    location: '悬名宗·录事房',
+    faction: '悬名宗掌册堂',
+    equipment: '朱砂判笔',
+  },
+  {
+    theme: 'sword',
+    premise: '剑冢与认主',
+    engine: '剑冢认主引擎',
+    resources: ['剑契', '渡劫名额'],
+    scenarios: ['剑冢开冢', '渡劫替名'],
+    storylines: ['旧脉归名', '我是谁的名字'],
+    location: '剑冢',
+    faction: '剑冢守人',
+    equipment: '剑契',
+  },
+  {
+    theme: 'incense',
+    premise: '香火与神位',
+    engine: '香火神位引擎',
+    resources: ['香火愿力', '替身纸人'],
+    scenarios: ['香火账对不上', '洗墨池边的无名客'],
+    storylines: ['旧脉归名', '宗门清册'],
+    location: '山门·旧榜墙',
+    faction: '香火祠',
+    equipment: '本命血墨',
+  },
+  {
+    theme: 'paper',
+    premise: '纸人与替死',
+    engine: '替身纸人引擎',
+    resources: ['替身纸人', '本命血墨'],
+    scenarios: ['渡劫替名', '第七行空了'],
+    storylines: ['我是谁的名字', '空名案'],
+    location: '洗墨池',
+    faction: '香火祠',
+    equipment: '替身纸人',
+  },
+];
+
+function buildWorldpack(def, packIndex, seed, cast) {
+  const find = (list, key, value) => list.find((item) => item[key] === value);
+  const premiseSource = def.theme === 'evacuation' || def.theme === 'identity' || def.theme === 'gate'
+    ? PREMISES : XIANXIA.premises;
+  const engineSource = def.theme === 'evacuation' || def.theme === 'identity' || def.theme === 'gate'
+    ? ENGINES : XIANXIA.engines;
+  const resourceSource = def.theme === 'evacuation' || def.theme === 'identity' || def.theme === 'gate'
+    ? RESOURCES : XIANXIA.resources;
+  const scenarioSource = def.theme === 'evacuation' || def.theme === 'identity' || def.theme === 'gate'
+    ? SCENARIOS : XIANXIA.scenarios;
+  const storylineSource = def.theme === 'evacuation' || def.theme === 'identity' || def.theme === 'gate'
+    ? STORYLINES : XIANXIA.storylines;
+  const locationSource = def.theme === 'evacuation' || def.theme === 'identity' || def.theme === 'gate'
+    ? LOCATIONS : XIANXIA.locations;
+  const factionSource = def.theme === 'evacuation' || def.theme === 'identity' || def.theme === 'gate'
+    ? FACTIONS : XIANXIA.factions;
+  const equipmentSource = def.theme === 'evacuation' || def.theme === 'identity' || def.theme === 'gate'
+    ? EQUIPMENT : XIANXIA.equipment;
+  const premise = find(premiseSource, 'title', def.premise);
+  const engine = find(engineSource, 'title', def.engine);
+  const resources = def.resources.map((name) => find(resourceSource, 'name', name)).filter(Boolean);
+  const scenarios = def.scenarios.map((title) => find(scenarioSource, 'title', title)).filter(Boolean);
+  const storylines = def.storylines.map((title) => find(storylineSource, 'title', title)).filter(Boolean);
+  const location = find(locationSource, 'name', def.location);
+  const faction = find(factionSource, 'name', def.faction);
+  const equipment = find(equipmentSource, 'name', def.equipment);
+  const packId = `worldpack-${seed}-${String(packIndex + 1).padStart(2, '0')}`;
+  return {
+    id: packId,
+    pack_id: packId,
+    theme: def.theme,
+    premise: premise ? {
+      title: premise.title,
+      statement: premise.statement,
+      surface_rule: premise.surface_rule,
+      hidden_truth: premise.hidden_truth,
+      scarcity: premise.scarcity,
+      central_conflict: premise.conflict,
+    } : null,
+    resources: resources.map((item, index) => ({ id: `${packId}-resource-${index + 1}`, ...item })),
+    scenarios: scenarios.map((item, index) => ({ id: `${packId}-scenario-${index + 1}`, ...item })),
+    storylines: storylines.map((item, index) => ({ id: `${packId}-storyline-${index + 1}`, ...item })),
+    engine: engine ? { id: `${packId}-engine`, ...engine } : null,
+    location: location ? { id: `${packId}-location`, ...location } : null,
+    faction: faction ? { id: `${packId}-faction`, ...faction } : null,
+    equipment: equipment ? { id: `${packId}-equipment`, ...equipment } : null,
+    cast,
+  };
 }
 
 function resultId(prefix, seed, index) {
@@ -264,36 +470,20 @@ export function drawIdeas(options = {}) {
   const scenarios = deck?.scenarios || SCENARIOS;
   const storylines = deck?.storylines || STORYLINES;
   const engines = deck?.engines || ENGINES;
+  const locations = deck?.locations || LOCATIONS;
+  const factions = deck?.factions || FACTIONS;
+  const equipment = deck?.equipment || EQUIPMENT;
   let results;
   if (type === 'worldpack') {
-    const packs = [];
-    for (let packIndex = 0; packIndex < count; packIndex += 1) {
-      const premise = pick(rng, premises);
-      const packResources = pickMany(rng, resources, 2);
-      const packScenarios = pickMany(rng, scenarios, 2);
-      const packStorylines = pickMany(rng, storylines, 2);
-      const engine = pick(rng, engines);
+    const packDefs = deck ? XIANXIA_PACKS : DEFAULT_PACKS;
+    const selected = pickMany(rng, packDefs, Math.min(count, packDefs.length));
+    results = selected.map((def, packIndex) => {
       const cast = namecards(rng, seed + packIndex, 4);
-      const packId = `worldpack-${seed}-${String(packIndex + 1).padStart(2, '0')}`;
-      packs.push({
-        id: packId,
-        pack_id: packId,
-        premise: {
-          title: premise.title,
-          statement: premise.statement,
-          surface_rule: premise.surface_rule,
-          hidden_truth: premise.hidden_truth,
-          scarcity: premise.scarcity,
-          central_conflict: premise.conflict,
-        },
-        resources: packResources.map((item, index) => ({ id: `${packId}-resource-${index + 1}`, ...item })),
-        scenarios: packScenarios.map((item, index) => ({ id: `${packId}-scenario-${index + 1}`, ...item })),
-        storylines: packStorylines.map((item, index) => ({ id: `${packId}-storyline-${index + 1}`, ...item })),
-        engine: { id: `${packId}-engine`, ...engine },
-        cast,
+      cast.forEach((character, index) => {
+        character.role_tags = [index === 0 ? 'protagonist' : index === 1 ? 'antagonist' : 'support'];
       });
-    }
-    results = packs;
+      return buildWorldpack(def, packIndex, seed, cast);
+    });
   } else if (type === 'namecard' || type === 'name' || type === 'cast') {
     results = namecards(rng, seed, count);
   } else if (type === 'engine') {
@@ -301,6 +491,21 @@ export function drawIdeas(options = {}) {
       id: resultId('engine', seed, index),
       ...item,
       reference_id: options.source || 'wishmachine',
+    }));
+  } else if (type === 'location') {
+    results = pickMany(rng, locations, Math.min(count, locations.length)).map((item, index) => ({
+      id: resultId('location', seed, index),
+      ...item,
+    }));
+  } else if (type === 'faction') {
+    results = pickMany(rng, factions, Math.min(count, factions.length)).map((item, index) => ({
+      id: resultId('faction', seed, index),
+      ...item,
+    }));
+  } else if (type === 'equipment') {
+    results = pickMany(rng, equipment, Math.min(count, equipment.length)).map((item, index) => ({
+      id: resultId('equipment', seed, index),
+      ...item,
     }));
   } else if (type === 'premise' || type === 'axiom') {
     results = pickMany(rng, premises, Math.min(count, premises.length)).map((item, index) => ({

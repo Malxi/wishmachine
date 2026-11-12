@@ -223,6 +223,11 @@ test('worldpack bundles premise, resources and scenarios', () => {
   assert.ok(pack.results[0].scenarios.length >= 1);
   assert.ok(pack.results[0].storylines.length >= 1);
   assert.ok(pack.results[0].engine.artifact);
+  assert.ok(pack.results[0].location.name);
+  assert.ok(pack.results[0].faction.name);
+  assert.ok(pack.results[0].equipment.name);
+  assert.equal(pack.results[0].cast[0].role_tags[0], 'protagonist');
+  assert.equal(pack.results[0].cast[1].role_tags[0], 'antagonist');
   assert.ok(pack.results[0].cast.length >= 1);
 });
 
@@ -318,11 +323,11 @@ test('recaps copied from outline events are flagged', () => {
   assert.ok(result.check.findings.some((item) => item.rule_id === 'quality.recap.outline_copy'));
 });
 
-test('provocation, law, event, engine and storyline draws are available', () => {
-  for (const type of ['provocation', 'law', 'event', 'engine', 'storyline']) {
+test('provocation, law, event, engine, storyline, location, faction and equipment draws are available', () => {
+  for (const type of ['provocation', 'law', 'event', 'engine', 'storyline', 'location', 'faction', 'equipment']) {
     const draw = drawIdeas({ type, count: 2, seed: 9 });
     assert.equal(draw.count, 2);
-    assert.ok(draw.results.every((item) => item.title));
+    assert.ok(draw.results.every((item) => item.title || item.name));
   }
   assert.ok(drawIdeas({ type: 'engine', count: 1, seed: 9 }).results[0].artifact);
 });
