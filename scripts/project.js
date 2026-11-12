@@ -1039,7 +1039,7 @@ function threadResolutionChapters(outline) {
     for (const mystery of chapterResolvedMysteries(chapter)) {
       if (!mystery?.thread_id) continue;
       if (!map.has(mystery.thread_id)) map.set(mystery.thread_id, []);
-      map.get(mystery.thread_id).push(chapter.id);
+      if (!map.get(mystery.thread_id).includes(chapter.id)) map.get(mystery.thread_id).push(chapter.id);
     }
   }
   return map;
@@ -1137,7 +1137,11 @@ function repairThreadStatuses(project) {
 }
 
 function sortMysteryLinks(links) {
-  return [...links].sort((left, right) => (
+  const unique = new Map();
+  for (const link of links || []) {
+    if (link?.id && !unique.has(link.id)) unique.set(link.id, link);
+  }
+  return [...unique.values()].sort((left, right) => (
     String(left.chapter_id || '').localeCompare(String(right.chapter_id || ''), undefined, { numeric: true })
     || String(left.id || '').localeCompare(String(right.id || ''), undefined, { numeric: true })
   ));

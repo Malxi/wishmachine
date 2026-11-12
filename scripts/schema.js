@@ -485,6 +485,13 @@ export function validateOutline(outline, config) {
       if (sortedLinks.some((mystery, index) => mystery.id !== thread[key]?.[index]?.id)) {
         findings.push(finding('quality.outline.thread.mystery_link_order', 'low', `${thread.id}.${key} is not sorted`, thread.id));
       }
+      const linkIds = new Set();
+      for (const mystery of thread[key] || []) {
+        if (linkIds.has(mystery.id)) {
+          findings.push(finding('quality.outline.thread.mystery_link_duplicate', 'low', `${thread.id}.${key} repeats ${mystery.id}`, thread.id));
+        }
+        linkIds.add(mystery.id);
+      }
       for (const mystery of thread[key] || []) {
         if (!mystery?.id || !mysteryChapter.has(mystery.id)) {
           findings.push(finding(rule, 'high', `${thread.id}.${key} references unknown mystery ${mystery?.id || '(missing)'}`, thread.id));

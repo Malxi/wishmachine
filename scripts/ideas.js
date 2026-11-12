@@ -624,7 +624,11 @@ function buildPlotpack(pack, seed, index) {
 }
 
 function sortMysteryLinks(links) {
-  return [...links].sort((left, right) => (
+  const unique = new Map();
+  for (const link of links || []) {
+    if (link?.id && !unique.has(link.id)) unique.set(link.id, link);
+  }
+  return [...unique.values()].sort((left, right) => (
     String(left.chapter_id || '').localeCompare(String(right.chapter_id || ''), undefined, { numeric: true })
     || String(left.id || '').localeCompare(String(right.id || ''), undefined, { numeric: true })
   ));

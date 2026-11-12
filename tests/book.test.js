@@ -579,6 +579,10 @@ test('outline validation checks thread resolution and abandoned threads', () => 
     linkThread.resolved_mysteries.reverse();
     assert.ok(validateOutline(unsortedLinks, { structure: {} }).some((finding) => finding.rule_id === 'quality.outline.thread.mystery_link_order'));
   }
+  const duplicateLinks = JSON.parse(JSON.stringify(outline.draft_outline));
+  const duplicateThread = duplicateLinks.thread_registry.find((thread) => thread.resolved_mysteries.length > 0);
+  duplicateThread.resolved_mysteries.push(duplicateThread.resolved_mysteries[0]);
+  assert.ok(validateOutline(duplicateLinks, { structure: {} }).some((finding) => finding.rule_id === 'quality.outline.thread.mystery_link_duplicate'));
 });
 
 test('idea validation checks thread status consistency', () => {
