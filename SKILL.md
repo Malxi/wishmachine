@@ -13,7 +13,7 @@ examples_en:
   - "Create a 3-volume × 5-chapter science-fiction project"
   - "Check the outline for blocking findings"
   - "Draw 12 science-fiction name cards"
-version: 0.1.92
+version: 0.1.93
 author: Malxi
 ---
 
@@ -170,7 +170,9 @@ same ids; cast `storyline_refs` use those ids. `thread_registry` entries carry
 `abandoned_mysteries`. `mystery_registry` stores the deduplicated mystery objects; `check` reports
 setup/outline registry drift (including mystery registry drift), unknown chapter
 thread ids, and thread references to missing or non-registry mystery ids.
-`doctor --fix` rebuilds a missing or stale mystery registry from chapter data. `doctor --fix`
+`doctor --fix` rebuilds a missing or stale mystery registry from chapter data.
+Dropped mysteries carry `reason: pending_capacity`; registry status must be
+present in the chapter status set. `doctor --fix`
 migrates old projects, synchronizes thread status from resolved mysteries and
 fills abandoned entries; it also downgrades a resolved thread when no matching
 resolved mystery remains. Pending mysteries are sorted by importance and capped; dropped

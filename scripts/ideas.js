@@ -625,8 +625,11 @@ function buildPlotpack(pack, seed, index) {
 
 function collectMysteryRegistry(chapters) {
   const registry = new Map();
+  const priority = { open: 0, dropped: 1, resolved: 2 };
   const add = (mystery, chapterId, source) => {
-    if (!mystery?.id || registry.has(mystery.id)) return;
+    if (!mystery?.id) return;
+    const existing = registry.get(mystery.id);
+    if (existing && (priority[existing.status] || 0) >= (priority[mystery.status] || 0)) return;
     registry.set(mystery.id, {
       ...mystery,
       chapter_id: chapterId,
@@ -972,11 +975,13 @@ function buildOutlinePack(plot, seed, options = {}) {
         ...dropped,
         status: 'dropped',
         dropped_in: chapterId,
+        reason: 'pending_capacity',
         abandoned_thread: {
           thread_id: dropped.thread_id,
           thread: dropped.thread,
           question: dropped.question,
           importance: dropped.importance,
+          reason: 'pending_capacity',
         },
       };
       mysteries.dropped.push(record);

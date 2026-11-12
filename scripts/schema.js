@@ -250,6 +250,7 @@ export function validateOutline(outline, config) {
   const chapterIds = [];
   const chaptersById = new Map();
   const mysteryChapter = new Map();
+  const mysteryStatus = new Map();
   let volumeCount = 0;
   let chapterCount = 0;
   outline.parts.forEach((part, pi) => {
@@ -302,13 +303,25 @@ export function validateOutline(outline, config) {
         chaptersById.set(chapter.id, chapter);
         for (const key of ['carried', 'planted', 'resolved', 'dropped']) {
           for (const mystery of chapter.mysteries?.[key] || []) {
-            if (mystery?.id) mysteryChapter.set(mystery.id, chapter.id);
+            if (mystery?.id) {
+              mysteryChapter.set(mystery.id, chapter.id);
+              if (mystery.status) {
+                if (!mysteryStatus.has(mystery.id)) mysteryStatus.set(mystery.id, new Set());
+                mysteryStatus.get(mystery.id).add(mystery.status);
+              }
+            }
           }
         }
         for (const scene of chapter.scenes || []) {
           for (const key of ['planted', 'resolved']) {
             for (const mystery of scene.mysteries?.[key] || []) {
-              if (mystery?.id) mysteryChapter.set(mystery.id, chapter.id);
+              if (mystery?.id) {
+                mysteryChapter.set(mystery.id, chapter.id);
+                if (mystery.status) {
+                  if (!mysteryStatus.has(mystery.id)) mysteryStatus.set(mystery.id, new Set());
+                  mysteryStatus.get(mystery.id).add(mystery.status);
+                }
+              }
             }
           }
         }
@@ -395,6 +408,11 @@ export function validateOutline(outline, config) {
       });
     });
   });
+  for (const mystery of outline.mystery_registry || []) {
+    if (mystery?.id && mysteryStatus.has(mystery.id) && !mysteryStatus.get(mystery.id).has(mystery.status)) {
+      findings.push(finding('quality.outline.mystery.status_mismatch', 'medium', `${mystery.id} registry status ${mystery.status} is not present in chapter statuses ${[...mysteryStatus.get(mystery.id)].join(', ')}`, mystery.id));
+    }
+  }
   for (const thread of threadMap.values()) {
     for (const [key, rule] of [
       ['resolved_mysteries', 'quality.outline.thread.resolved_mystery_missing'],
