@@ -413,7 +413,15 @@ function buildWorldpack(def, packIndex, seed, cast, sources) {
   const storylineIds = storylines.map((item, index) => addEntity('storyline', `storyline-${index + 1}`, item.title));
   const castIds = cast.map((character, index) => addEntity('character', `character-${index + 1}`, character.name, {
     role: character.role_tags?.[0] || 'support',
+    archetype: character.archetype,
   }));
+  const castRelations = [];
+  const castRelate = (from, to, type, stake) => {
+    if (!from || !to) return;
+    const relation = { from, to, type, stake };
+    castRelations.push(relation);
+    relate(from, to, type);
+  };
   if (premiseId && engineId) relate(engineId, premiseId, 'governs');
   if (factionId && engineId) relate(factionId, engineId, 'issues');
   if (locationId && engineId) relate(locationId, engineId, 'hosts');
@@ -423,10 +431,16 @@ function buildWorldpack(def, packIndex, seed, cast, sources) {
   for (const id of scenarioIds) if (premiseId) relate(id, premiseId, 'tests');
   for (const id of storylineIds) if (premiseId) relate(id, premiseId, 'dramatizes');
   if (castIds[0] && premiseId) relate(castIds[0], premiseId, 'pursues');
-  if (castIds[0] && castIds[1]) relate(castIds[1], castIds[0], 'opposes');
   if (castIds[0] && factionId) relate(castIds[0], factionId, 'belongs_to');
   if (castIds[0] && locationId) relate(castIds[0], locationId, 'starts_at');
   if (castIds[0] && equipmentId) relate(castIds[0], equipmentId, 'uses');
+  castRelate(castIds[1], castIds[0], 'opposes', '谁来决定谁被留下');
+  castRelate(castIds[2], castIds[0], 'supports', '主角的目标需要这名支持者的技能');
+  castRelate(castIds[3], factionId, 'works_for', '支持者嵌在势力内部，能拿到外部拿不到的东西');
+  castRelate(castIds[0], storylineIds[0], 'drives', '主角的选择推动第一条剧情线');
+  castRelate(castIds[1], storylineIds[0], 'blocks', '反派让第一条剧情线无法顺利完成');
+  castRelate(castIds[1], factionId, 'controls', '反派掌握势力资源');
+  castRelate(castIds[2], locationId, 'guards', '支持者守着关键地点');
   const keywords = [...new Set([
     def.theme,
     premise?.title,
@@ -494,6 +508,7 @@ function buildWorldpack(def, packIndex, seed, cast, sources) {
     motif: motif ? { id: `${packId}-motif`, ...motif } : null,
     entities,
     relations,
+    cast_relations: castRelations,
     graph: { entities, relations },
     cast,
   };

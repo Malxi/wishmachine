@@ -13,7 +13,7 @@ examples_en:
   - "Create a 3-volume × 5-chapter science-fiction project"
   - "Check the outline for blocking findings"
   - "Draw 12 science-fiction name cards"
-version: 0.1.55
+version: 0.1.56
 author: Malxi
 ---
 
@@ -142,6 +142,8 @@ resources, two scenarios, two storylines and four role-tagged cast cards.
 Cast archetypes are selected by genre and by protagonist / antagonist / support
 pools.
 Some packs also include a `motif` and an `inspired_by` graph edge.
+`cast_relations` links the four characters to each other, the faction, the
+location and the first storyline; each relation carries a `stake`.
 `prompt_pack` contains positive, negative, style and keywords; `prompt` is
 kept as the positive prompt for compatibility.
 Genre decks currently cover default sci-fi, xianxia, suspense, urban and history.
