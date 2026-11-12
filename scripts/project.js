@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { randomUUID } from 'node:crypto';
+import { randomUUID, createHash } from 'node:crypto';
 import {
   ensureDir, readJson, readText, writeJsonAtomic, writeTextAtomic,
   resolveProjectDir, nowIso, stamp, deepMerge, safeSegment, parseJson,
@@ -229,6 +229,10 @@ function findMysteryNode(outline, id) {
   return null;
 }
 
+function fileChecksum(file) {
+  return createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+}
+
 function createRegistryBackup(project, action) {
   const dir = path.join(project.dir, 'logs', 'registry-backups', `${stamp()}-${action}`);
   ensureDir(dir);
@@ -240,6 +244,10 @@ function createRegistryBackup(project, action) {
     created_at: nowIso(),
     action,
     files: ['story_setup.json', 'outline.json'],
+    checksums: {
+      'story_setup.json': fileChecksum(setupFile),
+      'outline.json': fileChecksum(outlineFile),
+    },
   });
   return path.relative(project.dir, dir).replace(/\\/g, '/');
 }
@@ -289,6 +297,15 @@ export function restoreRegistryBackup(project, backupName, options = {}) {
   const outlineSource = path.join(backupDir, 'outline.json');
   if (!fs.existsSync(setupSource) || !fs.existsSync(outlineSource)) {
     throw new Error(`registry backup not found: ${backupName}`);
+  }
+  const manifestFile = path.join(backupDir, 'manifest.json');
+  if (fs.existsSync(manifestFile)) {
+    const manifest = readJson(manifestFile);
+    for (const [name, checksum] of Object.entries(manifest.checksums || {})) {
+      if (fileChecksum(path.join(backupDir, name)) !== checksum) {
+        throw new Error(`registry backup checksum mismatch: ${backupName}/${name}`);
+      }
+    }
   }
   if (options.dryRun) {
     return {

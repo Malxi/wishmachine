@@ -960,6 +960,19 @@ test('manual registry snapshot can be restored', () => {
   assert.ok(after.thread_registry.length > 0);
 });
 
+test('registry restore rejects a tampered snapshot', () => {
+  const dir = tempDir();
+  initProject({ name: 'snapshot checksum', dir, parts: 1, volumes: 1, chapter: 10 });
+  const project = loadProject(dir);
+  const outline = drawIdeas({ type: 'outlinepack', genre: '悬疑', count: 1, seed: 42, chapters: 10 }).results[0];
+  writeArtifact(project, { section: 'setup', content: JSON.stringify(outline.setup_draft), apply: true });
+  writeArtifact(project, { section: 'outline', content: JSON.stringify(outline.draft_outline), apply: true });
+  const snapshot = createRegistrySnapshot(project);
+  const name = snapshot.backup.split('/').pop();
+  fs.appendFileSync(path.join(dir, 'logs', 'registry-backups', name, 'outline.json'), '\n');
+  assert.throws(() => restoreRegistryBackup(project, name), /checksum mismatch/);
+});
+
 test('saved idea draws are readable from the project', () => {
   const dir = tempDir();
   initProject({ name: 'idea store', dir, parts: 1, volumes: 1, chapter: 1 });
