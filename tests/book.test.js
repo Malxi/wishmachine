@@ -928,6 +928,7 @@ test('book registry abandon marks a mystery as manually dropped', () => {
   assert.ok(pruned.count >= 1);
   assert.ok(pruned.protected.length > 0);
   assert.ok(registryOperations(project, { limit: 20 }).operations.some((operation) => operation.action === 'abandon'));
+  assert.equal(registryOperations(project, { action: 'abandon' }).operations.at(-1).state, 'applied');
   assert.ok(registryOperations(project, { action: 'abandon' }).operations.every((operation) => operation.action === 'abandon'));
   assert.ok(!registryOperations(project, { action: 'clean' }).operations.some((operation) => operation.action === 'abandon'));
   const undo = undoRegistryOperation(project, {
@@ -936,10 +937,12 @@ test('book registry abandon marks a mystery as manually dropped', () => {
   assert.equal(undo.action, 'undo');
   const restored = JSON.parse(fs.readFileSync(outlineFile, 'utf8'));
   assert.equal(restored.mystery_registry.find((mystery) => mystery.id === target.id).status, 'resolved');
+  assert.equal(registryOperations(project, { action: 'abandon' }).operations.at(-1).state, 'undone');
   const redo = redoRegistryOperation(project);
   assert.equal(redo.action, 'redo');
   const redone = JSON.parse(fs.readFileSync(outlineFile, 'utf8'));
   assert.equal(redone.mystery_registry.find((mystery) => mystery.id === target.id).status, 'dropped');
+  assert.equal(registryOperations(project, { action: 'abandon' }).operations.at(-1).state, 'applied');
 });
 
 test('manual registry snapshot can be restored', () => {

@@ -566,10 +566,23 @@ export function abandonMystery(project, mysteryId, reason = 'manual', options = 
 
 export function registryOperations(project, options = {}) {
   const limit = Math.max(1, Math.min(200, Number(options.limit) || 20));
-  const operations = readRegistryOperations(project, limit, {
-    action: options.action || '',
-    since: options.since || '',
-  });
+  const all = readRegistryOperations(project, 10000, {});
+  const states = new Map();
+  for (const operation of all) {
+    if (operation.action === 'undo' && operation.original_operation_id) {
+      states.set(operation.original_operation_id, 'undone');
+      states.set(operation.id, 'applied');
+    } else if (operation.action === 'redo' && operation.original_operation_id) {
+      const undo = all.find((item) => item.id === operation.original_operation_id);
+      if (undo?.original_operation_id) states.set(undo.original_operation_id, 'applied');
+      states.set(operation.id, 'applied');
+    }
+  }
+  const operations = all
+    .filter((operation) => !options.action || operation.action === options.action)
+    .filter((operation) => !options.since || String(operation.at || '') >= options.since)
+    .slice(-limit)
+    .map((operation) => ({ ...operation, state: states.get(operation.id) || 'applied' }));
   return {
     ok: true,
     action: 'registry-log',

@@ -13,7 +13,7 @@ examples_en:
   - "Create a 3-volume × 5-chapter science-fiction project"
   - "Check the outline for blocking findings"
   - "Draw 12 science-fiction name cards"
-version: 0.2.22
+version: 0.2.23
 author: Malxi
 ---
 
@@ -196,7 +196,7 @@ and verifies manifest checksums before overwriting setup/outline.
 `book registry check-backups` verifies every snapshot manifest and file checksum.
 `book registry undo [--operation <id>]` restores the selected or most recent
 backed-up operation; `book registry redo [--operation <id>]` replays the after
-snapshot. `book registry abandon --mystery <id>` manually marks a
+snapshot. Log entries expose `state: applied|undone`. `book registry abandon --mystery <id>` manually marks a
 mystery dropped with a reason; add `--dry-run` to preview without writing.
 Clean also re-runs thread status repair after rebuilding the
 registry. `doctor --fix`
