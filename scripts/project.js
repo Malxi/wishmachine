@@ -144,6 +144,28 @@ export function cleanRegistry(project, options = {}) {
   const docs = loadRegistryDocs(project);
   if (!docs) throw new Error('setup and outline are required before cleaning registries');
   const expected = collectOutlineMysteryRegistry(docs.outline);
+  const validIds = new Set(expected.map((mystery) => mystery.id));
+  const removed = [];
+  const seen = new Set();
+  for (const doc of [docs.setup, docs.outline]) {
+    for (const mystery of doc.mystery_registry || []) {
+      if (mystery?.id && !validIds.has(mystery.id) && !seen.has(mystery.id)) {
+        seen.add(mystery.id);
+        removed.push(mystery.id);
+      }
+    }
+  }
+  let removedLinks = 0;
+  for (const doc of [docs.setup, docs.outline]) {
+    for (const thread of doc.thread_registry || []) {
+      const resolved = (thread.resolved_mysteries || []).filter((mystery) => validIds.has(mystery.id));
+      const abandoned = (thread.abandoned_mysteries || []).filter((mystery) => validIds.has(mystery.id));
+      removedLinks += (thread.resolved_mysteries || []).length - resolved.length;
+      removedLinks += (thread.abandoned_mysteries || []).length - abandoned.length;
+      thread.resolved_mysteries = resolved;
+      thread.abandoned_mysteries = abandoned;
+    }
+  }
   const before = (Array.isArray(docs.outline.mystery_registry) ? docs.outline.mystery_registry.length : 0)
     + (Array.isArray(docs.setup.mystery_registry) ? docs.setup.mystery_registry.length : 0);
   if (options.dryRun) {
@@ -153,6 +175,8 @@ export function cleanRegistry(project, options = {}) {
       before,
       after: expected.length * 2,
       entries: expected.length,
+      removed,
+      removedLinks,
       dryRun: true,
     };
   }
@@ -168,6 +192,8 @@ export function cleanRegistry(project, options = {}) {
     before,
     after: expected.length * 2,
     entries: expected.length,
+    removed,
+    removedLinks,
     dryRun: false,
   };
 }
