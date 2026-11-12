@@ -700,6 +700,14 @@ function buildOutlinePack(plot, seed, options = {}) {
         : lastScene
           ? `反转：${plot.storyline?.midpoint || scenarioB?.twist || '原本的理解被推翻'}`
           : `复杂化：${scenarioB?.twist || blocking?.stake || '新的阻力出现'}`;
+      const sceneGoal = sceneIndex === 0
+        ? beat.beat
+        : lastScene
+          ? `承受并处理：${chapterObstacle}`
+          : `验证一个判断：${scenarioB?.twist || blocking?.stake || chapterObstacle}`;
+      const consequence = lastScene
+        ? (plot.storyline?.cost || '本章代价落地，主角带着不可撤回的结果进入下一章。')
+        : (scenarioA?.pressure || '局面被推进，但新的问题被留下。');
       const sceneMysteries = {
         planted: sceneIndex === 0 && plot.premise?.hidden_truth
           ? [{ mystery: plot.premise.hidden_truth, status: 'open' }]
@@ -711,10 +719,12 @@ function buildOutlinePack(plot, seed, options = {}) {
       return {
         order: sceneIndex + 1,
         pov: protagonist,
-        goal: sceneIndex === 0 ? beat.beat : `${beat.beat}（推进 ${sceneIndex + 1}）`,
+        goal: sceneGoal,
         obstacle: sceneObstacle,
         turn: sceneTurn,
         turn_event: turnEvent,
+        consequence,
+        result: consequence,
         stakes: plot.storyline?.cost || '这一章必须付出代价',
         location: plot.location?.name || '关键地点',
         characters: castNames.slice(0, Math.min(3, castNames.length)),
