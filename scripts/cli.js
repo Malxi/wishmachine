@@ -1,10 +1,10 @@
-import { loadProject, initProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, doctorProject, saveIdeaDraw, saveImportedIdeas, saveResearchReport, ingestSource, discoverSources, searchSources, readSection, writeArtifact } from './project.js';
+import { loadProject, initProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, doctorProject, saveIdeaDraw, saveImportedIdeas, saveResearchReport, discoverSources, searchSources, readSection, writeArtifact } from './project.js';
 import { checkProject } from './schema.js';
 import { readJson } from './util.js';
 import { drawIdeas, ideasTypes } from './ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference, listSkills, readSkill } from './guides.js';
 
-const VERSION = '0.1.50';
+const VERSION = '0.1.51';
 const BOOLEAN_FLAGS = new Set(['apply', 'json', 'help', 'h', 'dry-run', 'force', 'ingest']);
 const COMMANDS = new Set(['book', 'check', 'ideas', 'gen', 'state', 'audit', 'refresh', 'export', 'doctor', 'version', 'help']);
 
@@ -100,7 +100,6 @@ Commands:
   check [--profile quality|schema|custom|all] [--target setup|outline|chapter] [--id <id>]
   ideas draw --type namecard|premise|resource|scenario ... [--count 5] [--seed 42] [--dir <project> --save]
   ideas import --file <cards.json> [--dir <project>] [--type <type>] [--source <source>]
-  ideas ingest --url <https-url> [--dir <project>] [--type source]
   ideas discover [--topic history|myth|novel] [--limit 3] [--dir <project>]
   ideas search --query <text> [--provider wikipedia|gutenberg] [--limit 3] [--ingest] [--dir <project>]
   ideas types
@@ -252,13 +251,6 @@ async function runIdeas(args, flags) {
       genre: stringFlag(flags, 'genre', ''),
       source: stringFlag(flags, 'source', ''),
     }));
-    return 0;
-  }
-  if (sub === 'ingest') {
-    const url = stringFlag(flags, 'url', '');
-    if (!url) fail('ideas ingest requires --url');
-    const project = loadProject(stringFlag(flags, 'dir', ''));
-    print(await ingestSource(project, url, { type: stringFlag(flags, 'type', 'source') }));
     return 0;
   }
   if (sub === 'discover') {

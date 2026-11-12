@@ -74,12 +74,11 @@ logs/
 - `ideas namecard/premise/resource/equipment/scenario/provocation/law/event/engine/storyline/location/faction/motif/worldpack`
 - `ideas draw --save` 持久化到 `story/ideas/`，可用 `book read ideas` / `book read idea` 读取
 - `ideas import` 将联网考究/人工整理的卡片写入同一卡池
-- `ideas ingest --url` 抓取网页标题、描述、关键词和短摘录，保存为 source card
-- `ideas discover --topic` 从内置历史/神话/小说来源目录批量抓取 source cards
 - `ideas search --provider wikipedia|gutenberg` 联网搜索来源并保存 source cards
+- `ideas discover --topic` 从内置历史/神话/小说来源目录批量抓取 source cards
 - `book read graph` 聚合所有已保存卡片的 entity / relation / keyword 图
 - `book write research` / `book read research` 持久化考究报告
-- `skills/wishmachine-research` 联网考究抽卡实体与关系
+- 主 skill 内置 `research` workflow：联网搜索、来源卡、实体图与考究报告
 - `gen workflow/reference/skill`
 
 没有：

@@ -13,7 +13,7 @@ examples_en:
   - "Create a 3-volume × 5-chapter science-fiction project"
   - "Check the outline for blocking findings"
   - "Draw 12 science-fiction name cards"
-version: 0.1.50
+version: 0.1.51
 author: Malxi
 ---
 
@@ -122,7 +122,6 @@ node scripts/wishmachine.js ideas draw --type motif --count 4 --seed 9
 node scripts/wishmachine.js ideas draw --type worldpack --genre 科幻 --count 1 --seed 42
 node scripts/wishmachine.js ideas draw --type worldpack --genre 修仙 --count 1 --seed 42 --dir my-book --save
 node scripts/wishmachine.js ideas import --dir my-book --type motif --source "web research" --file cards.json
-node scripts/wishmachine.js ideas ingest --dir my-book --url "https://example.org/source"
 node scripts/wishmachine.js ideas discover --dir my-book --topic history --limit 3
 node scripts/wishmachine.js ideas search --dir my-book --provider wikipedia --query "Mary Celeste" --limit 3
 node scripts/wishmachine.js book read ideas --dir my-book
@@ -151,7 +150,7 @@ node scripts/wishmachine.js gen workflow read research
 
 第一次写 setup 前读 `setup-schema`；第一次写 outline 前读 `outline-schema`。
 设定和大纲的编辑性审查使用 `review-checklist`，它不会替代确定性检查。
-历史/文化/科学元素使用 `wishmachine-research` skill 联网考究后再进入 canon。
+历史/文化/科学元素使用 `gen workflow read research`，在主 skill 内完成联网考究后再进入 canon。
 
 ## 边界
 
@@ -159,7 +158,7 @@ node scripts/wishmachine.js gen workflow read research
 - 不调用 LLM。
 - 抽卡结果默认只输出；加 `--save` 才写入 `story/ideas/`。
 - `ideas import` 可导入人工/联网考究后的卡片；`book write research` 保存考究报告。
-- 不做历史考据；考据由 `wishmachine-research` skill 联网完成，主 skill 只负责保存抽卡结果和确定性检查。
+- 不做自动历史考据；主 skill 的 `research` workflow 负责联网核验，主 skill 只负责保存抽卡结果和确定性检查。
 - 不包含 RPG 模拟；`check --profile rpg` 会明确报未实现。
 - 不做 MCP；只提供 CLI，方便作为 Skill 的 `scripts/` 直接运行。
 - 不直接编辑项目文件；写入走 `book write`。

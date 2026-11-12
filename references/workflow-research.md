@@ -1,10 +1,24 @@
 # Research workflow
 
+This is part of the main `wishmachine` skill. There is no separate research
+skill.
+
 Use this when a drawn card contains a historical event, a real-world culture,
 a scientific claim, or a public-domain story that may not fit the target genre.
 
-Wishmachine does not search the web itself. WorkBuddy should use its available
-web search/fetch tools and record what it actually opened.
+## Rules
+
+1. Read the actual card; do not research a title from memory.
+2. Search the web for historical, cultural, scientific or public-domain claims.
+3. Record the exact source title and URL you opened.
+4. Never invent a citation. If no usable source is found, mark the entity
+   `unsupported`.
+5. Separate a deliberate fantasy transformation (`inspired_by`) from a
+   historical fact.
+6. Check relations, not only entities. A verified location can still be paired
+   with an impossible faction or anachronistic equipment.
+7. Do not silently rewrite canon. Return a report and a `safe_prompt`; the main
+   skill decides whether to apply it.
 
 ## 1. Load the pack
 
@@ -35,16 +49,6 @@ known uncertainties
 Prefer primary or reputable public-domain/reference sources. Record the exact
 title and URL you opened. Do not invent a citation or claim that a source says
 something it does not.
-
-If you open a usable page, save a raw source card:
-
-```bash
-node scripts/wishmachine.js ideas ingest --url "https://example.org/source" --dir my-book
-```
-
-It stores the title, URL, retrieval time, keywords, headings, links, a short
-excerpt, and a small `source -> mentions/links_to` graph. It does not
-semantically verify the page.
 
 The bundled source catalog can seed a history/myth/novel pass:
 
