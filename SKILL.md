@@ -13,7 +13,7 @@ examples_en:
   - "Create a 3-volume × 5-chapter science-fiction project"
   - "Check the outline for blocking findings"
   - "Draw 12 science-fiction name cards"
-version: 0.1.60
+version: 0.1.61
 author: Malxi
 ---
 
@@ -148,10 +148,10 @@ resources, two scenarios, two storylines and four role-tagged cast cards.
 (setup / inciting / midpoint / crisis / climax / resolution).
 `outlinepack` expands those beats into chapters with 3-5 scenes per chapter,
 target character counts and a draft outline that passes `validateOutline`.
-`--volumes` / `--chapters-per-volume` produce multiple volumes. The saved pack
-also contains `setup_draft`; `book write setup --from-idea <id>` and
-`book write outline --from-idea <id>` write the drafts through the normal
-candidate checks.
+`--volumes` / `--chapters-per-volume` produce multiple volumes; each volume
+uses a different storyline when the pack has one, and `payoff_contract` follows
+that volume's storyline. The saved pack also contains `setup_draft` with main
+and subplot storylines.
 Some packs also include a `motif` and an `inspired_by` graph edge.
 `cast_relations` links the four characters to each other, the faction, the
 location and the first storyline; each relation carries a `stake`.

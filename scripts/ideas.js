@@ -593,6 +593,7 @@ function buildPlotpack(pack, seed, index) {
     resources: pack.resources,
     scenarios: pack.scenarios,
     storyline,
+    storylines: pack.storylines,
     events: beats.map((beat) => ({
       act: beat.act,
       chapter: beat.chapter,
@@ -727,9 +728,14 @@ function buildOutlinePack(plot, seed, options = {}) {
 function buildMultiVolumeOutlinePack(plot, seed, options = {}) {
   const volumes = Math.max(1, Math.min(10, Number(options.volumes) || 1));
   const chaptersPerVolume = Math.max(3, Math.min(60, Number(options.chaptersPerVolume) || Number(options.chapters) || 10));
+  const storylines = (plot.storylines || [plot.storyline]).filter(Boolean);
   const bases = [];
   for (let volumeIndex = 0; volumeIndex < volumes; volumeIndex += 1) {
-    const base = buildOutlinePack(plot, seed, { ...options, chapters: chaptersPerVolume, index: volumeIndex });
+    const volumePlot = {
+      ...plot,
+      storyline: storylines[volumeIndex % storylines.length] || plot.storyline,
+    };
+    const base = buildOutlinePack(volumePlot, seed, { ...options, chapters: chaptersPerVolume, index: volumeIndex });
     const volume = base.draft_outline.parts[0].volumes[0];
     volume.id = `P1-V${volumeIndex + 1}`;
     volume.title = `第${volumeIndex + 1}卷`;
@@ -737,11 +743,11 @@ function buildMultiVolumeOutlinePack(plot, seed, options = {}) {
       chapter.id = `${volume.id}-C${chapterIndex + 1}`;
     });
     volume.payoff_contract = {
-      volume_question: plot.storyline?.promise || '主角能否改变现状？',
-      power_promise: plot.storyline?.escalation || '主角获得一次改变规则的能力。',
+      volume_question: volumePlot.storyline?.promise || '主角能否改变现状？',
+      power_promise: volumePlot.storyline?.escalation || '主角获得一次改变规则的能力。',
       main_opponent_misread: plot.premise?.hidden_truth || '对手误读了主角真正的筹码。',
-      big_win: plot.storyline?.payoff || '主角完成一次无法撤回的胜利。',
-      visible_reward: plot.storyline?.cost || '胜利留下一个可见的代价。',
+      big_win: volumePlot.storyline?.payoff || '主角完成一次无法撤回的胜利。',
+      visible_reward: volumePlot.storyline?.cost || '胜利留下一个可见的代价。',
       reputation_shift: '主角从被规则支配的人变成能改写规则的人。',
       next_bigger_game: volumeIndex === volumes - 1 ? '故事收束，代价留下。' : '更大的对手进入视野。',
     };
@@ -758,7 +764,7 @@ function buildMultiVolumeOutlinePack(plot, seed, options = {}) {
     chapters: chapters.length,
     scenes_per_chapter: Math.max(1, Math.min(5, Number(options.scenes) || 3)),
   };
-  const setupDraft = buildSetupDraft(plot, { chapter_config: chapterConfig });
+  const setupDraft = buildSetupDraft({ ...plot, storylines }, { chapter_config: chapterConfig });
   return {
     ...bases[0],
     id,
@@ -779,7 +785,13 @@ function buildMultiVolumeOutlinePack(plot, seed, options = {}) {
 }
 
 function buildSetupDraft(plot, outline) {
-  const storyline = plot.storyline || {};
+  const storylineList = (plot.storylines || [plot.storyline]).filter(Boolean);
+  const storyline = storylineList[0] || {};
+  const allowedCategories = new Set(['能源', '消耗品', '材料', '货币']);
+  const categoryMap = {
+    凭证: '货币', 配额: '货币', 许可证: '材料', 劳动权: '货币',
+    身份资产: '材料', 金融资产: '货币', 核心资源: '材料',
+  };
   const cast = (plot.cast || []).map((character, index) => ({
     id: `cast_${index + 1}`,
     name: character.name,
@@ -790,7 +802,7 @@ function buildSetupDraft(plot, outline) {
     relationship_arc: `${character.contradiction || 'is changed by the plot'} -> ${character.want || 'gets a choice'}`,
     entry_phase: 'opening',
     payoff: character.want || 'their want is tested',
-    storyline_refs: [storyline.title || plot.premise?.title || 'main'],
+    storyline_refs: storylineList.map((item) => item.title).filter(Boolean),
   }));
   return {
     project_name: plot.premise?.title || '未命名故事',
@@ -814,35 +826,35 @@ function buildSetupDraft(plot, outline) {
       endgame_promise: storyline.payoff || '主角改写规则并付出代价',
     },
     core_cast: cast,
-    storylines: [{
-      name: storyline.title || '主线',
-      description: storyline.promise || '主角试图改变现状',
-      type: 'main',
-      importance: 10,
-      scope: 'book',
+    storylines: storylineList.map((item, index) => ({
+      name: item.title || `storyline ${index + 1}`,
+      description: item.promise || item.title || '主角试图改变现状',
+      type: index === 0 ? 'main' : 'subplot',
+      importance: index === 0 ? 10 : 6,
+      scope: index === 0 ? 'book' : 'volume',
       payoff_style: 'staged_reveal',
-      setup_role: plot.premise?.surface_rule || 'establish the rule',
-      repeatable_pressure: storyline.escalation || 'the rule keeps extracting a price',
-      payoff_cadence: 'per volume',
-      mutation: storyline.midpoint || 'the rule is not what it seems',
-      failure_mode: storyline.cost || 'the cost cannot be undone',
-      desire: storyline.promise || 'change the current order',
+      setup_role: index === 0 ? plot.premise?.surface_rule || 'establish the rule' : item.promise || 'add pressure',
+      repeatable_pressure: item.escalation || 'the rule keeps extracting a price',
+      payoff_cadence: index === 0 ? 'per volume' : 'per act',
+      mutation: item.midpoint || 'the rule is not what it seems',
+      failure_mode: item.cost || 'the cost cannot be undone',
+      desire: item.promise || 'change the current order',
       opposition: plot.premise?.central_conflict || 'the rule resists',
-      stakes: storyline.cost || 'someone is left behind',
-      turn: storyline.midpoint || 'the rule turns against the lead',
-      payoff: storyline.payoff || 'the lead changes the rule',
-      open_question: storyline.cost || 'what remains after the change?',
+      stakes: item.cost || 'someone is left behind',
+      turn: item.midpoint || 'the rule turns against the lead',
+      payoff: item.payoff || 'the lead changes the rule',
+      open_question: item.cost || 'what remains after the change?',
       pressure_points: [plot.premise?.scarcity, plot.premise?.central_conflict].filter(Boolean),
       appeal_engine: {
-        appeal: storyline.promise || 'a rule that can be bent',
+        appeal: item.promise || 'a rule that can be bent',
         surface_limit: plot.premise?.surface_rule || 'the rule seems absolute',
         exploit: plot.premise?.leverage || 'find the exception',
-        signature_win: storyline.payoff || 'a visible win',
-        upgrade_path: storyline.escalation || 'the stakes rise',
+        signature_win: item.payoff || 'a visible win',
+        upgrade_path: item.escalation || 'the stakes rise',
         opponent_misread: plot.premise?.hidden_truth || 'the opponent misreads the cost',
         reward_type: 'consequence',
       },
-    }],
+    })),
     premises: [{
       name: plot.premise?.title || '核心前提',
       description: plot.premise?.statement || '核心前提',
@@ -857,7 +869,9 @@ function buildSetupDraft(plot, outline) {
     }],
     world_resources: (plot.resources || []).map((resource) => ({
       name: resource.name,
-      category: '材料',
+      category: allowedCategories.has(resource.category)
+        ? resource.category
+        : (categoryMap[resource.category] || '材料'),
       scarcity: '稀有',
       description: resource.meaning || resource.category || 'world resource',
     })),
