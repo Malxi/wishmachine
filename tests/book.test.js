@@ -458,6 +458,8 @@ test('outlinepack expands into multiple volumes', () => {
   assert.ok(outline.chapters[1].mysteries.carried[0].related_cast.length > 0);
   assert.ok(outline.chapters[1].mysteries.carried.some((mystery) => mystery.thread_type === 'scene'));
   assert.ok(outline.chapters[1].mysteries.carried[0].thread.length > 0);
+  assert.ok(outline.chapters[1].mysteries.carried[0].thread_id);
+  assert.ok(outline.chapters[1].mysteries.carried[0].related_cast_ids.length > 0);
   assert.ok(outline.chapters[11].mysteries.resolved.length > 0);
   assert.ok(outline.chapters[11].mysteries.resolved[0].answer);
   assert.ok(outline.volumes[1].chapters[0].mysteries.carried.length > 0);
@@ -482,6 +484,8 @@ test('long outlinepack records dropped mysteries', () => {
   assert.ok(outline.dropped_mysteries.length > 0);
   assert.ok(outline.dropped_mysteries.every((mystery) => mystery.status === 'dropped'));
   assert.ok(outline.dropped_mysteries.every((mystery) => mystery.dropped_in));
+  assert.ok(outline.dropped_mysteries.every((mystery) => mystery.abandoned_thread?.thread_id));
+  assert.ok(outline.abandoned_threads.length > 0);
   assert.ok(outline.chapters.some((chapter) => chapter.mysteries.dropped.length > 0));
 });
 

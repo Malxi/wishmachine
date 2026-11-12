@@ -78,7 +78,7 @@ logs/
 - `plotpack` 把 worldpack、cast 关系、六个章节 beat（setup/inciting/midpoint/crisis/climax/resolution）打包
 - `outlinepack --chapters --scenes --target-chars` 展开为带 scenes、字数目标和 draft_outline 的章节骨架
 - `outlinepack --volumes --chapters-per-volume` 全局分布 6 个 beat，并生成多卷 opening/closing、mysteries、timeline
-- `outlinepack` mysteries 带 thread/thread_type/related_cast，被裁剪的记录进入 dropped_mysteries
+- `outlinepack` mysteries 带 thread_id/related_cast_ids，被裁剪的进入 abandoned_threads
 - `outlinepack` scene mystery 可以进入 chapter pending
 - `outlinepack` pending mysteries 跨章/跨卷传递，在 climax/resolution 回收
 - `outlinepack` entry_from_previous 会进入 chapter.obstacle/conflict/mysteries.carried

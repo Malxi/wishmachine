@@ -629,14 +629,23 @@ function buildOutlinePack(plot, seed, options = {}) {
   const targetChars = Math.max(500, Math.min(10000, Number(options.targetChars) || 3000));
   const beats = plot.beats || [];
   const castNames = (plot.cast || []).map((character) => character.name);
+  const castIds = (plot.cast || []).map((character) => character.id);
   const leadCast = (plot.cast || [])
     .filter((character) => ['protagonist', 'antagonist'].includes(character.role_tags?.[0]))
     .map((character) => character.name);
+  const leadCastIds = (plot.cast || [])
+    .filter((character) => ['protagonist', 'antagonist'].includes(character.role_tags?.[0]))
+    .map((character) => character.id);
   const supportCast = (plot.cast || [])
     .filter((character) => character.role_tags?.[0] === 'support')
     .map((character) => character.name);
+  const supportCastIds = (plot.cast || [])
+    .filter((character) => character.role_tags?.[0] === 'support')
+    .map((character) => character.id);
   const sceneCast = [...new Set([castNames[0], ...supportCast].filter(Boolean))].slice(0, 2);
+  const sceneCastIds = [...new Set([castIds[0], ...supportCastIds].filter(Boolean))].slice(0, 2);
   const protagonist = castNames[0] || '主角';
+  const threadId = plot.storyline?.id || plot.storyline?.title || '';
   const pacingByFunction = {
     setup: 'slow build',
     inciting: 'rising',
@@ -698,8 +707,10 @@ function buildOutlinePack(plot, seed, options = {}) {
         mystery: plot.premise.hidden_truth,
         importance: 10,
         thread: plot.storyline?.title || 'premise',
+        thread_id: threadId || 'premise',
         thread_type: 'premise',
         related_cast: leadCast,
+        related_cast_ids: leadCastIds,
         planted_in: chapterId,
         status: 'open',
       });
@@ -713,8 +724,10 @@ function buildOutlinePack(plot, seed, options = {}) {
         mystery: scenarioB.twist,
         importance: 8,
         thread: plot.storyline?.title || 'storyline',
+        thread_id: threadId || 'storyline',
         thread_type: 'storyline',
         related_cast: leadCast,
+        related_cast_ids: leadCastIds,
         planted_in: chapterId,
         status: 'open',
       });
@@ -737,8 +750,10 @@ function buildOutlinePack(plot, seed, options = {}) {
         mystery: plot.storyline?.midpoint || plot.premise?.hidden_truth || '核心谜题',
         importance: 10,
         thread: plot.storyline?.title || 'climax',
+        thread_id: threadId || 'climax',
         thread_type: 'climax',
         related_cast: castNames,
+        related_cast_ids: castIds,
         resolved_in: chapterId,
         status: 'resolved',
       });
@@ -776,8 +791,10 @@ function buildOutlinePack(plot, seed, options = {}) {
             mystery: plot.premise.hidden_truth,
             importance: 4,
             thread: plot.storyline?.title || 'scene',
+            thread_id: threadId || 'scene',
             thread_type: 'scene',
             related_cast: sceneCast,
+            related_cast_ids: sceneCastIds,
             status: 'open',
           }]
           : sceneIndex === 1
@@ -789,8 +806,10 @@ function buildOutlinePack(plot, seed, options = {}) {
               mystery: `局部问题：${sceneObstacle}`,
               importance: 4,
               thread: plot.storyline?.title || 'scene',
+              thread_id: threadId || 'scene',
               thread_type: 'scene',
               related_cast: sceneCast,
+              related_cast_ids: sceneCastIds,
               status: 'open',
             }]
             : [],
@@ -803,8 +822,10 @@ function buildOutlinePack(plot, seed, options = {}) {
             mystery: plot.storyline?.midpoint || plot.premise?.hidden_truth || '本章疑问',
             importance: 6,
             thread: plot.storyline?.title || 'scene',
+            thread_id: threadId || 'scene',
             thread_type: 'scene',
             related_cast: sceneCast,
+            related_cast_ids: sceneCastIds,
             status: 'resolved',
           }]
           : [],
@@ -887,8 +908,10 @@ function buildOutlinePack(plot, seed, options = {}) {
           mystery: item.question,
           importance: item.importance,
           thread: item.thread,
+          thread_id: item.thread_id,
           thread_type: item.thread_type,
           related_cast: item.related_cast,
+          related_cast_ids: item.related_cast_ids,
           from: chapterId,
           status: 'open',
         });
@@ -906,8 +929,10 @@ function buildOutlinePack(plot, seed, options = {}) {
             mystery: item.question,
             importance: item.importance,
             thread: item.thread,
+            thread_id: item.thread_id,
             thread_type: item.thread_type,
             related_cast: item.related_cast,
+            related_cast_ids: item.related_cast_ids,
             from: chapterId,
             source_scene: `${chapterId}-S${scene.order}`,
             status: 'open',
@@ -923,6 +948,12 @@ function buildOutlinePack(plot, seed, options = {}) {
         ...dropped,
         status: 'dropped',
         dropped_in: chapterId,
+        abandoned_thread: {
+          thread_id: dropped.thread_id,
+          thread: dropped.thread,
+          question: dropped.question,
+          importance: dropped.importance,
+        },
       };
       mysteries.dropped.push(record);
       droppedMysteries.push(record);
@@ -971,6 +1002,7 @@ function buildOutlinePack(plot, seed, options = {}) {
     plotpack: plot,
     pending_mysteries: pendingMysteries,
     dropped_mysteries: droppedMysteries,
+    abandoned_threads: droppedMysteries.map((item) => item.abandoned_thread).filter(Boolean),
   };
 }
 
@@ -1056,6 +1088,7 @@ function buildMultiVolumeOutlinePack(plot, seed, options = {}) {
     chapter_config: chapterConfig,
     pending_mysteries: carriedMysteries,
     dropped_mysteries: bases.flatMap((base) => base.dropped_mysteries || []),
+    abandoned_threads: bases.flatMap((base) => base.abandoned_threads || []),
   };
 }
 

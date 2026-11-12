@@ -13,7 +13,7 @@ examples_en:
   - "Create a 3-volume × 5-chapter science-fiction project"
   - "Check the outline for blocking findings"
   - "Draw 12 science-fiction name cards"
-version: 0.1.74
+version: 0.1.75
 author: Malxi
 ---
 
@@ -163,9 +163,9 @@ chapters and volumes. The entry consequence also feeds the chapter's
 previous `hook`. Pending mysteries carry across chapters/volumes and are
 resolved at climax/resolution; `pending_mysteries` is capped. Mysteries are
 structured objects with `id`, `question`, `answer`, `payoff`, `importance`,
-`thread`, `thread_type`, `related_cast` and `status`. Pending mysteries are
-sorted by importance and capped; dropped mysteries are recorded in
-`dropped_mysteries`, and scene-local mysteries can enter the pending set.
+`thread`, `thread_id`, `thread_type`, `related_cast`, `related_cast_ids` and
+`status`. Pending mysteries are sorted by importance and capped; dropped
+mysteries are recorded in `dropped_mysteries` and `abandoned_threads`.
 The saved pack also contains `setup_draft` with main/subplot
 storylines, premise progression and a world timeline.
 Some packs also include a `motif` and an `inspired_by` graph edge.
