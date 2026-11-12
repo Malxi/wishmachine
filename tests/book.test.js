@@ -923,6 +923,8 @@ test('book registry abandon marks a mystery as manually dropped', () => {
   assert.ok(after.parts[0].volumes[0].chapters.some((chapter) => chapter.mysteries.dropped.some((mystery) => mystery.id === target.id)));
   assert.ok(projectRegistryStatus(project).operations.some((operation) => operation.action === 'abandon' && operation.id === target.id));
   assert.ok(registryOperations(project, { limit: 20 }).operations.some((operation) => operation.action === 'abandon'));
+  assert.ok(registryOperations(project, { action: 'abandon' }).operations.every((operation) => operation.action === 'abandon'));
+  assert.ok(!registryOperations(project, { action: 'clean' }).operations.some((operation) => operation.action === 'abandon'));
 });
 
 test('saved idea draws are readable from the project', () => {

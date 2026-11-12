@@ -232,20 +232,22 @@ function appendRegistryOperation(project, operation) {
   fs.appendFileSync(path.join(dir, 'registry-operations.jsonl'), `${JSON.stringify({ at: nowIso(), ...operation })}\n`, 'utf8');
 }
 
-function readRegistryOperations(project, limit = 5) {
+function readRegistryOperations(project, limit = 5, filters = {}) {
   const file = path.join(project.dir, 'logs', 'registry-operations.jsonl');
   if (!fs.existsSync(file)) return [];
-  return fs.readFileSync(file, 'utf8')
+  const operations = fs.readFileSync(file, 'utf8')
     .split(/\r?\n/)
     .filter(Boolean)
-    .slice(-limit)
     .map((line) => {
       try {
         return JSON.parse(line);
       } catch {
         return { raw: line };
       }
-    });
+    })
+    .filter((operation) => !filters.action || operation.action === filters.action)
+    .filter((operation) => !filters.since || String(operation.at || '') >= filters.since);
+  return operations.slice(-limit);
 }
 
 export function abandonMystery(project, mysteryId, reason = 'manual', options = {}) {
@@ -331,7 +333,10 @@ export function abandonMystery(project, mysteryId, reason = 'manual', options = 
 
 export function registryOperations(project, options = {}) {
   const limit = Math.max(1, Math.min(200, Number(options.limit) || 20));
-  const operations = readRegistryOperations(project, limit);
+  const operations = readRegistryOperations(project, limit, {
+    action: options.action || '',
+    since: options.since || '',
+  });
   return {
     ok: true,
     action: 'registry-log',
