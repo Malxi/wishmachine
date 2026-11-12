@@ -13,7 +13,7 @@ examples_en:
   - "Create a 3-volume × 5-chapter science-fiction project"
   - "Check the outline for blocking findings"
   - "Draw 12 science-fiction name cards"
-version: 0.2.2
+version: 0.2.3
 author: Malxi
 ---
 
@@ -168,7 +168,7 @@ structured objects with `id`, `question`, `answer`, `payoff`, `importance`,
 same ids; cast `storyline_refs` use those ids. `thread_registry` entries carry
 `resolved_in`, `resolved_chapters`, `resolved_mysteries`, `abandoned_history` and
 `abandoned_mysteries`. `mystery_registry` stores the deduplicated mystery objects sorted by chapter/id;
-both registries carry `*_registry_version: 1`. `check` reports setup/outline
+both registries carry `*_registry_version: 2`. `check` reports setup/outline
 registry drift (including mystery registry drift), unknown chapter thread ids,
 and thread references to missing or non-registry mystery ids. The mystery
 registry order is checked with natural chapter ordering (C2 before C10), setup

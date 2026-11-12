@@ -484,9 +484,9 @@ test('outlinepack expands into multiple volumes', () => {
   assert.ok(resolvedThread.resolved_mysteries.length > 0);
   assert.ok(resolvedThread.resolved_mysteries.every((mystery) => mystery.id && mystery.chapter_id));
   assert.ok(outline.mystery_registry.length > 0);
-  assert.equal(outline.mystery_registry_version, 1);
-  assert.equal(outline.thread_registry_version, 1);
-  assert.equal(outline.setup_draft.mystery_registry_version, 1);
+  assert.equal(outline.mystery_registry_version, 2);
+  assert.equal(outline.thread_registry_version, 2);
+  assert.equal(outline.setup_draft.mystery_registry_version, 2);
   const sortedRegistry = [...outline.mystery_registry].sort((a, b) => (
     String(a.chapter_id || '').localeCompare(String(b.chapter_id || ''), undefined, { numeric: true })
     || String(a.id || '').localeCompare(String(b.id || ''), undefined, { numeric: true })
@@ -706,8 +706,8 @@ test('doctor --fix migrates old projects to thread_registry', () => {
   const migratedSetup = JSON.parse(fs.readFileSync(path.join(dir, 'story', 'setup', 'story_setup.json'), 'utf8'));
   const migratedOutline = JSON.parse(fs.readFileSync(path.join(dir, 'story', 'compose', 'outline.json'), 'utf8'));
   assert.equal(migratedSetup.thread_registry.length, 2);
-  assert.equal(migratedSetup.thread_registry_version, 1);
-  assert.equal(migratedSetup.mystery_registry_version, 1);
+  assert.equal(migratedSetup.thread_registry_version, 2);
+  assert.equal(migratedSetup.mystery_registry_version, 2);
   assert.equal(migratedSetup.storylines[0].thread_id, 'thread-1');
   assert.equal(migratedOutline.thread_registry.length, 2);
   assert.equal(migratedOutline.parts[0].volumes[0].chapters[0].thread_id, 'thread-1');
