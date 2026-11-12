@@ -310,6 +310,11 @@ export async function searchSources(project, options = {}) {
       description: snippets[index] || '',
       keywords: [query].filter(Boolean),
       excerpt: snippets[index] || '',
+      entities: [{ id: `wikipedia:${encodeURIComponent(title)}`, type: 'topic', label: title }],
+      graph: {
+        entities: [{ id: `wikipedia:${encodeURIComponent(title)}`, type: 'topic', label: title }],
+        relations: [],
+      },
     }));
     const saved = [];
     if (options.ingest) {
@@ -333,6 +338,21 @@ export async function searchSources(project, options = {}) {
     const cards = books.map((book) => {
       const formats = book.formats || {};
       const url = formats['text/html'] || formats['text/plain'] || `https://www.gutenberg.org/ebooks/${book.id}`;
+      const workId = `gutenberg:${book.id}:work`;
+      const entities = [{ id: workId, type: 'work', label: book.title || `Gutenberg #${book.id}` }];
+      const relations = [];
+      for (const author of book.authors || []) {
+        if (!author?.name) continue;
+        const authorId = `gutenberg:${book.id}:author:${encodeURIComponent(author.name)}`;
+        entities.push({ id: authorId, type: 'author', label: author.name });
+        relations.push({ from: workId, to: authorId, type: 'authored_by' });
+      }
+      for (const subject of book.subjects || []) {
+        const subjectId = `gutenberg:${book.id}:subject:${encodeURIComponent(subject)}`;
+        if (entities.some((entity) => entity.id === subjectId)) continue;
+        entities.push({ id: subjectId, type: 'subject', label: subject });
+        relations.push({ from: workId, to: subjectId, type: 'has_subject' });
+      }
       return {
         title: book.title || `Gutenberg #${book.id}`,
         type: 'public-domain-novel',
@@ -344,6 +364,9 @@ export async function searchSources(project, options = {}) {
         keywords: [...(book.subjects || []), ...((book.authors || []).map((author) => author.name))].slice(0, 12),
         excerpt: '',
         gutenberg_id: book.id,
+        entities,
+        relations,
+        graph: { entities, relations },
       };
     });
     const draw = cards.length

@@ -64,6 +64,20 @@ Search saves source cards. Add `--ingest` to fetch each Wikipedia result's page
 for title/meta/excerpt extraction. Gutenberg results save metadata and a link;
 open the text only when you need a specific excerpt.
 
+Gutenberg result cards include a small graph:
+
+```text
+work --authored_by--> author
+work --has_subject--> subject
+```
+
+Wikipedia result cards include a `topic` entity. After saving cards, inspect
+the merged project graph:
+
+```bash
+node scripts/wishmachine.js book read graph --dir my-book
+```
+
 ## 3. Compatibility check
 
 Classify each entity:

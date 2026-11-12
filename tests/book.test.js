@@ -324,6 +324,8 @@ test('source search maps Gutenberg results into source cards', async () => {
     assert.equal(result.count, 1);
     assert.equal(result.results[0].title, 'Frankenstein');
     assert.equal(result.results[0].source_url, 'https://www.gutenberg.org/ebooks/84.html');
+    assert.ok(result.results[0].graph.entities.length >= 2);
+    assert.ok(result.results[0].graph.relations.length >= 1);
     assert.ok(result.saved[0].id);
   } finally {
     global.fetch = original;
