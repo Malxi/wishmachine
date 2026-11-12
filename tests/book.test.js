@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import http from 'node:http';
-import { initProject, loadProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, doctorProject, saveIdeaDraw, saveImportedIdeas, saveResearchReport, ingestSource, discoverSources, searchSources, buildProjectGraph, projectRegistryStatus, registryOperations, cleanRegistry, abandonMystery, writeArtifact, readSection } from '../scripts/project.js';
+import { initProject, loadProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, doctorProject, saveIdeaDraw, saveImportedIdeas, saveResearchReport, ingestSource, discoverSources, searchSources, buildProjectGraph, projectRegistryStatus, registryOperations, cleanRegistry, abandonMystery, undoRegistryOperation, writeArtifact, readSection } from '../scripts/project.js';
 import { checkProject, validateOutline, validateSetup } from '../scripts/schema.js';
 import { drawIdeas, validateIdeaDraw } from '../scripts/ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference } from '../scripts/guides.js';
@@ -925,6 +925,10 @@ test('book registry abandon marks a mystery as manually dropped', () => {
   assert.ok(registryOperations(project, { limit: 20 }).operations.some((operation) => operation.action === 'abandon'));
   assert.ok(registryOperations(project, { action: 'abandon' }).operations.every((operation) => operation.action === 'abandon'));
   assert.ok(!registryOperations(project, { action: 'clean' }).operations.some((operation) => operation.action === 'abandon'));
+  const undo = undoRegistryOperation(project);
+  assert.equal(undo.action, 'undo');
+  const restored = JSON.parse(fs.readFileSync(outlineFile, 'utf8'));
+  assert.equal(restored.mystery_registry.find((mystery) => mystery.id === target.id).status, 'resolved');
 });
 
 test('saved idea draws are readable from the project', () => {

@@ -1,10 +1,10 @@
-import { loadProject, initProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, doctorProject, saveIdeaDraw, saveImportedIdeas, saveResearchReport, discoverSources, searchSources, readSection, writeArtifact, projectRegistryStatus, cleanRegistry, abandonMystery, registryOperations } from './project.js';
+import { loadProject, initProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, doctorProject, saveIdeaDraw, saveImportedIdeas, saveResearchReport, discoverSources, searchSources, readSection, writeArtifact, projectRegistryStatus, cleanRegistry, abandonMystery, registryOperations, undoRegistryOperation } from './project.js';
 import { checkProject } from './schema.js';
 import { readJson } from './util.js';
 import { drawIdeas, ideasTypes, validateIdeaDraw } from './ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference, listSkills, readSkill } from './guides.js';
 
-const VERSION = '0.2.13';
+const VERSION = '0.2.14';
 const BOOLEAN_FLAGS = new Set(['apply', 'json', 'help', 'h', 'dry-run', 'force', 'ingest']);
 const COMMANDS = new Set(['book', 'check', 'ideas', 'gen', 'state', 'audit', 'refresh', 'export', 'doctor', 'version', 'help']);
 
@@ -99,6 +99,7 @@ Commands:
   book registry [--dir <project>]
   book registry clean [--dir <project>] [--dry-run]
   book registry log [--limit 20] [--action abandon|clean] [--since ISO] [--dir <project>]
+  book registry undo [--dir <project>]
   book registry abandon --mystery <id> [--reason <text>] [--dry-run] [--dir <project>]
   book write <setup|outline|craft|chapter|recap|research> [--mode replace|patch|append] [--apply] [--id <id>] [--from-idea <id>]
   check [--profile quality|schema|custom|all] [--target setup|outline|chapter] [--id <id>]
@@ -159,6 +160,10 @@ async function runBook(args, flags) {
   }
   if (sub === 'registry') {
     const project = loadProject(stringFlag(flags, 'dir', ''));
+    if (args[1] === 'undo') {
+      print(undoRegistryOperation(project));
+      return 0;
+    }
     if (args[1] === 'log') {
       print(registryOperations(project, {
         limit: intFlag(flags, 'limit', 20),

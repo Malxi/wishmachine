@@ -180,6 +180,7 @@ export function cleanRegistry(project, options = {}) {
       dryRun: true,
     };
   }
+  const backup = createRegistryBackup(project, 'clean');
   docs.setup.mystery_registry = expected;
   docs.outline.mystery_registry = expected;
   docs.setup.mystery_registry_version = 2;
@@ -194,6 +195,7 @@ export function cleanRegistry(project, options = {}) {
     entries: expected.length,
     removed,
     removedLinks,
+    backup,
   });
   return {
     ok: true,
@@ -224,6 +226,40 @@ function findMysteryNode(outline, id) {
     }
   }
   return null;
+}
+
+function createRegistryBackup(project, action) {
+  const dir = path.join(project.dir, 'logs', 'registry-backups', `${stamp()}-${action}`);
+  ensureDir(dir);
+  const setupFile = path.join(project.dir, 'story', 'setup', 'story_setup.json');
+  const outlineFile = path.join(project.dir, 'story', 'compose', 'outline.json');
+  fs.copyFileSync(setupFile, path.join(dir, 'story_setup.json'));
+  fs.copyFileSync(outlineFile, path.join(dir, 'outline.json'));
+  return path.relative(project.dir, dir).replace(/\\/g, '/');
+}
+
+export function undoRegistryOperation(project) {
+  const operations = readRegistryOperations(project, 200);
+  const target = [...operations].reverse().find((operation) => operation.backup && operation.action !== 'undo');
+  if (!target) throw new Error('no registry operation with a backup to undo');
+  const backupDir = path.resolve(project.dir, target.backup);
+  const root = path.resolve(project.dir);
+  if (!backupDir.startsWith(root)) throw new Error('registry backup is outside the project');
+  const setupFile = path.join(project.dir, 'story', 'setup', 'story_setup.json');
+  const outlineFile = path.join(project.dir, 'story', 'compose', 'outline.json');
+  fs.copyFileSync(path.join(backupDir, 'story_setup.json'), setupFile);
+  fs.copyFileSync(path.join(backupDir, 'outline.json'), outlineFile);
+  appendRegistryOperation(project, {
+    action: 'undo',
+    restored: target.backup,
+    original_action: target.action,
+  });
+  return {
+    ok: true,
+    action: 'undo',
+    restored: target.backup,
+    original_action: target.action,
+  };
 }
 
 function appendRegistryOperation(project, operation) {
@@ -271,6 +307,7 @@ export function abandonMystery(project, mysteryId, reason = 'manual', options = 
       dryRun: true,
     };
   }
+  const backup = createRegistryBackup(project, 'abandon');
   chapter.mysteries = chapter.mysteries || { carried: [], planted: [], resolved: [], dropped: [] };
   const removed = (list) => (list || []).filter((item) => item.id !== mysteryId);
   chapter.mysteries.carried = removed(chapter.mysteries.carried);
@@ -319,6 +356,7 @@ export function abandonMystery(project, mysteryId, reason = 'manual', options = 
     chapter_id: chapterId,
     thread_id: threadId,
     reason,
+    backup,
   });
   repairThreadStatuses(project);
   return {

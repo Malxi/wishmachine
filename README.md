@@ -84,6 +84,7 @@ logs/
 - setup mystery_registry 与 thread_registry 也有排序校验
 - mystery_registry 使用自然章序排序（C2 在 C10 前）
 - check 校验 mystery_registry 排序，doctor 重建后保持稳定顺序
+- `book registry undo` 从最近 backup 恢复，abandon/clean 自动备份
 - `book registry log --action --since` 过滤 registry 操作日志
 - `book registry log --limit 20` 查看 registry 操作日志
 - registry 操作写入 `logs/registry-operations.jsonl`，`book registry` 返回最近 5 条
