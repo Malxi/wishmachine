@@ -385,6 +385,18 @@ test('imported cards and research reports are persisted', () => {
   assert.ok(projectState(project).state.research.some((item) => item.name === imported.saved.id));
 });
 
+test('genre decks cover suspense, urban and history', () => {
+  for (const [genre, deck] of [['悬疑', 'suspense'], ['都市', 'urban'], ['历史', 'history']]) {
+    const premise = drawIdeas({ type: 'premise', genre, count: 1, seed: 42 });
+    assert.equal(premise.meta.deck, deck);
+    assert.ok(premise.results[0].title);
+    const pack = drawIdeas({ type: 'worldpack', genre, count: 1, seed: 42 });
+    assert.equal(pack.meta.deck, deck);
+    assert.ok(pack.results[0].engine);
+    assert.ok(pack.results[0].location);
+  }
+});
+
 test('saved idea draws are readable from the project', () => {
   const dir = tempDir();
   initProject({ name: 'idea store', dir, parts: 1, volumes: 1, chapter: 1 });

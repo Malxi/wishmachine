@@ -72,6 +72,7 @@ logs/
 - `export` 将已写章节导出为带目录、人物和规则的阅读版（`--format plain` 输出纯章节拼接）
 - `doctor` 检查项目目录、配置、setup/outline/craft/recap JSON 有效性、缺失 JSON 和 orphan 文件；`--fix` 会创建缺失目录并写入规范化 structure
 - `ideas namecard/premise/resource/equipment/scenario/provocation/law/event/engine/storyline/location/faction/motif/worldpack`
+- `ideas` 题材牌堆：科幻默认 / 修仙 / 悬疑 / 都市 / 历史
 - `ideas draw --save` 持久化到 `story/ideas/`，可用 `book read ideas` / `book read idea` 读取
 - `ideas import` 将联网考究/人工整理的卡片写入同一卡池
 - `ideas search --provider wikipedia|gutenberg` 联网搜索来源并保存 source cards

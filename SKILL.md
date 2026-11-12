@@ -13,7 +13,7 @@ examples_en:
   - "Create a 3-volume × 5-chapter science-fiction project"
   - "Check the outline for blocking findings"
   - "Draw 12 science-fiction name cards"
-version: 0.1.51
+version: 0.1.52
 author: Malxi
 ---
 
@@ -110,6 +110,9 @@ all       quality + schema
 ```bash
 node scripts/wishmachine.js ideas draw --type namecard --genre 科幻 --count 12 --seed 42
 node scripts/wishmachine.js ideas draw --type premise --genre 修仙 --count 3 --seed 7
+node scripts/wishmachine.js ideas draw --type premise --genre 悬疑 --count 3 --seed 7
+node scripts/wishmachine.js ideas draw --type premise --genre 都市 --count 3 --seed 7
+node scripts/wishmachine.js ideas draw --type premise --genre 历史 --count 3 --seed 7
 node scripts/wishmachine.js ideas draw --type provocation --count 4 --seed 9
 node scripts/wishmachine.js ideas draw --type law --count 4 --seed 9
 node scripts/wishmachine.js ideas draw --type event --count 4 --seed 9
@@ -136,6 +139,7 @@ node scripts/wishmachine.js ideas types
 
 `worldpack` returns one premise, engine, location, faction, equipment, two
 resources, two scenarios, two storylines and four role-tagged cast cards.
+Genre decks currently cover default sci-fi, xianxia, suspense, urban and history.
 
 ## 4. 读取指导
 

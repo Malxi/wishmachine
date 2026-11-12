@@ -1,4 +1,5 @@
 import { hashSeed, mulberry32, pickMany, pick } from './util.js';
+import { SUSPENSE, URBAN, HISTORY } from './ideas-genres.js';
 
 const TYPES = [
   'provocation', 'axiom', 'event', 'law', 'scenario', 'engine',
@@ -193,6 +194,7 @@ const STORYLINES = [
 ];
 
 const XIANXIA = {
+  name: 'xianxia',
   premises: [
     { title: '命册与真名', statement: '修士以真名入照命册承道，名不在册则术法无应、亲族不识；每隔一甲子，宗门以清册决定谁的名字被勾去。', surface_rule: '只有登记在册的真名能引动宗门术法。', hidden_truth: '照命册不是记录，是配额；被勾去的人不死，只是再无人能记住。', scarcity: '每甲子可用空位有限，名录只能由掌册者添改。', conflict: '掌册长老、巡册使与无名者争夺谁有资格留下。', leverage: '用纸背留痕读出被勾掉的真名。', counter: '把清册改成人人可自书的公册。' },
     { title: '剑冢与认主', statement: '剑冢每甲子开一次，古剑只认一个真名；被剑认下的人必须替剑主完成未竟之约。', surface_rule: '没有剑契的人不能拔剑，强行拔剑会被剑意反噬。', hidden_truth: '剑认的不是人，是剑主临死前记住的那个名字。', scarcity: '剑冢只开七日，每柄剑只能认一次主。', conflict: '剑冢守人、宗门与散修争夺认主资格。', leverage: '用一段旧剑主记忆篡改认主结果。', counter: '让剑认一个没有名字的人。' },
@@ -216,6 +218,8 @@ const XIANXIA = {
     { title: '香火账对不上', pressure: '山神发现香火账少了一整页，信徒开始忘记自己的村落。', twist: '少掉的那页被宗门拿去给另一座山买了神位。' },
     { title: '清册之夜', pressure: '宗门提前三年开清册，名单上第一个名字是掌册长老自己。', twist: '多出来的那个空位，是留给主角的。' },
     { title: '渡劫替名', pressure: '主角拿到一枚渡劫名额，却发现替劫者是自己唯一的亲人。', twist: '名额本来就是用亲人的命换来的。' },
+    { title: '旧剑主归来', pressure: '剑冢开冢时，一柄古剑自己飞出，指向一个没有剑契的散修。', twist: '散修体内藏着旧剑主最后一缕剑意。' },
+    { title: '山神换位', pressure: '山神突然要求换位，把神位让给一个被除名的村落。', twist: '村落里供奉的是一块没有名字的牌位。' },
   ],
   engines: [
     { title: '照命册清册引擎', artifact: '照命册与朱砂判笔', issuer: '悬名宗掌册堂', holder: '掌册长老', stated_purpose: '记录真名、维持宗门术法', hidden_function: '用清册配额决定谁被忘记', loophole: '朱笔只能勾名字，不能勾掉纸背的留痕', cost: '每勾一人，掌册者自己的名字也淡一分', protagonist_role: '能读出纸背旧名的抄册执事', counter_expectation: '主角不把自己写回去，而是让所有人自己写名' },
@@ -230,6 +234,7 @@ const XIANXIA = {
     { title: '我是谁的名字', promise: '主角想知道自己是谁。', escalation: '每找回一段旧名，就失去一段现在。', midpoint: '主角发现自己是被补名写回来的。', payoff: '主角拒绝把自己写回去。', cost: '拒绝写回会让他从所有人记忆里消失。' },
     { title: '宗门清册', promise: '主角想阻止下一次清册。', escalation: '每阻止一次，掌册者就提前一次。', midpoint: '主角发现清册已经运行了六十年。', payoff: '主角把清册改成公册。', cost: '公册需要有人永远坐在册页边上记录。' },
     { title: '旧脉归名', promise: '主角想找回被整脉抹掉的旧人。', escalation: '每找回一个名字，就惊动一个还在位的既得利益者。', midpoint: '旧脉不是被魔所灭，是被宗门自己抹掉。', payoff: '旧脉姓名被逐个写回。', cost: '写回名字会让当年的执行者无法再躲。' },
+    { title: '香火账', promise: '主角想让一座山神记起被除名的村落。', escalation: '每找回一个信徒，香火账上就多一笔对不上的愿力。', midpoint: '山神自己就是被除名者名单上的一员。', payoff: '主角把香火账改成所有信徒共同记账。', cost: '公开账本会让山神失去神位。' },
   ],
   locations: [
     { name: '悬名宗·录事房', type: '宗门', description: '抄册执事日夜誊写真名的低矮房间，灯永远添到第三盏。', function: '发现空行、抄录旧名、把私账带出去。', danger: '每一页都可能是下一次清册的名单。' },
@@ -245,6 +250,7 @@ const XIANXIA = {
     { name: '藏册阁', type: '守门人', goal: '守住旧档与三个固定问题。', resource: '旧档残页', method: '只让答对第三问的人进入。', secret: '守门人自己也是被抹名的人。' },
     { name: '剑冢守人', type: '中立势力', goal: '让古剑找到能履约的剑主。', resource: '剑契', method: '每甲子开冢一次，只认真名。', secret: '剑认的是旧剑主临终记住的名字。' },
     { name: '香火祠', type: '民间信仰', goal: '按香火账分配愿力与神位。', resource: '香火愿力', method: '用香火账决定谁还能被神记住。', secret: '神位可以买卖。' },
+    { name: '符师行会', type: '匠人行会', goal: '垄断替身纸人与本命血墨的制作。', resource: '符纸与血墨', method: '只向登记符师发放制作许可。', secret: '行会替宗门处理不愿公开的替死记录。' },
     { name: '照夜一脉', type: '旧宗门', goal: '拒绝清册，保住整脉姓名。', resource: '旧榜与验状', method: '以整脉清零为代价拒绝一次清册。', secret: '他们不是被魔所灭，是被宗门自己抹掉。' },
   ],
   equipment: [
@@ -254,33 +260,17 @@ const XIANXIA = {
     { name: '替身纸人', type: '消耗品', function: '替人挡一次死劫。', cost: '把死劫转给纸人里被写名的另一个人。', limit: '纸人只认名字，不认因果。' },
     { name: '渡劫名额', type: '许可', function: '允许在宗门境内渡劫，并指定替劫者。', cost: '替劫者承担天劫。', limit: '十年只发数枚。' },
     { name: '照命册残页', type: '文书', function: '保留被勾掉的真名痕迹。', cost: '携带者会被掌册堂追踪。', limit: '离开命册越久，字迹越淡。' },
+    { name: '香火灯', type: '祭祀法器', function: '聚拢香火愿力，让一个名字暂时不被忘记。', cost: '每点一次灯，就要烧掉一段自己的记忆。', limit: '灯油只够烧一夜。' },
   ],
 };
 
-const XIANXIA_THEMES = {
-  '命册与真名': 'name', '剑冢与认主': 'sword', '香火与神位': 'incense',
-  '渡劫与名额': 'tribulation', '纸人与替死': 'paper', '山门与旧榜': 'roster',
-  '真名玉册': 'name', '本命血墨': 'name', '香火愿力': 'incense', '剑契': 'sword',
-  '渡劫名额': 'tribulation', '替身纸人': 'paper',
-  '第七行空了': 'name', '洗墨池边的无名客': 'name', '剑冢开冢': 'sword',
-  '香火账对不上': 'incense', '清册之夜': 'roster', '渡劫替名': 'tribulation',
-  '照命册清册引擎': 'name', '剑冢认主引擎': 'sword', '香火神位引擎': 'incense',
-  '渡劫名额引擎': 'tribulation', '替身纸人引擎': 'paper', '宗门榜文引擎': 'roster',
-  '空名案': 'name', '我是谁的名字': 'name', '宗门清册': 'roster', '旧脉归名': 'roster',
-  '悬名宗·录事房': 'name', '洗墨池': 'name', '沉剑谷': 'roster', '藏册阁': 'roster',
-  '剑冢': 'sword', '山门·旧榜墙': 'roster',
-  '悬名宗掌册堂': 'name', '巡册司': 'roster', '藏册阁': 'roster',
-  '剑冢守人': 'sword', '香火祠': 'incense', '照夜一脉': 'roster',
-  '朱砂判笔': 'name', '本命血墨': 'name', '剑契': 'sword',
-  '替身纸人': 'paper', '渡劫名额': 'tribulation', '照命册残页': 'name',
-};
-
-function themeOf(card) {
-  return card?.theme || XIANXIA_THEMES[card?.title] || XIANXIA_THEMES[card?.name] || '';
-}
-
 function selectDeck(genre) {
-  return /仙|修|玄幻|古风|武侠|fantasy|xian/i.test(String(genre || '')) ? XIANXIA : null;
+  const value = String(genre || '');
+  if (/仙|修|玄幻|古风|武侠|fantasy|xian/i.test(value)) return XIANXIA;
+  if (/悬疑|推理|侦探|犯罪|恐怖|thriller|mystery/i.test(value)) return SUSPENSE;
+  if (/都市|现代|职场|娱乐|校园|urban/i.test(value)) return URBAN;
+  if (/历史|古代|朝代|民国|战争|history/i.test(value)) return HISTORY;
+  return null;
 }
 
 const DEFAULT_PACKS = [
@@ -319,6 +309,19 @@ const DEFAULT_PACKS = [
   },
 ];
 
+const DEFAULT_DECK = {
+  name: 'default',
+  premises: PREMISES,
+  resources: RESOURCES,
+  scenarios: SCENARIOS,
+  storylines: STORYLINES,
+  engines: ENGINES,
+  locations: LOCATIONS,
+  factions: FACTIONS,
+  equipment: EQUIPMENT,
+  packs: DEFAULT_PACKS,
+};
+
 const XIANXIA_PACKS = [
   {
     theme: 'name',
@@ -335,8 +338,8 @@ const XIANXIA_PACKS = [
     theme: 'sword',
     premise: '剑冢与认主',
     engine: '剑冢认主引擎',
-    resources: ['剑契', '渡劫名额'],
-    scenarios: ['剑冢开冢', '渡劫替名'],
+    resources: ['剑契', '本命血墨'],
+    scenarios: ['剑冢开冢', '旧剑主归来'],
     storylines: ['旧脉归名', '我是谁的名字'],
     location: '剑冢',
     faction: '剑冢守人',
@@ -347,51 +350,37 @@ const XIANXIA_PACKS = [
     premise: '香火与神位',
     engine: '香火神位引擎',
     resources: ['香火愿力', '替身纸人'],
-    scenarios: ['香火账对不上', '洗墨池边的无名客'],
-    storylines: ['旧脉归名', '宗门清册'],
-    location: '山门·旧榜墙',
+    scenarios: ['香火账对不上', '山神换位'],
+    storylines: ['香火账', '旧脉归名'],
+    location: '香火祠',
     faction: '香火祠',
-    equipment: '本命血墨',
+    equipment: '香火灯',
   },
   {
     theme: 'paper',
     premise: '纸人与替死',
     engine: '替身纸人引擎',
     resources: ['替身纸人', '本命血墨'],
-    scenarios: ['渡劫替名', '第七行空了'],
+    scenarios: ['洗墨池边的无名客', '清册之夜'],
     storylines: ['我是谁的名字', '空名案'],
     location: '洗墨池',
-    faction: '香火祠',
+    faction: '符师行会',
     equipment: '替身纸人',
   },
 ];
 
-function buildWorldpack(def, packIndex, seed, cast) {
+XIANXIA.packs = XIANXIA_PACKS;
+
+function buildWorldpack(def, packIndex, seed, cast, sources) {
   const find = (list, key, value) => list.find((item) => item[key] === value);
-  const premiseSource = def.theme === 'evacuation' || def.theme === 'identity' || def.theme === 'gate'
-    ? PREMISES : XIANXIA.premises;
-  const engineSource = def.theme === 'evacuation' || def.theme === 'identity' || def.theme === 'gate'
-    ? ENGINES : XIANXIA.engines;
-  const resourceSource = def.theme === 'evacuation' || def.theme === 'identity' || def.theme === 'gate'
-    ? RESOURCES : XIANXIA.resources;
-  const scenarioSource = def.theme === 'evacuation' || def.theme === 'identity' || def.theme === 'gate'
-    ? SCENARIOS : XIANXIA.scenarios;
-  const storylineSource = def.theme === 'evacuation' || def.theme === 'identity' || def.theme === 'gate'
-    ? STORYLINES : XIANXIA.storylines;
-  const locationSource = def.theme === 'evacuation' || def.theme === 'identity' || def.theme === 'gate'
-    ? LOCATIONS : XIANXIA.locations;
-  const factionSource = def.theme === 'evacuation' || def.theme === 'identity' || def.theme === 'gate'
-    ? FACTIONS : XIANXIA.factions;
-  const equipmentSource = def.theme === 'evacuation' || def.theme === 'identity' || def.theme === 'gate'
-    ? EQUIPMENT : XIANXIA.equipment;
-  const premise = find(premiseSource, 'title', def.premise);
-  const engine = find(engineSource, 'title', def.engine);
-  const resources = def.resources.map((name) => find(resourceSource, 'name', name)).filter(Boolean);
-  const scenarios = def.scenarios.map((title) => find(scenarioSource, 'title', title)).filter(Boolean);
-  const storylines = def.storylines.map((title) => find(storylineSource, 'title', title)).filter(Boolean);
-  const location = find(locationSource, 'name', def.location);
-  const faction = find(factionSource, 'name', def.faction);
-  const equipment = find(equipmentSource, 'name', def.equipment);
+  const premise = find(sources.premises, 'title', def.premise);
+  const engine = find(sources.engines, 'title', def.engine);
+  const resources = def.resources.map((name) => find(sources.resources, 'name', name)).filter(Boolean);
+  const scenarios = def.scenarios.map((title) => find(sources.scenarios, 'title', title)).filter(Boolean);
+  const storylines = def.storylines.map((title) => find(sources.storylines, 'title', title)).filter(Boolean);
+  const location = find(sources.locations, 'name', def.location);
+  const faction = find(sources.factions, 'name', def.faction);
+  const equipment = find(sources.equipment, 'name', def.equipment);
   const packId = `worldpack-${seed}-${String(packIndex + 1).padStart(2, '0')}`;
   const entities = [];
   const relations = [];
@@ -528,25 +517,25 @@ export function drawIdeas(options = {}) {
     seed = Math.floor(Math.random() * 2147483646) + 1;
   }
   const rng = mulberry32(hashSeed(`${seed}:${type}:${options.genre || ''}`));
-  const deck = selectDeck(options.genre);
-  const premises = deck?.premises || PREMISES;
-  const resources = deck?.resources || RESOURCES;
-  const scenarios = deck?.scenarios || SCENARIOS;
-  const storylines = deck?.storylines || STORYLINES;
-  const engines = deck?.engines || ENGINES;
-  const locations = deck?.locations || LOCATIONS;
-  const factions = deck?.factions || FACTIONS;
-  const equipment = deck?.equipment || EQUIPMENT;
+  const deck = selectDeck(options.genre) || DEFAULT_DECK;
+  const premises = deck.premises;
+  const resources = deck.resources;
+  const scenarios = deck.scenarios;
+  const storylines = deck.storylines;
+  const engines = deck.engines;
+  const locations = deck.locations;
+  const factions = deck.factions;
+  const equipment = deck.equipment;
   let results;
   if (type === 'worldpack') {
-    const packDefs = deck ? XIANXIA_PACKS : DEFAULT_PACKS;
+    const packDefs = deck.packs;
     const selected = pickMany(rng, packDefs, Math.min(count, packDefs.length));
     results = selected.map((def, packIndex) => {
       const cast = namecards(rng, seed + packIndex, 4);
       cast.forEach((character, index) => {
         character.role_tags = [index === 0 ? 'protagonist' : index === 1 ? 'antagonist' : 'support'];
       });
-      return buildWorldpack(def, packIndex, seed, cast);
+      return buildWorldpack(def, packIndex, seed, cast, deck);
     });
   } else if (type === 'namecard' || type === 'name' || type === 'cast') {
     results = namecards(rng, seed, count);
@@ -628,7 +617,7 @@ export function drawIdeas(options = {}) {
     query: {
       type,
       genre: options.genre || '',
-      deck: deck ? 'xianxia' : 'default',
+      deck: deck.name,
       count,
       seed,
       source: options.source || '',
@@ -640,7 +629,7 @@ export function drawIdeas(options = {}) {
     results,
     meta: {
       genre: options.genre || '',
-      deck: deck ? 'xianxia' : 'default',
+      deck: deck.name,
       mode: type,
       seed,
       replay_command: `wishmachine ideas draw --type ${type}${options.genre ? ` --genre ${options.genre}` : ''} --seed ${seed} --count ${count}`,
