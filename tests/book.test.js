@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import http from 'node:http';
-import { initProject, loadProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, doctorProject, saveIdeaDraw, saveImportedIdeas, saveResearchReport, ingestSource, discoverSources, searchSources, buildProjectGraph, writeArtifact, readSection } from '../scripts/project.js';
+import { initProject, loadProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, doctorProject, saveIdeaDraw, saveImportedIdeas, saveResearchReport, ingestSource, discoverSources, searchSources, buildProjectGraph, projectRegistryStatus, writeArtifact, readSection } from '../scripts/project.js';
 import { checkProject, validateOutline, validateSetup } from '../scripts/schema.js';
 import { drawIdeas, validateIdeaDraw } from '../scripts/ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference } from '../scripts/guides.js';
@@ -850,6 +850,21 @@ test('doctor --fix sorts registry arrays', () => {
   assert.equal(setup.thread_registry[0].type, 'main');
   assert.ok(setup.mystery_registry.every((mystery, index, list) => index === 0 || String(list[index - 1].chapter_id).localeCompare(String(mystery.chapter_id), undefined, { numeric: true }) <= 0));
   assert.deepEqual(setup.thread_registry.map((thread) => thread.id), repaired.thread_registry.map((thread) => thread.id));
+});
+
+test('project registry status summarizes setup and outline registries', () => {
+  const dir = tempDir();
+  initProject({ name: 'registry status', dir, parts: 1, volumes: 1, chapter: 10 });
+  const project = loadProject(dir);
+  const outline = drawIdeas({ type: 'outlinepack', genre: '悬疑', count: 1, seed: 42, chapters: 10 }).results[0];
+  writeArtifact(project, { section: 'setup', content: JSON.stringify(outline.setup_draft), apply: true });
+  writeArtifact(project, { section: 'outline', content: JSON.stringify(outline.draft_outline), apply: true });
+  const status = projectRegistryStatus(project);
+  assert.equal(status.ok, true);
+  assert.equal(status.setup.thread_registry_version, 2);
+  assert.equal(status.outline.thread_registry_version, 2);
+  assert.ok(status.setup.thread_count > 0);
+  assert.ok(status.outline.mystery_count > 0);
 });
 
 test('saved idea draws are readable from the project', () => {

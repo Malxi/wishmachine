@@ -140,6 +140,52 @@ export function projectStatus(project) {
   };
 }
 
+export function projectRegistryStatus(project) {
+  const setupFile = path.join(project.dir, 'story', 'setup', 'story_setup.json');
+  const outlineFile = path.join(project.dir, 'story', 'compose', 'outline.json');
+  if (!fs.existsSync(setupFile) && !fs.existsSync(outlineFile)) {
+    return { ok: false, reason: 'setup and outline are missing' };
+  }
+  const setup = fs.existsSync(setupFile) ? readJson(setupFile) : {};
+  const outline = fs.existsSync(outlineFile) ? readJson(outlineFile) : {};
+  const summarize = (threads, mysteries) => {
+    const threadStatus = {};
+    for (const thread of threads) threadStatus[thread.status || 'unknown'] = (threadStatus[thread.status || 'unknown'] || 0) + 1;
+    const mysteryStatus = {};
+    for (const mystery of mysteries) mysteryStatus[mystery.status || 'unknown'] = (mysteryStatus[mystery.status || 'unknown'] || 0) + 1;
+    return {
+      thread_count: threads.length,
+      mystery_count: mysteries.length,
+      thread_status: threadStatus,
+      mystery_status: mysteryStatus,
+    };
+  };
+  const setupThreads = Array.isArray(setup.thread_registry) ? setup.thread_registry : [];
+  const setupMysteries = Array.isArray(setup.mystery_registry) ? setup.mystery_registry : [];
+  const outlineThreads = Array.isArray(outline.thread_registry) ? outline.thread_registry : [];
+  const outlineMysteries = Array.isArray(outline.mystery_registry) ? outline.mystery_registry : [];
+  const check = checkProject(project, { profile: 'schema', target: 'outline' });
+  const drift = (check.findings || []).filter((finding) => (
+    String(finding.rule_id || '').startsWith('quality.thread.')
+    || String(finding.rule_id || '').startsWith('quality.mystery.')
+    || String(finding.rule_id || '').startsWith('quality.setup.')
+  ));
+  return {
+    ok: drift.length === 0,
+    setup: {
+      thread_registry_version: setup.thread_registry_version ?? null,
+      mystery_registry_version: setup.mystery_registry_version ?? null,
+      ...summarize(setupThreads, setupMysteries),
+    },
+    outline: {
+      thread_registry_version: outline.thread_registry_version ?? null,
+      mystery_registry_version: outline.mystery_registry_version ?? null,
+      ...summarize(outlineThreads, outlineMysteries),
+    },
+    drift,
+  };
+}
+
 export function saveImportedIdeas(project, payload, options = {}) {
   const raw = Array.isArray(payload) ? { results: payload } : payload;
   if (!raw || !Array.isArray(raw.results) || raw.results.length === 0) {
