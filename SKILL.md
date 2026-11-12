@@ -13,7 +13,7 @@ examples_en:
   - "Create a 3-volume × 5-chapter science-fiction project"
   - "Check the outline for blocking findings"
   - "Draw 12 science-fiction name cards"
-version: 0.1.80
+version: 0.1.81
 author: Malxi
 ---
 
@@ -168,8 +168,9 @@ structured objects with `id`, `question`, `answer`, `payoff`, `importance`,
 same ids; cast `storyline_refs` use those ids. `thread_registry` entries carry
 `status` (active/resolved/abandoned) and `resolved_in`. `ideas validate --id`
 checks status consistency. `book write setup/outline --from-idea` persists
-`thread_registry` into setup/outline, and the schema check rejects unknown
-chapter thread ids. Pending mysteries are sorted by importance and capped; dropped
+`thread_registry` into setup/outline. `check --target setup|outline` also reports
+setup/outline registry drift (`registry_missing_setup`, `registry_missing_outline`,
+`status_mismatch`, `resolved_in_mismatch`). Pending mysteries are sorted by importance and capped; dropped
 mysteries are recorded in `dropped_mysteries` and `abandoned_threads`.
 The saved pack also contains `setup_draft` with main/subplot
 storylines, premise progression and a world timeline.

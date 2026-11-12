@@ -771,6 +771,53 @@ function customFindings(project, target, id, overrideText) {
   return findings;
 }
 
+function threadConsistencyFindings(project) {
+  const setupFile = path.join(project.dir, 'story', 'setup', 'story_setup.json');
+  const outlineFile = path.join(project.dir, 'story', 'compose', 'outline.json');
+  if (!fs.existsSync(setupFile) || !fs.existsSync(outlineFile)) return [];
+  let setup;
+  let outline;
+  try {
+    setup = readJson(setupFile);
+    outline = readJson(outlineFile);
+  } catch {
+    return [];
+  }
+  const setupRegistry = setup.thread_registry;
+  const outlineRegistry = outline.thread_registry;
+  if (!Array.isArray(setupRegistry) && !Array.isArray(outlineRegistry)) return [];
+  const findings = [];
+  if (!Array.isArray(setupRegistry)) {
+    findings.push(finding('quality.thread.registry_missing_setup', 'high', 'thread_registry', 'outline has thread_registry but setup does not'));
+    return findings;
+  }
+  if (!Array.isArray(outlineRegistry)) {
+    findings.push(finding('quality.thread.registry_missing_outline', 'high', 'thread_registry', 'setup has thread_registry but outline does not'));
+    return findings;
+  }
+  const setupMap = new Map(setupRegistry.map((thread) => [thread.id, thread]));
+  const outlineMap = new Map(outlineRegistry.map((thread) => [thread.id, thread]));
+  for (const [id, thread] of setupMap) {
+    if (!outlineMap.has(id)) {
+      findings.push(finding('quality.thread.registry_missing_outline', 'high', `outline is missing setup thread ${id}`, id));
+      continue;
+    }
+    const other = outlineMap.get(id);
+    if (thread.status !== other.status) {
+      findings.push(finding('quality.thread.status_mismatch', 'medium', `thread ${id} status ${thread.status} in setup but ${other.status} in outline`, id));
+    }
+    if ((thread.resolved_in || null) !== (other.resolved_in || null)) {
+      findings.push(finding('quality.thread.resolved_in_mismatch', 'medium', `thread ${id} resolved_in differs between setup and outline`, id));
+    }
+  }
+  for (const id of outlineMap.keys()) {
+    if (!setupMap.has(id)) {
+      findings.push(finding('quality.thread.registry_missing_setup', 'high', `setup is missing outline thread ${id}`, id));
+    }
+  }
+  return findings;
+}
+
 export function checkCandidate(project, options = {}) {
   const section = options.section;
   const candidate = options.candidate;
@@ -842,6 +889,9 @@ export function checkProject(project, options = {}) {
     throw new Error(`unsupported check target: ${target}`);
   }
   if (profile === 'custom' || profile === 'all') findings.push(...customFindings(project, target, id));
+  if ((profile === 'schema' || profile === 'all') && ['setup', 'outline'].includes(target)) {
+    findings.push(...threadConsistencyFindings(project));
+  }
   const min = options.minSeverity;
   if (min) {
     const rank = { low: 0, medium: 1, high: 2, critical: 3 };

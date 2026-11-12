@@ -579,6 +579,23 @@ test('genre decks cover suspense, urban and history', () => {
   }
 });
 
+test('checkProject reports setup/outline thread registry drift', () => {
+  const dir = tempDir();
+  initProject({ name: 'registry drift', dir, parts: 1, volumes: 1, chapter: 10 });
+  const project = loadProject(dir);
+  const outline = drawIdeas({ type: 'outlinepack', genre: '悬疑', count: 1, seed: 42, chapters: 10 }).results[0];
+  writeArtifact(project, { section: 'setup', content: JSON.stringify(outline.setup_draft), apply: true });
+  writeArtifact(project, { section: 'outline', content: JSON.stringify(outline.draft_outline), apply: true });
+  const clean = checkProject(project, { profile: 'schema', target: 'outline' });
+  assert.equal(clean.findings.length, 0);
+  const setupFile = path.join(dir, 'story', 'setup', 'story_setup.json');
+  const setup = JSON.parse(fs.readFileSync(setupFile, 'utf8'));
+  setup.thread_registry.pop();
+  fs.writeFileSync(setupFile, JSON.stringify(setup, null, 2));
+  const drifted = checkProject(project, { profile: 'schema', target: 'outline' });
+  assert.ok(drifted.findings.some((finding) => finding.rule_id === 'quality.thread.registry_missing_setup'));
+});
+
 test('saved idea draws are readable from the project', () => {
   const dir = tempDir();
   initProject({ name: 'idea store', dir, parts: 1, volumes: 1, chapter: 1 });
