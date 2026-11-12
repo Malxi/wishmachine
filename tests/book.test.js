@@ -526,6 +526,10 @@ test('outline validation checks thread resolution and abandoned threads', () => 
   abandoned.thread_registry[0].status = 'abandoned';
   abandoned.abandoned_threads = [];
   assert.ok(validateOutline(abandoned, { structure: {} }).some((finding) => finding.rule_id === 'quality.outline.abandoned_thread_missing'));
+  const unknownMystery = JSON.parse(JSON.stringify(outline.draft_outline));
+  const resolvedThread = unknownMystery.thread_registry.find((thread) => thread.status === 'resolved');
+  resolvedThread.resolved_mysteries[0].id = 'missing-mystery';
+  assert.ok(validateOutline(unknownMystery, { structure: {} }).some((finding) => finding.rule_id === 'quality.outline.thread.resolved_mystery_missing'));
 });
 
 test('idea validation checks thread status consistency', () => {

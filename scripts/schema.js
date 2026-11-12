@@ -216,6 +216,7 @@ export function validateOutline(outline, config) {
   }
   const chapterIds = [];
   const chaptersById = new Map();
+  const mysteryChapter = new Map();
   let volumeCount = 0;
   let chapterCount = 0;
   outline.parts.forEach((part, pi) => {
@@ -266,6 +267,18 @@ export function validateOutline(outline, config) {
         }
         chapterIds.push(chapter.id);
         chaptersById.set(chapter.id, chapter);
+        for (const key of ['carried', 'planted', 'resolved', 'dropped']) {
+          for (const mystery of chapter.mysteries?.[key] || []) {
+            if (mystery?.id) mysteryChapter.set(mystery.id, chapter.id);
+          }
+        }
+        for (const scene of chapter.scenes || []) {
+          for (const key of ['planted', 'resolved']) {
+            for (const mystery of scene.mysteries?.[key] || []) {
+              if (mystery?.id) mysteryChapter.set(mystery.id, chapter.id);
+            }
+          }
+        }
         for (const key of ['id', 'title', 'summary', 'conflict', 'pacing']) {
           if (typeof chapter[key] !== 'string' || !chapter[key].trim()) {
             findings.push(finding(`schema.outline.chapter.${key}`, 'high', `${chapterId}.${key} must be a non-empty string`, chapterId));
@@ -350,6 +363,18 @@ export function validateOutline(outline, config) {
     });
   });
   for (const thread of threadMap.values()) {
+    for (const [key, rule] of [
+      ['resolved_mysteries', 'quality.outline.thread.resolved_mystery_missing'],
+      ['abandoned_mysteries', 'quality.outline.thread.abandoned_mystery_missing'],
+    ]) {
+      for (const mystery of thread[key] || []) {
+        if (!mystery?.id || !mysteryChapter.has(mystery.id)) {
+          findings.push(finding(rule, 'high', `${thread.id}.${key} references unknown mystery ${mystery?.id || '(missing)'}`, thread.id));
+        } else if (mystery.chapter_id && mysteryChapter.get(mystery.id) !== mystery.chapter_id) {
+          findings.push(finding('quality.outline.thread.mystery_chapter_mismatch', 'medium', `${thread.id}.${key} says ${mystery.id} is in ${mystery.chapter_id}, but it is in ${mysteryChapter.get(mystery.id)}`, thread.id));
+        }
+      }
+    }
     if (thread.status === 'active' && thread.resolved_in) {
       findings.push(finding('quality.outline.thread.active_with_resolution', 'high', `${thread.id} is active but has resolved_in`, thread.id));
     }
