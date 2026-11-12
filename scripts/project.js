@@ -262,6 +262,30 @@ export function undoRegistryOperation(project) {
   };
 }
 
+export function registryBackups(project, options = {}) {
+  const dir = path.join(project.dir, 'logs', 'registry-backups');
+  if (!fs.existsSync(dir)) return { ok: true, action: 'registry-backups', count: 0, backups: [], removed: [] };
+  const keep = Math.max(1, Math.min(100, Number(options.keep) || 10));
+  const names = fs.readdirSync(dir)
+    .filter((name) => fs.statSync(path.join(dir, name)).isDirectory())
+    .sort()
+    .reverse();
+  const removed = [];
+  if (options.prune) {
+    for (const name of names.slice(keep)) {
+      fs.rmSync(path.join(dir, name), { recursive: true, force: true });
+      removed.push(name);
+    }
+  }
+  const backups = names
+    .filter((name) => !removed.includes(name))
+    .map((name) => ({
+      name,
+      path: path.relative(project.dir, path.join(dir, name)).replace(/\\/g, '/'),
+    }));
+  return { ok: true, action: 'registry-backups', count: backups.length, backups, removed };
+}
+
 function appendRegistryOperation(project, operation) {
   const dir = path.join(project.dir, 'logs');
   ensureDir(dir);
