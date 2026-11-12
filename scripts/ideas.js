@@ -980,12 +980,18 @@ function buildOutlinePack(plot, seed, options = {}) {
     }],
   };
   const id = `outlinepack-${seed}-${String(options.index + 1 || 1).padStart(2, '0')}`;
-  const threadRegistry = (plot.storylines || [plot.storyline]).filter(Boolean).map((item, index) => ({
-    id: item.id || `thread-${index + 1}`,
-    name: item.title || `storyline ${index + 1}`,
-    type: index === 0 ? 'main' : 'subplot',
-    importance: index === 0 ? 10 : 6,
-  }));
+  const abandonedIds = new Set(droppedMysteries.map((item) => item.thread_id).filter(Boolean));
+  const threadRegistry = (plot.storylines || [plot.storyline]).filter(Boolean).map((item, index) => {
+    const id = item.id || `thread-${index + 1}`;
+    return {
+      id,
+      name: item.title || `storyline ${index + 1}`,
+      type: index === 0 ? 'main' : 'subplot',
+      importance: index === 0 ? 10 : 6,
+      status: abandonedIds.has(id) ? 'abandoned' : 'active',
+      resolved_in: null,
+    };
+  });
   return {
     id,
     outline_id: id,
@@ -1077,12 +1083,19 @@ function buildMultiVolumeOutlinePack(plot, seed, options = {}) {
     scenes_per_chapter: Math.max(1, Math.min(5, Number(options.scenes) || 3)),
   };
   const setupDraft = buildSetupDraft({ ...plot, storylines }, { chapter_config: chapterConfig });
-  const threadRegistry = storylines.map((item, index) => ({
-    id: item.id || `thread-${index + 1}`,
-    name: item.title || `storyline ${index + 1}`,
-    type: index === 0 ? 'main' : 'subplot',
-    importance: index === 0 ? 10 : 6,
-  }));
+  const allDropped = bases.flatMap((base) => base.dropped_mysteries || []);
+  const abandonedIds = new Set(allDropped.map((mystery) => mystery.thread_id));
+  const threadRegistry = storylines.map((item, index) => {
+    const id = item.id || `thread-${index + 1}`;
+    return {
+      id,
+      name: item.title || `storyline ${index + 1}`,
+      type: index === 0 ? 'main' : 'subplot',
+      importance: index === 0 ? 10 : 6,
+      status: abandonedIds.has(id) ? 'abandoned' : 'active',
+      resolved_in: null,
+    };
+  });
   return {
     ...bases[0],
     id,
@@ -1101,8 +1114,8 @@ function buildMultiVolumeOutlinePack(plot, seed, options = {}) {
     },
     chapter_config: chapterConfig,
     pending_mysteries: carriedMysteries,
-    dropped_mysteries: bases.flatMap((base) => base.dropped_mysteries || []),
-    abandoned_threads: bases.flatMap((base) => base.abandoned_threads || []),
+    dropped_mysteries: allDropped,
+    abandoned_threads: allDropped.map((item) => item.abandoned_thread).filter(Boolean),
   };
 }
 
@@ -1279,6 +1292,62 @@ function namecards(rng, seed, count, roles = [], genre = '') {
     });
   }
   return results;
+}
+
+export function validateIdeaDraw(draw) {
+  const results = Array.isArray(draw) ? draw : (draw?.results || []);
+  const findings = [];
+  const add = (severity, rule, target, issue, suggestion) => {
+    findings.push({ rule_id: rule, severity, target_id: target, issue, suggestion });
+  };
+  for (const result of results) {
+    const registry = result.thread_registry;
+    if (!Array.isArray(registry)) continue;
+    const ids = new Set();
+    for (const thread of registry) {
+      if (!thread?.id) {
+        add('high', 'idea.thread.missing_id', result.id || 'outlinepack', 'thread registry entry has no id', 'Add a stable thread id.');
+        continue;
+      }
+      if (ids.has(thread.id)) {
+        add('high', 'idea.thread.duplicate_id', thread.id, 'duplicate thread id', 'Give each thread a unique id.');
+      }
+      ids.add(thread.id);
+    }
+    for (const storyline of result.setup_draft?.storylines || []) {
+      if (!storyline.thread_id || !ids.has(storyline.thread_id)) {
+        add('high', 'idea.thread.unknown_setup_thread', storyline.name || 'storyline', 'setup storyline references an unknown thread id', 'Use an id from thread_registry.');
+      }
+    }
+    const checkMystery = (mystery, target) => {
+      if (mystery?.thread_id && !ids.has(mystery.thread_id)) {
+        add('high', 'idea.thread.unknown_mystery_thread', target, `mystery references unknown thread ${mystery.thread_id}`, 'Use an id from thread_registry or add the thread.');
+      }
+    };
+    for (const chapter of result.chapters || []) {
+      for (const key of ['carried', 'planted', 'resolved', 'dropped']) {
+        for (const mystery of chapter.mysteries?.[key] || []) {
+          checkMystery(mystery, chapter.id);
+        }
+      }
+      for (const scene of chapter.scenes || []) {
+        for (const key of ['planted', 'resolved']) {
+          for (const mystery of scene.mysteries?.[key] || []) {
+            checkMystery(mystery, `${chapter.id}-S${scene.order}`);
+          }
+        }
+      }
+    }
+    for (const thread of result.abandoned_threads || []) {
+      if (thread?.thread_id && !ids.has(thread.thread_id)) {
+        add('high', 'idea.thread.unknown_abandoned_thread', thread.thread_id, 'abandoned thread is not in thread_registry', 'Keep abandoned threads in the registry with status abandoned.');
+      }
+    }
+  }
+  return {
+    ok: findings.length === 0,
+    findings,
+  };
 }
 
 export function ideasTypes() {

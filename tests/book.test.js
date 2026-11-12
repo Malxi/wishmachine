@@ -6,7 +6,7 @@ import path from 'node:path';
 import http from 'node:http';
 import { initProject, loadProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, doctorProject, saveIdeaDraw, saveImportedIdeas, saveResearchReport, ingestSource, discoverSources, searchSources, buildProjectGraph, writeArtifact, readSection } from '../scripts/project.js';
 import { checkProject, validateOutline, validateSetup } from '../scripts/schema.js';
-import { drawIdeas } from '../scripts/ideas.js';
+import { drawIdeas, validateIdeaDraw } from '../scripts/ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference } from '../scripts/guides.js';
 
 function tempDir() {
@@ -473,7 +473,9 @@ test('outlinepack expands into multiple volumes', () => {
   assert.ok(outline.setup_draft.storylines[0].thread_id);
   assert.ok(outline.thread_registry.length >= 2);
   assert.ok(outline.thread_registry.some((thread) => thread.id === outline.setup_draft.storylines[0].thread_id));
+  assert.ok(outline.thread_registry.every((thread) => thread.status === 'active' || thread.status === 'abandoned'));
   assert.ok(outline.setup_draft.core_cast[0].storyline_refs.includes(outline.setup_draft.storylines[0].thread_id));
+  assert.equal(validateIdeaDraw({ results: [outline] }).ok, true);
   assert.equal(outline.setup_draft.premises[0].progression.length, 4);
   assert.ok(outline.setup_draft.world_timeline.length >= 2);
   assert.ok(outline.setup_draft.world_resources.every((resource) => ['能源', '消耗品', '材料', '货币'].includes(resource.category)));
@@ -491,6 +493,14 @@ test('long outlinepack records dropped mysteries', () => {
   assert.ok(outline.dropped_mysteries.every((mystery) => mystery.abandoned_thread?.thread_id));
   assert.ok(outline.abandoned_threads.length > 0);
   assert.ok(outline.chapters.some((chapter) => chapter.mysteries.dropped.length > 0));
+});
+
+test('idea validation rejects unknown thread ids', () => {
+  const outline = drawIdeas({ type: 'outlinepack', genre: '悬疑', count: 1, seed: 42, chapters: 10 }).results[0];
+  outline.chapters[0].mysteries.planted[0].thread_id = 'missing-thread';
+  const result = validateIdeaDraw({ results: [outline] });
+  assert.equal(result.ok, false);
+  assert.ok(result.findings.some((finding) => finding.rule_id === 'idea.thread.unknown_mystery_thread'));
 });
 
 test('plotpack combines worldpack, cast relations and chapter beats', () => {
