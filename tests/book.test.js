@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import http from 'node:http';
-import { initProject, loadProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, doctorProject, saveIdeaDraw, saveImportedIdeas, saveResearchReport, ingestSource, discoverSources, searchSources, buildProjectGraph, projectRegistryStatus, cleanRegistry, abandonMystery, writeArtifact, readSection } from '../scripts/project.js';
+import { initProject, loadProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, doctorProject, saveIdeaDraw, saveImportedIdeas, saveResearchReport, ingestSource, discoverSources, searchSources, buildProjectGraph, projectRegistryStatus, registryOperations, cleanRegistry, abandonMystery, writeArtifact, readSection } from '../scripts/project.js';
 import { checkProject, validateOutline, validateSetup } from '../scripts/schema.js';
 import { drawIdeas, validateIdeaDraw } from '../scripts/ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference } from '../scripts/guides.js';
@@ -922,6 +922,7 @@ test('book registry abandon marks a mystery as manually dropped', () => {
   assert.equal(dropped.reason, '作者决定放弃');
   assert.ok(after.parts[0].volumes[0].chapters.some((chapter) => chapter.mysteries.dropped.some((mystery) => mystery.id === target.id)));
   assert.ok(projectRegistryStatus(project).operations.some((operation) => operation.action === 'abandon' && operation.id === target.id));
+  assert.ok(registryOperations(project, { limit: 20 }).operations.some((operation) => operation.action === 'abandon'));
 });
 
 test('saved idea draws are readable from the project', () => {

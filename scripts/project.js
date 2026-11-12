@@ -329,6 +329,18 @@ export function abandonMystery(project, mysteryId, reason = 'manual', options = 
   };
 }
 
+export function registryOperations(project, options = {}) {
+  const limit = Math.max(1, Math.min(200, Number(options.limit) || 20));
+  const operations = readRegistryOperations(project, limit);
+  return {
+    ok: true,
+    action: 'registry-log',
+    path: 'logs/registry-operations.jsonl',
+    count: operations.length,
+    operations,
+  };
+}
+
 export function projectRegistryStatus(project) {
   const setupFile = path.join(project.dir, 'story', 'setup', 'story_setup.json');
   const outlineFile = path.join(project.dir, 'story', 'compose', 'outline.json');
