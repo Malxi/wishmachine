@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import http from 'node:http';
-import { initProject, loadProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, doctorProject, saveIdeaDraw, saveImportedIdeas, saveResearchReport, ingestSource, discoverSources, searchSources, buildProjectGraph, projectRegistryStatus, registryOperations, cleanRegistry, abandonMystery, undoRegistryOperation, registryBackups, writeArtifact, readSection } from '../scripts/project.js';
+import { initProject, loadProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, doctorProject, saveIdeaDraw, saveImportedIdeas, saveResearchReport, ingestSource, discoverSources, searchSources, buildProjectGraph, projectRegistryStatus, registryOperations, cleanRegistry, abandonMystery, undoRegistryOperation, registryBackups, createRegistrySnapshot, restoreRegistryBackup, writeArtifact, readSection } from '../scripts/project.js';
 import { checkProject, validateOutline, validateSetup } from '../scripts/schema.js';
 import { drawIdeas, validateIdeaDraw } from '../scripts/ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference } from '../scripts/guides.js';
@@ -934,6 +934,24 @@ test('book registry abandon marks a mystery as manually dropped', () => {
   assert.equal(undo.action, 'undo');
   const restored = JSON.parse(fs.readFileSync(outlineFile, 'utf8'));
   assert.equal(restored.mystery_registry.find((mystery) => mystery.id === target.id).status, 'resolved');
+});
+
+test('manual registry snapshot can be restored', () => {
+  const dir = tempDir();
+  initProject({ name: 'registry snapshot', dir, parts: 1, volumes: 1, chapter: 10 });
+  const project = loadProject(dir);
+  const outline = drawIdeas({ type: 'outlinepack', genre: '悬疑', count: 1, seed: 42, chapters: 10 }).results[0];
+  writeArtifact(project, { section: 'setup', content: JSON.stringify(outline.setup_draft), apply: true });
+  writeArtifact(project, { section: 'outline', content: JSON.stringify(outline.draft_outline), apply: true });
+  const snapshot = createRegistrySnapshot(project);
+  const outlineFile = path.join(dir, 'story', 'compose', 'outline.json');
+  const before = JSON.parse(fs.readFileSync(outlineFile, 'utf8'));
+  before.thread_registry = [];
+  fs.writeFileSync(outlineFile, JSON.stringify(before, null, 2));
+  const restored = restoreRegistryBackup(project, snapshot.backup.split('/').pop());
+  assert.equal(restored.ok, true);
+  const after = JSON.parse(fs.readFileSync(outlineFile, 'utf8'));
+  assert.ok(after.thread_registry.length > 0);
 });
 
 test('saved idea draws are readable from the project', () => {

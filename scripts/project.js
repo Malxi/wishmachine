@@ -265,6 +265,41 @@ export function undoRegistryOperation(project, options = {}) {
   };
 }
 
+export function createRegistrySnapshot(project) {
+  const backup = createRegistryBackup(project, 'manual');
+  return {
+    ok: true,
+    action: 'registry-backup',
+    backup,
+    path: backup,
+  };
+}
+
+export function restoreRegistryBackup(project, backupName) {
+  if (!backupName) throw new Error('restoreRegistryBackup requires a backup name');
+  const root = path.resolve(project.dir, 'logs', 'registry-backups');
+  const backupDir = path.resolve(root, backupName);
+  if (!backupDir.startsWith(root)) throw new Error('registry backup is outside the backup directory');
+  const setupSource = path.join(backupDir, 'story_setup.json');
+  const outlineSource = path.join(backupDir, 'outline.json');
+  if (!fs.existsSync(setupSource) || !fs.existsSync(outlineSource)) {
+    throw new Error(`registry backup not found: ${backupName}`);
+  }
+  const setupFile = path.join(project.dir, 'story', 'setup', 'story_setup.json');
+  const outlineFile = path.join(project.dir, 'story', 'compose', 'outline.json');
+  fs.copyFileSync(setupSource, setupFile);
+  fs.copyFileSync(outlineSource, outlineFile);
+  appendRegistryOperation(project, {
+    action: 'restore',
+    backup: path.relative(project.dir, backupDir).replace(/\\/g, '/'),
+  });
+  return {
+    ok: true,
+    action: 'restore',
+    backup: backupName,
+  };
+}
+
 export function registryBackups(project, options = {}) {
   const dir = path.join(project.dir, 'logs', 'registry-backups');
   if (!fs.existsSync(dir)) return { ok: true, action: 'registry-backups', count: 0, backups: [], removed: [] };

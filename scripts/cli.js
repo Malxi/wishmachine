@@ -1,10 +1,10 @@
-import { loadProject, initProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, doctorProject, saveIdeaDraw, saveImportedIdeas, saveResearchReport, discoverSources, searchSources, readSection, writeArtifact, projectRegistryStatus, cleanRegistry, abandonMystery, registryOperations, undoRegistryOperation, registryBackups } from './project.js';
+import { loadProject, initProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, doctorProject, saveIdeaDraw, saveImportedIdeas, saveResearchReport, discoverSources, searchSources, readSection, writeArtifact, projectRegistryStatus, cleanRegistry, abandonMystery, registryOperations, undoRegistryOperation, registryBackups, createRegistrySnapshot, restoreRegistryBackup } from './project.js';
 import { checkProject } from './schema.js';
 import { readJson } from './util.js';
 import { drawIdeas, ideasTypes, validateIdeaDraw } from './ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference, listSkills, readSkill } from './guides.js';
 
-const VERSION = '0.2.16';
+const VERSION = '0.2.17';
 const BOOLEAN_FLAGS = new Set(['apply', 'json', 'help', 'h', 'dry-run', 'force', 'ingest']);
 const COMMANDS = new Set(['book', 'check', 'ideas', 'gen', 'state', 'audit', 'refresh', 'export', 'doctor', 'version', 'help']);
 
@@ -101,6 +101,8 @@ Commands:
   book registry log [--limit 20] [--action abandon|clean] [--since ISO] [--dir <project>]
   book registry undo [--operation <id>] [--dir <project>]
   book registry backups [--keep 10] [--prune] [--dir <project>]
+  book registry backup [--dir <project>]
+  book registry restore --backup <name> [--dir <project>]
   book registry abandon --mystery <id> [--reason <text>] [--dry-run] [--dir <project>]
   book write <setup|outline|craft|chapter|recap|research> [--mode replace|patch|append] [--apply] [--id <id>] [--from-idea <id>]
   check [--profile quality|schema|custom|all] [--target setup|outline|chapter] [--id <id>]
@@ -161,6 +163,16 @@ async function runBook(args, flags) {
   }
   if (sub === 'registry') {
     const project = loadProject(stringFlag(flags, 'dir', ''));
+    if (args[1] === 'backup') {
+      print(createRegistrySnapshot(project));
+      return 0;
+    }
+    if (args[1] === 'restore') {
+      const backup = stringFlag(flags, 'backup', '');
+      if (!backup) fail('book registry restore requires --backup');
+      print(restoreRegistryBackup(project, backup));
+      return 0;
+    }
     if (args[1] === 'backups') {
       print(registryBackups(project, {
         keep: intFlag(flags, 'keep', 10),
