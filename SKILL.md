@@ -13,7 +13,7 @@ examples_en:
   - "Create a 3-volume × 5-chapter science-fiction project"
   - "Check the outline for blocking findings"
   - "Draw 12 science-fiction name cards"
-version: 0.1.75
+version: 0.1.76
 author: Malxi
 ---
 
@@ -164,7 +164,8 @@ previous `hook`. Pending mysteries carry across chapters/volumes and are
 resolved at climax/resolution; `pending_mysteries` is capped. Mysteries are
 structured objects with `id`, `question`, `answer`, `payoff`, `importance`,
 `thread`, `thread_id`, `thread_type`, `related_cast`, `related_cast_ids` and
-`status`. Pending mysteries are sorted by importance and capped; dropped
+`status`. `thread_registry` and `setup_draft.storylines[*].thread_id` share the
+same ids; cast `storyline_refs` use those ids. Pending mysteries are sorted by importance and capped; dropped
 mysteries are recorded in `dropped_mysteries` and `abandoned_threads`.
 The saved pack also contains `setup_draft` with main/subplot
 storylines, premise progression and a world timeline.

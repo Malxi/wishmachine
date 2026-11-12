@@ -470,6 +470,10 @@ test('outlinepack expands into multiple volumes', () => {
   assert.equal(outline.volumes[1].chapters[0].entry_from_previous, outline.volumes[0].chapters[3].exit_consequence);
   assert.ok(outline.setup_draft.storylines.length >= 2);
   assert.ok(outline.setup_draft.storylines.some((storyline) => storyline.type === 'subplot'));
+  assert.ok(outline.setup_draft.storylines[0].thread_id);
+  assert.ok(outline.thread_registry.length >= 2);
+  assert.ok(outline.thread_registry.some((thread) => thread.id === outline.setup_draft.storylines[0].thread_id));
+  assert.ok(outline.setup_draft.core_cast[0].storyline_refs.includes(outline.setup_draft.storylines[0].thread_id));
   assert.equal(outline.setup_draft.premises[0].progression.length, 4);
   assert.ok(outline.setup_draft.world_timeline.length >= 2);
   assert.ok(outline.setup_draft.world_resources.every((resource) => ['能源', '消耗品', '材料', '货币'].includes(resource.category)));

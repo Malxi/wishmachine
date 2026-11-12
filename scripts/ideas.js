@@ -980,6 +980,12 @@ function buildOutlinePack(plot, seed, options = {}) {
     }],
   };
   const id = `outlinepack-${seed}-${String(options.index + 1 || 1).padStart(2, '0')}`;
+  const threadRegistry = (plot.storylines || [plot.storyline]).filter(Boolean).map((item, index) => ({
+    id: item.id || `thread-${index + 1}`,
+    name: item.title || `storyline ${index + 1}`,
+    type: index === 0 ? 'main' : 'subplot',
+    importance: index === 0 ? 10 : 6,
+  }));
   return {
     id,
     outline_id: id,
@@ -990,6 +996,7 @@ function buildOutlinePack(plot, seed, options = {}) {
     cast: plot.cast,
     cast_relations: plot.cast_relations,
     chapters: chapterList,
+    thread_registry: threadRegistry,
     draft_outline: draftOutline,
     chapter_config: {
       target_chars: targetChars,
@@ -1070,6 +1077,12 @@ function buildMultiVolumeOutlinePack(plot, seed, options = {}) {
     scenes_per_chapter: Math.max(1, Math.min(5, Number(options.scenes) || 3)),
   };
   const setupDraft = buildSetupDraft({ ...plot, storylines }, { chapter_config: chapterConfig });
+  const threadRegistry = storylines.map((item, index) => ({
+    id: item.id || `thread-${index + 1}`,
+    name: item.title || `storyline ${index + 1}`,
+    type: index === 0 ? 'main' : 'subplot',
+    importance: index === 0 ? 10 : 6,
+  }));
   return {
     ...bases[0],
     id,
@@ -1077,6 +1090,7 @@ function buildMultiVolumeOutlinePack(plot, seed, options = {}) {
     volumes: volumeList,
     chapters,
     setup_draft: setupDraft,
+    thread_registry: threadRegistry,
     draft_outline: {
       parts: [{
         id: 'P1',
@@ -1110,7 +1124,7 @@ function buildSetupDraft(plot, outline) {
     relationship_arc: `${character.contradiction || 'is changed by the plot'} -> ${character.want || 'gets a choice'}`,
     entry_phase: 'opening',
     payoff: character.want || 'their want is tested',
-    storyline_refs: storylineList.map((item) => item.title).filter(Boolean),
+    storyline_refs: storylineList.map((item, index) => item.id || `thread-${index + 1}`).filter(Boolean),
   }));
   return {
     project_name: plot.premise?.title || '未命名故事',
@@ -1135,6 +1149,7 @@ function buildSetupDraft(plot, outline) {
     },
     core_cast: cast,
     storylines: storylineList.map((item, index) => ({
+      thread_id: item.id || `thread-${index + 1}`,
       name: item.title || `storyline ${index + 1}`,
       description: item.promise || item.title || '主角试图改变现状',
       type: index === 0 ? 'main' : 'subplot',
