@@ -661,13 +661,23 @@ function buildOutlinePack(plot, seed, options = {}) {
       climax: plot.storyline?.cost,
       resolution: plot.storyline?.cost,
     };
-    const chapterObstacle = obstacleByFunction[beat.function]
+    const baseObstacle = obstacleByFunction[beat.function]
       || plot.premise?.central_conflict
       || '规则阻止主角推进';
+    const chapterObstacle = entryFromPrevious
+      ? `上一章后果未解：${entryFromPrevious}；${baseObstacle}`
+      : baseObstacle;
     const mysteries = {
       planted: [],
       resolved: [],
     };
+    if (entryFromPrevious) {
+      mysteries.planted.push({
+        mystery: `上一章遗留：${entryFromPrevious}`,
+        status: 'open',
+        carried_from_previous: true,
+      });
+    }
     if (beat.function === 'setup' && plot.premise?.hidden_truth) {
       mysteries.planted.push({
         mystery: plot.premise.hidden_truth,
