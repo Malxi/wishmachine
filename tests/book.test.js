@@ -711,7 +711,11 @@ test('doctor --fix downgrades resolved threads without a resolved mystery', () =
   fs.writeFileSync(outlineFile, JSON.stringify(doc, null, 2));
   const setup = JSON.parse(fs.readFileSync(setupFile, 'utf8'));
   setup.thread_registry.find((item) => item.id === thread.id).status = 'resolved';
+  setup.thread_registry.find((item) => item.id === thread.id).abandoned_history = false;
   fs.writeFileSync(setupFile, JSON.stringify(setup, null, 2));
+  const outlineDoc = JSON.parse(fs.readFileSync(outlineFile, 'utf8'));
+  outlineDoc.thread_registry.find((item) => item.id === thread.id).abandoned_history = false;
+  fs.writeFileSync(outlineFile, JSON.stringify(outlineDoc, null, 2));
   doctorProject(project, { fix: true });
   const repaired = JSON.parse(fs.readFileSync(outlineFile, 'utf8'));
   assert.equal(repaired.thread_registry.find((item) => item.id === thread.id).status, 'active');

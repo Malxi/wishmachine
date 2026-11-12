@@ -985,17 +985,22 @@ function buildOutlinePack(plot, seed, options = {}) {
   const threadRegistry = (plot.storylines || [plot.storyline]).filter(Boolean).map((item, index) => {
     const id = item.id || `thread-${index + 1}`;
     const threadChapters = chapterList.filter((chapter) => chapter.thread_id === id);
+    const resolvedChapters = chapterList
+      .filter((chapter) => (chapter.mysteries?.resolved || []).some((mystery) => mystery.thread_id === id))
+      .map((chapter) => chapter.id);
     const lastChapter = threadChapters[threadChapters.length - 1];
-    const resolvedIn = lastChapter && ['climax', 'resolution'].includes(lastChapter.beat_function)
-      ? lastChapter.id
-      : null;
+    const resolvedIn = resolvedChapters[resolvedChapters.length - 1]
+      || (lastChapter && ['climax', 'resolution'].includes(lastChapter.beat_function) ? lastChapter.id : null);
+    const abandonedHistory = abandonedIds.has(id);
     return {
       id,
       name: item.title || `storyline ${index + 1}`,
       type: index === 0 ? 'main' : 'subplot',
       importance: index === 0 ? 10 : 6,
-      status: resolvedIn ? 'resolved' : abandonedIds.has(id) ? 'abandoned' : 'active',
+      status: resolvedIn ? 'resolved' : abandonedHistory ? 'abandoned' : 'active',
       resolved_in: resolvedIn,
+      resolved_chapters: resolvedChapters,
+      abandoned_history: abandonedHistory,
     };
   });
   return {
@@ -1096,17 +1101,22 @@ function buildMultiVolumeOutlinePack(plot, seed, options = {}) {
   const threadRegistry = storylines.map((item, index) => {
     const id = item.id || `thread-${index + 1}`;
     const threadChapters = chapters.filter((chapter) => chapter.thread_id === id);
+    const resolvedChapters = chapters
+      .filter((chapter) => (chapter.mysteries?.resolved || []).some((mystery) => mystery.thread_id === id))
+      .map((chapter) => chapter.id);
     const lastChapter = threadChapters[threadChapters.length - 1];
-    const resolvedIn = lastChapter && ['climax', 'resolution'].includes(lastChapter.beat_function)
-      ? lastChapter.id
-      : null;
+    const resolvedIn = resolvedChapters[resolvedChapters.length - 1]
+      || (lastChapter && ['climax', 'resolution'].includes(lastChapter.beat_function) ? lastChapter.id : null);
+    const abandonedHistory = abandonedIds.has(id);
     return {
       id,
       name: item.title || `storyline ${index + 1}`,
       type: index === 0 ? 'main' : 'subplot',
       importance: index === 0 ? 10 : 6,
-      status: resolvedIn ? 'resolved' : abandonedIds.has(id) ? 'abandoned' : 'active',
+      status: resolvedIn ? 'resolved' : abandonedHistory ? 'abandoned' : 'active',
       resolved_in: resolvedIn,
+      resolved_chapters: resolvedChapters,
+      abandoned_history: abandonedHistory,
     };
   });
   setupDraft.thread_registry = threadRegistry;
@@ -1345,7 +1355,10 @@ export function validateIdeaDraw(draw) {
             add('high', 'idea.thread.unknown_resolved_chapter', thread.id, `resolved_in ${thread.resolved_in} is not a chapter`, 'Use an existing chapter id.');
           } else {
             if (chapter.thread_id !== thread.id) {
-              add('high', 'idea.thread.resolved_chapter_mismatch', thread.id, `resolved_in ${thread.resolved_in} belongs to ${chapter.thread_id}`, 'Resolve the thread in one of its own chapters.');
+              const resolvedHere = (chapter.mysteries?.resolved || []).some((mystery) => mystery.thread_id === thread.id);
+              if (!resolvedHere) {
+                add('high', 'idea.thread.resolved_chapter_mismatch', thread.id, `resolved_in ${thread.resolved_in} belongs to ${chapter.thread_id}`, 'Resolve the thread in one of its own chapters.');
+              }
             }
             if (!['climax', 'resolution'].includes(chapter.beat_function)) {
               add('high', 'idea.thread.resolved_outside_climax', thread.id, `resolved_in ${thread.resolved_in} is ${chapter.beat_function}`, 'Resolve on a climax or resolution chapter.');

@@ -13,7 +13,7 @@ examples_en:
   - "Create a 3-volume × 5-chapter science-fiction project"
   - "Check the outline for blocking findings"
   - "Draw 12 science-fiction name cards"
-version: 0.1.87
+version: 0.1.88
 author: Malxi
 ---
 
@@ -166,18 +166,11 @@ structured objects with `id`, `question`, `answer`, `payoff`, `importance`,
 `thread`, `thread_id`, `thread_type`, `related_cast`, `related_cast_ids` and
 `status`. `thread_registry` and `setup_draft.storylines[*].thread_id` share the
 same ids; cast `storyline_refs` use those ids. `thread_registry` entries carry
-`status` (active/resolved/abandoned) and `resolved_in`. `ideas validate --id`
-checks status consistency. `book write setup/outline --from-idea` persists
-`thread_registry` into setup/outline. `check --target setup|outline` also reports
-setup/outline registry drift (`registry_missing_setup`, `registry_missing_outline`,
-`status_mismatch`, `resolved_in_mismatch`). `doctor --fix` migrates old projects
-that lack `thread_registry` by deriving stable thread ids from setup storylines;
-it also fills missing chapter thread ids by matching thread names in chapter
-text, preserves resolved status from outline, and repairs setup/outline registry
-drift. Checks also verify that resolved threads have a matching resolved mystery
-and that abandoned threads are listed in `abandoned_threads`. `doctor --fix`
-synchronizes thread status from resolved mysteries and fills abandoned entries;
-it also downgrades a resolved thread when no matching resolved mystery remains. Pending mysteries are sorted by importance and capped; dropped
+`resolved_in`, `resolved_chapters` and `abandoned_history`. `check` reports
+setup/outline registry drift and unknown chapter thread ids. `doctor --fix`
+migrates old projects, synchronizes thread status from resolved mysteries and
+fills abandoned entries; it also downgrades a resolved thread when no matching
+resolved mystery remains. Pending mysteries are sorted by importance and capped; dropped
 mysteries are recorded in `dropped_mysteries` and `abandoned_threads`.
 The saved pack also contains `setup_draft` with main/subplot
 storylines, premise progression and a world timeline.

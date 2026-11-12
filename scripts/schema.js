@@ -128,6 +128,12 @@ export function validateSetup(setup) {
         }
         if (ids.has(thread.id)) findings.push(finding('quality.setup.thread_registry.duplicate', 'high', `duplicate thread id ${thread.id}`, thread.id));
         ids.add(thread.id);
+        if (thread.resolved_chapters !== undefined && !Array.isArray(thread.resolved_chapters)) {
+          findings.push(finding('schema.setup.thread_registry.resolved_chapters', 'medium', `${thread.id}.resolved_chapters must be an array`, thread.id));
+        }
+        if (thread.abandoned_history !== undefined && typeof thread.abandoned_history !== 'boolean') {
+          findings.push(finding('schema.setup.thread_registry.abandoned_history', 'medium', `${thread.id}.abandoned_history must be boolean`, thread.id));
+        }
       }
       for (const storyline of setup.storylines || []) {
         if (storyline?.thread_id && !ids.has(storyline.thread_id)) {
@@ -175,6 +181,15 @@ export function validateOutline(outline, config) {
         }
         threadIds.add(thread.id);
         threadMap.set(thread.id, thread);
+        if (thread.resolved_chapters !== undefined && (!Array.isArray(thread.resolved_chapters) || thread.resolved_chapters.some((id) => typeof id !== 'string'))) {
+          findings.push(finding('schema.outline.thread_registry.resolved_chapters', 'medium', `${thread.id}.resolved_chapters must be an array of chapter ids`, thread.id));
+        }
+        if (thread.resolved_in && Array.isArray(thread.resolved_chapters) && !thread.resolved_chapters.includes(thread.resolved_in)) {
+          findings.push(finding('quality.outline.thread.resolved_chapters_mismatch', 'medium', `${thread.id}.resolved_in is not listed in resolved_chapters`, thread.id));
+        }
+        if (thread.abandoned_history !== undefined && typeof thread.abandoned_history !== 'boolean') {
+          findings.push(finding('schema.outline.thread_registry.abandoned_history', 'medium', `${thread.id}.abandoned_history must be boolean`, thread.id));
+        }
       }
       if (outline.abandoned_threads !== undefined) {
         if (!Array.isArray(outline.abandoned_threads)) {

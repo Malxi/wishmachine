@@ -944,16 +944,6 @@ function migrateThreadRegistry(project) {
   };
 }
 
-function threadResolutionMap(outline) {
-  const map = new Map();
-  for (const chapter of outlineChapters(outline)) {
-    for (const mystery of chapter.mysteries?.resolved || []) {
-      if (mystery?.thread_id) map.set(mystery.thread_id, chapter.id);
-    }
-  }
-  return map;
-}
-
 function loadRegistryDocs(project) {
   const setupFile = path.join(project.dir, 'story', 'setup', 'story_setup.json');
   const outlineFile = path.join(project.dir, 'story', 'compose', 'outline.json');
@@ -970,57 +960,72 @@ function loadRegistryDocs(project) {
   }
 }
 
+function threadResolutionChapters(outline) {
+  const map = new Map();
+  for (const chapter of outlineChapters(outline)) {
+    for (const mystery of chapter.mysteries?.resolved || []) {
+      if (!mystery?.thread_id) continue;
+      if (!map.has(mystery.thread_id)) map.set(mystery.thread_id, []);
+      map.get(mystery.thread_id).push(chapter.id);
+    }
+  }
+  return map;
+}
+
+function sameArray(left, right) {
+  return JSON.stringify(left || []) === JSON.stringify(right || []);
+}
+
 function needsThreadStatusRepair(project) {
   const docs = loadRegistryDocs(project);
   if (!docs) return false;
   const setupRegistry = Array.isArray(docs.setup.thread_registry) ? docs.setup.thread_registry : [];
   const outlineRegistry = Array.isArray(docs.outline.thread_registry) ? docs.outline.thread_registry : [];
   if (!setupRegistry.length || !outlineRegistry.length) return false;
-  const resolved = threadResolutionMap(docs.outline);
+  const resolvedChapters = threadResolutionChapters(docs.outline);
   const abandoned = new Set((docs.outline.abandoned_threads || []).map((item) => item.thread_id));
   return [...setupRegistry, ...outlineRegistry].some((thread) => {
-    const hasResolution = resolved.has(thread.id);
+    const chapters = resolvedChapters.get(thread.id) || [];
+    const hasResolution = chapters.length > 0;
+    const listed = abandoned.has(thread.id);
+    const expectedIn = hasResolution ? chapters[chapters.length - 1] : null;
     return (thread.status === 'active' && hasResolution)
       || (thread.status === 'resolved' && !hasResolution)
-      || (thread.status === 'abandoned' && !abandoned.has(thread.id))
-      || (thread.status === 'abandoned' && hasResolution);
+      || (thread.status === 'abandoned' && !listed)
+      || (thread.status === 'abandoned' && hasResolution)
+      || (thread.resolved_in || null) !== expectedIn
+      || !sameArray(thread.resolved_chapters, chapters)
+      || Boolean(thread.abandoned_history) !== (listed || thread.status === 'abandoned');
   });
 }
 
 function repairThreadStatuses(project) {
   const docs = loadRegistryDocs(project);
   if (!docs) return null;
-  const resolved = threadResolutionMap(docs.outline);
+  const resolvedChapters = threadResolutionChapters(docs.outline);
   let changed = false;
   for (const doc of [docs.setup, docs.outline]) {
     const registry = Array.isArray(doc.thread_registry) ? doc.thread_registry : [];
     const abandoned = Array.isArray(doc.abandoned_threads) ? doc.abandoned_threads : [];
     for (const thread of registry) {
-      const hasResolution = resolved.has(thread.id);
-      if (hasResolution && thread.status !== 'resolved') {
-        thread.status = 'resolved';
-        thread.resolved_in = resolved.get(thread.id);
-        changed = true;
-      }
-      if (!hasResolution && thread.status === 'resolved') {
-        thread.status = 'active';
-        thread.resolved_in = null;
-        changed = true;
-      }
-      if (thread.status === 'abandoned' && hasResolution) {
-        thread.status = 'resolved';
-        thread.resolved_in = resolved.get(thread.id);
-        changed = true;
-      }
-      if (thread.status === 'abandoned' && !abandoned.some((item) => item.thread_id === thread.id)) {
+      const before = JSON.stringify(thread);
+      const chapters = resolvedChapters.get(thread.id) || [];
+      const hasResolution = chapters.length > 0;
+      const wasAbandoned = thread.status === 'abandoned' || thread.abandoned_history === true;
+      const listed = abandoned.some((item) => item.thread_id === thread.id);
+      thread.resolved_chapters = chapters;
+      thread.resolved_in = hasResolution ? chapters[chapters.length - 1] : null;
+      thread.status = hasResolution ? 'resolved' : (wasAbandoned ? 'abandoned' : 'active');
+      thread.abandoned_history = Boolean(wasAbandoned || listed);
+      if (thread.status === 'abandoned' && !listed) {
         abandoned.push({
           thread_id: thread.id,
           thread: thread.name,
           question: thread.name,
           importance: thread.importance,
         });
-        changed = true;
       }
+      if (JSON.stringify(thread) !== before) changed = true;
     }
     if (abandoned.length) doc.abandoned_threads = abandoned;
   }
