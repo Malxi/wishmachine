@@ -910,6 +910,9 @@ test('book registry abandon marks a mystery as manually dropped', () => {
   const before = JSON.parse(fs.readFileSync(outlineFile, 'utf8'));
   const target = before.mystery_registry.find((mystery) => mystery.status === 'resolved');
   assert.ok(target);
+  const dryRun = abandonMystery(project, target.id, '作者决定放弃', { dryRun: true });
+  assert.equal(dryRun.dryRun, true);
+  assert.equal(JSON.parse(fs.readFileSync(outlineFile, 'utf8')).mystery_registry.find((mystery) => mystery.id === target.id).status, 'resolved');
   const result = abandonMystery(project, target.id, '作者决定放弃');
   assert.equal(result.ok, true);
   assert.equal(result.reason, '作者决定放弃');

@@ -4,7 +4,7 @@ import { readJson } from './util.js';
 import { drawIdeas, ideasTypes, validateIdeaDraw } from './ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference, listSkills, readSkill } from './guides.js';
 
-const VERSION = '0.2.9';
+const VERSION = '0.2.10';
 const BOOLEAN_FLAGS = new Set(['apply', 'json', 'help', 'h', 'dry-run', 'force', 'ingest']);
 const COMMANDS = new Set(['book', 'check', 'ideas', 'gen', 'state', 'audit', 'refresh', 'export', 'doctor', 'version', 'help']);
 
@@ -98,7 +98,7 @@ Commands:
   book read <setup|outline|craft|chapter|recap|context|logs|ideas|idea|research|graph> [--id <id>] [--view index|full]
   book registry [--dir <project>]
   book registry clean [--dir <project>] [--dry-run]
-  book registry abandon --mystery <id> [--reason <text>] [--dir <project>]
+  book registry abandon --mystery <id> [--reason <text>] [--dry-run] [--dir <project>]
   book write <setup|outline|craft|chapter|recap|research> [--mode replace|patch|append] [--apply] [--id <id>] [--from-idea <id>]
   check [--profile quality|schema|custom|all] [--target setup|outline|chapter] [--id <id>]
   ideas draw --type namecard|premise|resource|scenario ... [--count 5] [--seed 42] [--dir <project> --save]
@@ -166,7 +166,7 @@ async function runBook(args, flags) {
     if (args[1] === 'abandon') {
       const mystery = stringFlag(flags, 'mystery', '');
       if (!mystery) fail('book registry abandon requires --mystery');
-      const result = abandonMystery(project, mystery, stringFlag(flags, 'reason', 'manual'));
+      const result = abandonMystery(project, mystery, stringFlag(flags, 'reason', 'manual'), { dryRun: boolFlag(flags, 'dry-run') });
       print({ ok: result.ok, section: 'book', action: 'registry-abandon', result });
       return result.ok ? 0 : 1;
     }

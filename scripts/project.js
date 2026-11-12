@@ -218,7 +218,7 @@ function findMysteryNode(outline, id) {
   return null;
 }
 
-export function abandonMystery(project, mysteryId, reason = 'manual') {
+export function abandonMystery(project, mysteryId, reason = 'manual', options = {}) {
   if (!mysteryId) throw new Error('abandonMystery requires a mystery id');
   const docs = loadRegistryDocs(project);
   if (!docs) throw new Error('setup and outline are required before abandoning a mystery');
@@ -228,6 +228,17 @@ export function abandonMystery(project, mysteryId, reason = 'manual') {
   const threadId = mystery.thread_id || '';
   const chapterId = chapter.id;
   const question = mystery.question || mystery.mystery || mysteryId;
+  if (options.dryRun) {
+    return {
+      ok: true,
+      action: 'abandon-dry-run',
+      id: mysteryId,
+      chapter_id: chapterId,
+      thread_id: threadId,
+      reason,
+      dryRun: true,
+    };
+  }
   chapter.mysteries = chapter.mysteries || { carried: [], planted: [], resolved: [], dropped: [] };
   const removed = (list) => (list || []).filter((item) => item.id !== mysteryId);
   chapter.mysteries.carried = removed(chapter.mysteries.carried);

@@ -84,6 +84,7 @@ logs/
 - setup mystery_registry 与 thread_registry 也有排序校验
 - mystery_registry 使用自然章序排序（C2 在 C10 前）
 - check 校验 mystery_registry 排序，doctor 重建后保持稳定顺序
+- `book registry abandon --mystery <id> --dry-run` 预览目标章节/线程，不写入
 - `book registry abandon --mystery <id>` 手工标记 mystery 为 dropped 并记录 reason
 - `book registry clean` 重建 registry 后同步 thread status
 - `book registry clean --dry-run` 预览 removed ids / removedLinks，不写入
