@@ -723,6 +723,57 @@ function buildOutlinePack(plot, seed, options = {}) {
   };
 }
 
+function buildMultiVolumeOutlinePack(plot, seed, options = {}) {
+  const volumes = Math.max(1, Math.min(10, Number(options.volumes) || 1));
+  const chaptersPerVolume = Math.max(3, Math.min(60, Number(options.chaptersPerVolume) || Number(options.chapters) || 10));
+  const bases = [];
+  for (let volumeIndex = 0; volumeIndex < volumes; volumeIndex += 1) {
+    const base = buildOutlinePack(plot, seed, { ...options, chapters: chaptersPerVolume, index: volumeIndex });
+    const volume = base.draft_outline.parts[0].volumes[0];
+    volume.id = `P1-V${volumeIndex + 1}`;
+    volume.title = `第${volumeIndex + 1}卷`;
+    volume.chapters.forEach((chapter, chapterIndex) => {
+      chapter.id = `${volume.id}-C${chapterIndex + 1}`;
+    });
+    volume.payoff_contract = {
+      volume_question: plot.storyline?.promise || '主角能否改变现状？',
+      power_promise: plot.storyline?.escalation || '主角获得一次改变规则的能力。',
+      main_opponent_misread: plot.premise?.hidden_truth || '对手误读了主角真正的筹码。',
+      big_win: plot.storyline?.payoff || '主角完成一次无法撤回的胜利。',
+      visible_reward: plot.storyline?.cost || '胜利留下一个可见的代价。',
+      reputation_shift: '主角从被规则支配的人变成能改写规则的人。',
+      next_bigger_game: volumeIndex === volumes - 1 ? '故事收束，代价留下。' : '更大的对手进入视野。',
+    };
+    bases.push(base);
+  }
+  const volumeList = bases.map((base) => base.draft_outline.parts[0].volumes[0]);
+  const chapters = volumeList.flatMap((volume) => volume.chapters);
+  const id = `outlinepack-${seed}-${String((options.index || 0) + 1).padStart(2, '0')}`;
+  return {
+    ...bases[0],
+    id,
+    outline_id: id,
+    volumes: volumeList,
+    chapters,
+    draft_outline: {
+      parts: [{
+        id: 'P1',
+        title: plot.premise?.title || '未命名故事',
+        summary: plot.premise?.statement || '未填写故事前提。',
+        volumes: volumeList,
+      }],
+    },
+    chapter_config: {
+      target_chars: Math.max(500, Math.min(10000, Number(options.targetChars) || 3000)),
+      min_chars: Math.floor(Math.max(500, Math.min(10000, Number(options.targetChars) || 3000)) * 0.6),
+      volumes,
+      chapters_per_volume: chaptersPerVolume,
+      chapters: chapters.length,
+      scenes_per_chapter: Math.max(1, Math.min(5, Number(options.scenes) || 3)),
+    },
+  };
+}
+
 function resultId(prefix, seed, index) {
   return `${prefix}-${seed}-${String(index + 1).padStart(2, '0')}`;
 }
@@ -827,7 +878,7 @@ export function drawIdeas(options = {}) {
     const outlines = [];
     for (let index = 0; index < count; index += 1) {
       const plot = drawIdeas({ ...options, type: 'plotpack', count: 1, seed: seed + index });
-      outlines.push(buildOutlinePack(plot.results[0], seed + index, { ...options, index }));
+      outlines.push(buildMultiVolumeOutlinePack(plot.results[0], seed + index, { ...options, index }));
     }
     results = outlines;
   } else if (type === 'namecard' || type === 'name' || type === 'cast') {
@@ -920,6 +971,8 @@ export function drawIdeas(options = {}) {
       chapters: Number(options.chapters) || null,
       scenes: Number(options.scenes) || null,
       target_chars: Number(options.targetChars) || null,
+      volumes: Number(options.volumes) || null,
+      chapters_per_volume: Number(options.chaptersPerVolume) || null,
     },
     count: results.length,
     results,

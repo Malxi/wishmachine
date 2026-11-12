@@ -1,6 +1,6 @@
 {
   "name": "wishmachine",
-  "version": "0.1.58",
+  "version": "0.1.59",
   "description": "小说许愿机：把你的奇思妙想变成小说，包含创作流程、确定性检查和丰富参考。",
   "type": "module",
   "license": "MIT",

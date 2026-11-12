@@ -405,6 +405,22 @@ test('outlinepack expands plot beats into chapters and a draft outline', () => {
   assert.deepEqual(validateOutline(outline.draft_outline, { structure: {} }), []);
 });
 
+test('outlinepack expands into multiple volumes', () => {
+  const draw = drawIdeas({
+    type: 'outlinepack', genre: '修仙', count: 1, seed: 42,
+    volumes: 3, chaptersPerVolume: 4, scenes: 3, targetChars: 2000,
+  });
+  const outline = draw.results[0];
+  assert.equal(outline.volumes.length, 3);
+  assert.equal(outline.chapters.length, 12);
+  assert.equal(outline.chapter_config.volumes, 3);
+  assert.equal(outline.chapter_config.chapters_per_volume, 4);
+  assert.equal(outline.chapters[0].id, 'P1-V1-C1');
+  assert.equal(outline.chapters[11].id, 'P1-V3-C4');
+  assert.equal(outline.volumes[2].payoff_contract.big_win.length > 0, true);
+  assert.deepEqual(validateOutline(outline.draft_outline, { structure: {} }), []);
+});
+
 test('plotpack combines worldpack, cast relations and chapter beats', () => {
   const draw = drawIdeas({ type: 'plotpack', genre: '悬疑', count: 1, seed: 42 });
   assert.equal(draw.meta.deck, 'suspense');

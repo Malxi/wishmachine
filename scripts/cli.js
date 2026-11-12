@@ -4,7 +4,7 @@ import { readJson } from './util.js';
 import { drawIdeas, ideasTypes } from './ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference, listSkills, readSkill } from './guides.js';
 
-const VERSION = '0.1.58';
+const VERSION = '0.1.59';
 const BOOLEAN_FLAGS = new Set(['apply', 'json', 'help', 'h', 'dry-run', 'force', 'ingest']);
 const COMMANDS = new Set(['book', 'check', 'ideas', 'gen', 'state', 'audit', 'refresh', 'export', 'doctor', 'version', 'help']);
 
@@ -96,10 +96,11 @@ Commands:
   export [--dir <dir>] [--output drafts/manuscript.md] [--format book|plain]
   doctor [--dir <dir>] [--fix]
   book read <setup|outline|craft|chapter|recap|context|logs|ideas|idea|research|graph> [--id <id>] [--view index|full]
-  book write <setup|outline|craft|chapter|recap|research> [--mode replace|patch|append] [--apply] [--id <id>]
+  book write <setup|outline|craft|chapter|recap|research> [--mode replace|patch|append] [--apply] [--id <id>] [--from-idea <id>]
   check [--profile quality|schema|custom|all] [--target setup|outline|chapter] [--id <id>]
   ideas draw --type namecard|premise|resource|scenario ... [--count 5] [--seed 42] [--dir <project> --save]
   ideas draw --type outlinepack [--chapters 10] [--scenes 3] [--target-chars 3000]
+  ideas draw --type outlinepack [--volumes 3] [--chapters-per-volume 10]
   ideas import --file <cards.json> [--dir <project>] [--type <type>] [--source <source>]
   ideas discover [--topic history|myth|novel] [--limit 3] [--dir <project>]
   ideas search --query <text> [--provider wikipedia|gutenberg] [--limit 3] [--ingest] [--dir <project>]
@@ -197,7 +198,16 @@ async function runBook(args, flags) {
     const section = args[1];
     if (!section) fail('book write requires a section');
     const project = loadProject(stringFlag(flags, 'dir', ''));
-    const content = await stdinText();
+    const fromIdea = stringFlag(flags, 'from-idea', '');
+    let content;
+    if (section === 'outline' && fromIdea) {
+      const draw = readSection(project, 'idea', { id: fromIdea }).draw;
+      const outlineResult = (draw.results || []).find((item) => item.draft_outline);
+      if (!outlineResult) fail(`saved idea ${fromIdea} has no draft_outline`);
+      content = JSON.stringify(outlineResult.draft_outline);
+    } else {
+      content = await stdinText();
+    }
     if (section === 'research') {
       const id = stringFlag(flags, 'id', '');
       const report = JSON.parse(content.charCodeAt(0) === 0xfeff ? content.slice(1) : content);
@@ -287,6 +297,8 @@ async function runIdeas(args, flags) {
     chapters: intFlag(flags, 'chapters', 10),
     scenes: intFlag(flags, 'scenes', 3),
     targetChars: intFlag(flags, 'target-chars', 3000),
+    volumes: intFlag(flags, 'volumes', 1),
+    chaptersPerVolume: intFlag(flags, 'chapters-per-volume', 0),
   });
   if (boolFlag(flags, 'save')) {
     const project = loadProject(stringFlag(flags, 'dir', ''));

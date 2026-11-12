@@ -77,6 +77,8 @@ logs/
 - `worldpack` 输出 `prompt_pack`（positive/negative/style/keywords）和可选 `motif`
 - `plotpack` 把 worldpack、cast 关系、六个章节 beat（setup/inciting/midpoint/crisis/climax/resolution）打包
 - `outlinepack --chapters --scenes --target-chars` 展开为带 scenes、字数目标和 draft_outline 的章节骨架
+- `outlinepack --volumes --chapters-per-volume` 生成多卷 draft_outline
+- `book write outline --from-idea <id>` 把 outlinepack 的 draft_outline 送入正常候选检查
 - `ideas` 题材牌堆：科幻默认 / 修仙 / 悬疑 / 都市 / 历史
 - `ideas draw --save` 持久化到 `story/ideas/`，可用 `book read ideas` / `book read idea` 读取
 - `ideas import` 将联网考究/人工整理的卡片写入同一卡池
