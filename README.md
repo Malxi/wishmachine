@@ -71,11 +71,12 @@ logs/
 - `refresh` 重建 setup/outline markdown
 - `export` 将已写章节导出为带目录、人物和规则的阅读版（`--format plain` 输出纯章节拼接）
 - `doctor` 检查项目目录、配置、setup/outline/craft/recap JSON 有效性、缺失 JSON 和 orphan 文件；`--fix` 会创建缺失目录并写入规范化 structure
-- `ideas namecard/premise/resource/equipment/scenario/provocation/law/event/engine/storyline/location/faction/motif/worldpack/plotpack`
+- `ideas namecard/premise/resource/equipment/scenario/provocation/law/event/engine/storyline/location/faction/motif/worldpack/plotpack/outlinepack`
 - `worldpack` cast 按题材和 protagonist / antagonist / support 选择原型
 - `worldpack` cast 关系图：protagonist / antagonist / support 之间带 `opposes`、`supports`、`drives`、`blocks` 等边
 - `worldpack` 输出 `prompt_pack`（positive/negative/style/keywords）和可选 `motif`
 - `plotpack` 把 worldpack、cast 关系、六个章节 beat（setup/inciting/midpoint/crisis/climax/resolution）打包
+- `outlinepack --chapters --scenes --target-chars` 展开为带 scenes、字数目标和 draft_outline 的章节骨架
 - `ideas` 题材牌堆：科幻默认 / 修仙 / 悬疑 / 都市 / 历史
 - `ideas draw --save` 持久化到 `story/ideas/`，可用 `book read ideas` / `book read idea` 读取
 - `ideas import` 将联网考究/人工整理的卡片写入同一卡池

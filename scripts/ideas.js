@@ -4,7 +4,7 @@ import { XIANXIA_ARCHETYPES, SUSPENSE_ARCHETYPES, URBAN_ARCHETYPES, HISTORY_ARCH
 
 const TYPES = [
   'provocation', 'axiom', 'event', 'law', 'scenario', 'engine',
-  'worldpack', 'plotpack', 'premise', 'storyline', 'cast', 'namecard',
+  'worldpack', 'plotpack', 'outlinepack', 'premise', 'storyline', 'cast', 'namecard',
   'resource', 'equipment', 'itemcard', 'location', 'faction', 'motif', 'reference', 'name',
 ];
 
@@ -584,6 +584,10 @@ function buildPlotpack(pack, seed, index) {
     genre: pack.genre || '',
     theme: pack.theme,
     premise,
+    location: pack.location,
+    faction: pack.faction,
+    equipment: pack.equipment,
+    engine: pack.engine,
     cast: pack.cast,
     cast_relations: pack.cast_relations,
     scenarios: pack.scenarios,
@@ -614,6 +618,108 @@ function buildPlotpack(pack, seed, index) {
         { from: `${id}:plot`, to: `${id}:beat-6`, type: 'ends_with' },
       ],
     },
+  };
+}
+
+function buildOutlinePack(plot, seed, options = {}) {
+  const chapters = Math.max(3, Math.min(60, Number(options.chapters) || 10));
+  const scenesPerChapter = Math.max(1, Math.min(5, Number(options.scenes) || 3));
+  const targetChars = Math.max(500, Math.min(10000, Number(options.targetChars) || 3000));
+  const beats = plot.beats || [];
+  const castNames = (plot.cast || []).map((character) => character.name);
+  const protagonist = castNames[0] || '主角';
+  const pacingByFunction = {
+    setup: 'slow build',
+    inciting: 'rising',
+    midpoint: 'turn',
+    crisis: 'high pressure',
+    climax: 'climax',
+    resolution: 'falling',
+  };
+  const chapterList = [];
+  for (let index = 0; index < chapters; index += 1) {
+    const beat = beats[Math.min(beats.length - 1, Math.floor((index * beats.length) / chapters))] || beats[0] || {
+      act: 'Act I', function: 'setup', beat: '主角进入故事。',
+    };
+    const scenes = Array.from({ length: scenesPerChapter }, (_, sceneIndex) => ({
+      order: sceneIndex + 1,
+      pov: protagonist,
+      goal: sceneIndex === 0 ? beat.beat : `${beat.beat}（推进 ${sceneIndex + 1}）`,
+      location: plot.location?.name || '关键地点',
+      characters: castNames.slice(0, Math.min(3, castNames.length)),
+      words: Math.ceil(targetChars / scenesPerChapter),
+      tone: beat.act,
+      beats: [beat.function, sceneIndex === scenesPerChapter - 1 ? 'turn' : 'pressure'],
+    }));
+    const events = scenes.map((scene, sceneIndex) => ({
+      type: 'plot',
+      characters: scene.characters,
+      actor: protagonist,
+      action: 'advance',
+      target: scene.goal,
+      target_type: 'scene',
+      details: scene.goal,
+      order: sceneIndex + 1,
+    }));
+    chapterList.push({
+      id: `P1-V1-C${index + 1}`,
+      title: `第${index + 1}章 · ${beat.function}`,
+      summary: beat.beat,
+      characters: castNames,
+      location: plot.location?.name || '关键地点',
+      events,
+      conflict: plot.premise?.central_conflict || plot.premise?.conflict || '主角必须做出选择。',
+      pacing: pacingByFunction[beat.function] || 'rising',
+      beat_function: beat.function,
+      act: beat.act,
+      target_chars: targetChars,
+      scenes,
+      chapter_payoff: {
+        desire: plot.storyline?.promise || '主角想改变现状。',
+        pressure: plot.premise?.central_conflict || '规则不允许。',
+        clever_move: beat.beat,
+        payoff_moment: plot.storyline?.payoff || '主角完成一次反击。',
+        reward: plot.storyline?.cost || '代价被看见。',
+        social_proof: '见证者承认主角做到了。',
+        hook: index === chapters - 1 ? '故事结束，代价留下。' : '下一章的压力升起。',
+      },
+    });
+  }
+  const volume = {
+    id: 'P1-V1',
+    title: '第一卷',
+    summary: plot.storyline?.promise || plot.premise?.title || '故事的第一卷。',
+    chapters: chapterList,
+  };
+  const draftOutline = {
+    parts: [{
+      id: 'P1',
+      title: plot.premise?.title || '未命名故事',
+      summary: plot.premise?.statement || '未填写故事前提。',
+      volumes: [volume],
+    }],
+  };
+  const id = `outlinepack-${seed}-${String(options.index + 1 || 1).padStart(2, '0')}`;
+  return {
+    id,
+    outline_id: id,
+    plotpack_id: plot.id,
+    worldpack_id: plot.worldpack_id,
+    genre: plot.genre || '',
+    premise: plot.premise,
+    cast: plot.cast,
+    cast_relations: plot.cast_relations,
+    chapters: chapterList,
+    draft_outline: draftOutline,
+    chapter_config: {
+      target_chars: targetChars,
+      min_chars: Math.floor(targetChars * 0.6),
+      chapters,
+      scenes_per_chapter: scenesPerChapter,
+    },
+    prompt_pack: plot.prompt_pack,
+    motif: plot.motif,
+    plotpack: plot,
   };
 }
 
@@ -717,6 +823,13 @@ export function drawIdeas(options = {}) {
       plots.push(plot);
     }
     results = plots;
+  } else if (type === 'outlinepack') {
+    const outlines = [];
+    for (let index = 0; index < count; index += 1) {
+      const plot = drawIdeas({ ...options, type: 'plotpack', count: 1, seed: seed + index });
+      outlines.push(buildOutlinePack(plot.results[0], seed + index, { ...options, index }));
+    }
+    results = outlines;
   } else if (type === 'namecard' || type === 'name' || type === 'cast') {
     results = namecards(rng, seed, count, [], deck.name);
   } else if (type === 'engine') {
@@ -804,6 +917,9 @@ export function drawIdeas(options = {}) {
       category: options.category || '',
       level: options.level || 'axiom',
       mode: options.mode || 'balanced',
+      chapters: Number(options.chapters) || null,
+      scenes: Number(options.scenes) || null,
+      target_chars: Number(options.targetChars) || null,
     },
     count: results.length,
     results,

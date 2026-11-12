@@ -13,7 +13,7 @@ examples_en:
   - "Create a 3-volume × 5-chapter science-fiction project"
   - "Check the outline for blocking findings"
   - "Draw 12 science-fiction name cards"
-version: 0.1.57
+version: 0.1.58
 author: Malxi
 ---
 
@@ -124,6 +124,7 @@ node scripts/wishmachine.js ideas draw --type equipment --count 4 --seed 9
 node scripts/wishmachine.js ideas draw --type motif --count 4 --seed 9
 node scripts/wishmachine.js ideas draw --type worldpack --genre 科幻 --count 1 --seed 42
 node scripts/wishmachine.js ideas draw --type plotpack --genre 悬疑 --count 1 --seed 42
+node scripts/wishmachine.js ideas draw --type outlinepack --genre 悬疑 --chapters 10 --scenes 3 --target-chars 3000 --count 1 --seed 42
 node scripts/wishmachine.js ideas draw --type worldpack --genre 修仙 --count 1 --seed 42 --dir my-book --save
 node scripts/wishmachine.js ideas import --dir my-book --type motif --source "web research" --file cards.json
 node scripts/wishmachine.js ideas discover --dir my-book --topic history --limit 3
@@ -142,6 +143,8 @@ node scripts/wishmachine.js ideas types
 resources, two scenarios, two storylines and four role-tagged cast cards.
 `plotpack` wraps a worldpack with cast relations and six chapter beats
 (setup / inciting / midpoint / crisis / climax / resolution).
+`outlinepack` expands those beats into chapters with 3-5 scenes per chapter,
+target character counts and a draft outline that passes `validateOutline`.
 Some packs also include a `motif` and an `inspired_by` graph edge.
 `cast_relations` links the four characters to each other, the faction, the
 location and the first storyline; each relation carries a `stake`.

@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import http from 'node:http';
 import { initProject, loadProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, doctorProject, saveIdeaDraw, saveImportedIdeas, saveResearchReport, ingestSource, discoverSources, searchSources, buildProjectGraph, writeArtifact, readSection } from '../scripts/project.js';
-import { checkProject } from '../scripts/schema.js';
+import { checkProject, validateOutline } from '../scripts/schema.js';
 import { drawIdeas } from '../scripts/ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference } from '../scripts/guides.js';
 
@@ -390,6 +390,19 @@ test('imported cards and research reports are persisted', () => {
   const research = readSection(project, 'research', { id: imported.saved.id });
   assert.equal(research.report.entities[0].status, 'verified');
   assert.ok(projectState(project).state.research.some((item) => item.name === imported.saved.id));
+});
+
+test('outlinepack expands plot beats into chapters and a draft outline', () => {
+  const draw = drawIdeas({ type: 'outlinepack', genre: '悬疑', count: 1, seed: 42, chapters: 10, scenes: 3, targetChars: 2000 });
+  const outline = draw.results[0];
+  assert.equal(outline.chapters.length, 10);
+  assert.equal(outline.chapters[0].scenes.length, 3);
+  assert.equal(outline.chapters[0].target_chars, 2000);
+  assert.deepEqual(outline.chapters.map((chapter) => chapter.id), Array.from({ length: 10 }, (_, index) => `P1-V1-C${index + 1}`));
+  assert.equal(outline.draft_outline.parts[0].volumes[0].chapters.length, 10);
+  assert.ok(outline.draft_outline.parts[0].volumes[0].chapters[0].events.length > 0);
+  assert.ok(outline.chapters[0].chapter_payoff.desire);
+  assert.deepEqual(validateOutline(outline.draft_outline, { structure: {} }), []);
 });
 
 test('plotpack combines worldpack, cast relations and chapter beats', () => {
