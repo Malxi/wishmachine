@@ -221,8 +221,7 @@ export function validateOutline(outline, config) {
     if (!Array.isArray(outline.thread_registry)) {
       findings.push(finding('schema.outline.thread_registry', 'high', 'thread_registry must be an array'));
     } else {
-      for (const thread of outline.thread_registry) {
-        if (!thread?.id) {
+      for (const thread of outline.thread_registry) {        if (!thread?.id) {
           findings.push(finding('schema.outline.thread_registry.id', 'high', 'thread registry entry needs an id'));
           continue;
         }
@@ -257,6 +256,15 @@ export function validateOutline(outline, config) {
           }
         }
       }
+    }
+  }
+  if (Array.isArray(outline.mystery_registry)) {
+    const sorted = [...outline.mystery_registry].sort((left, right) => (
+      String(left.chapter_id || '').localeCompare(String(right.chapter_id || ''))
+      || String(left.id || '').localeCompare(String(right.id || ''))
+    ));
+    if (sorted.some((mystery, index) => mystery.id !== outline.mystery_registry[index]?.id)) {
+      findings.push(finding('quality.outline.mystery.registry_order', 'low', 'mystery_registry is not sorted by chapter_id/id', 'Sort the registry or run doctor --fix.'));
     }
   }
   const chapterIds = [];

@@ -550,6 +550,9 @@ test('outline validation checks thread resolution and abandoned threads', () => 
   const missingRegistry = JSON.parse(JSON.stringify(outline.draft_outline));
   missingRegistry.mystery_registry = [];
   assert.ok(validateOutline(missingRegistry, { structure: {} }).some((finding) => finding.rule_id === 'quality.outline.thread.mystery_not_in_registry'));
+  const unsorted = JSON.parse(JSON.stringify(outline.draft_outline));
+  unsorted.mystery_registry.reverse();
+  assert.ok(validateOutline(unsorted, { structure: {} }).some((finding) => finding.rule_id === 'quality.outline.mystery.registry_order'));
   const statusMismatch = JSON.parse(JSON.stringify(outline.draft_outline));
   const resolvedMystery = statusMismatch.mystery_registry.find((mystery) => mystery.status === 'resolved' && mystery.id.endsWith('-mystery-core'));
   resolvedMystery.status = 'open';
