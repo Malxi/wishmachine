@@ -200,6 +200,87 @@ export function cleanRegistry(project, options = {}) {
   };
 }
 
+function findMysteryNode(outline, id) {
+  for (const chapter of outlineChapters(outline)) {
+    for (const key of ['carried', 'planted', 'resolved', 'dropped']) {
+      const list = chapter.mysteries?.[key] || [];
+      const index = list.findIndex((mystery) => mystery.id === id);
+      if (index >= 0) return { chapter, key, index, mystery: list[index], scene: null };
+    }
+    for (const scene of chapter.scenes || []) {
+      for (const key of ['planted', 'resolved']) {
+        const list = scene.mysteries?.[key] || [];
+        const index = list.findIndex((mystery) => mystery.id === id);
+        if (index >= 0) return { chapter, key, index, mystery: list[index], scene };
+      }
+    }
+  }
+  return null;
+}
+
+export function abandonMystery(project, mysteryId, reason = 'manual') {
+  if (!mysteryId) throw new Error('abandonMystery requires a mystery id');
+  const docs = loadRegistryDocs(project);
+  if (!docs) throw new Error('setup and outline are required before abandoning a mystery');
+  const found = findMysteryNode(docs.outline, mysteryId);
+  if (!found) throw new Error(`mystery not found: ${mysteryId}`);
+  const { chapter, mystery } = found;
+  const threadId = mystery.thread_id || '';
+  const chapterId = chapter.id;
+  const question = mystery.question || mystery.mystery || mysteryId;
+  chapter.mysteries = chapter.mysteries || { carried: [], planted: [], resolved: [], dropped: [] };
+  const removed = (list) => (list || []).filter((item) => item.id !== mysteryId);
+  chapter.mysteries.carried = removed(chapter.mysteries.carried);
+  chapter.mysteries.planted = removed(chapter.mysteries.planted);
+  chapter.mysteries.resolved = removed(chapter.mysteries.resolved);
+  chapter.mysteries.dropped = removed(chapter.mysteries.dropped);
+  chapter.mysteries.dropped.push({
+    ...mystery,
+    status: 'dropped',
+    reason,
+    dropped_in: chapterId,
+  });
+  for (const scene of chapter.scenes || []) {
+    if (!scene.mysteries) continue;
+    scene.mysteries.planted = removed(scene.mysteries.planted);
+    scene.mysteries.resolved = removed(scene.mysteries.resolved);
+  }
+  docs.outline.dropped_mysteries = Array.isArray(docs.outline.dropped_mysteries) ? docs.outline.dropped_mysteries : [];
+  if (!docs.outline.dropped_mysteries.some((item) => item.id === mysteryId)) {
+    docs.outline.dropped_mysteries.push({
+      ...mystery,
+      status: 'dropped',
+      reason,
+      dropped_in: chapterId,
+    });
+  }
+  for (const doc of [docs.setup, docs.outline]) {
+    for (const thread of doc.thread_registry || []) {
+      if (thread.id !== threadId) continue;
+      thread.resolved_mysteries = (thread.resolved_mysteries || []).filter((item) => item.id !== mysteryId);
+      thread.abandoned_mysteries = thread.abandoned_mysteries || [];
+      if (!thread.abandoned_mysteries.some((item) => item.id === mysteryId)) {
+        thread.abandoned_mysteries.push({ id: mysteryId, chapter_id: chapterId, question });
+      }
+      thread.abandoned_history = true;
+    }
+  }
+  const expected = collectOutlineMysteryRegistry(docs.outline);
+  docs.setup.mystery_registry = expected;
+  docs.outline.mystery_registry = expected;
+  writeJsonAtomic(docs.setupFile, docs.setup);
+  writeJsonAtomic(docs.outlineFile, docs.outline);
+  repairThreadStatuses(project);
+  return {
+    ok: true,
+    action: 'abandon',
+    id: mysteryId,
+    chapter_id: chapterId,
+    thread_id: threadId,
+    reason,
+  };
+}
+
 export function projectRegistryStatus(project) {
   const setupFile = path.join(project.dir, 'story', 'setup', 'story_setup.json');
   const outlineFile = path.join(project.dir, 'story', 'compose', 'outline.json');

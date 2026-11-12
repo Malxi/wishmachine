@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import http from 'node:http';
-import { initProject, loadProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, doctorProject, saveIdeaDraw, saveImportedIdeas, saveResearchReport, ingestSource, discoverSources, searchSources, buildProjectGraph, projectRegistryStatus, cleanRegistry, writeArtifact, readSection } from '../scripts/project.js';
+import { initProject, loadProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, doctorProject, saveIdeaDraw, saveImportedIdeas, saveResearchReport, ingestSource, discoverSources, searchSources, buildProjectGraph, projectRegistryStatus, cleanRegistry, abandonMystery, writeArtifact, readSection } from '../scripts/project.js';
 import { checkProject, validateOutline, validateSetup } from '../scripts/schema.js';
 import { drawIdeas, validateIdeaDraw } from '../scripts/ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference } from '../scripts/guides.js';
@@ -897,6 +897,27 @@ test('book registry clean removes stale registry entries', () => {
   assert.ok(!setup.mystery_registry.some((mystery) => mystery.id === 'stale-mystery'));
   assert.ok(!repaired.mystery_registry.some((mystery) => mystery.id === 'stale-mystery'));
   assert.equal(setup.mystery_registry_version, 2);
+});
+
+test('book registry abandon marks a mystery as manually dropped', () => {
+  const dir = tempDir();
+  initProject({ name: 'manual abandon', dir, parts: 1, volumes: 1, chapter: 10 });
+  const project = loadProject(dir);
+  const outline = drawIdeas({ type: 'outlinepack', genre: '悬疑', count: 1, seed: 42, chapters: 10 }).results[0];
+  writeArtifact(project, { section: 'setup', content: JSON.stringify(outline.setup_draft), apply: true });
+  writeArtifact(project, { section: 'outline', content: JSON.stringify(outline.draft_outline), apply: true });
+  const outlineFile = path.join(dir, 'story', 'compose', 'outline.json');
+  const before = JSON.parse(fs.readFileSync(outlineFile, 'utf8'));
+  const target = before.mystery_registry.find((mystery) => mystery.status === 'resolved');
+  assert.ok(target);
+  const result = abandonMystery(project, target.id, '作者决定放弃');
+  assert.equal(result.ok, true);
+  assert.equal(result.reason, '作者决定放弃');
+  const after = JSON.parse(fs.readFileSync(outlineFile, 'utf8'));
+  const dropped = after.mystery_registry.find((mystery) => mystery.id === target.id);
+  assert.equal(dropped.status, 'dropped');
+  assert.equal(dropped.reason, '作者决定放弃');
+  assert.ok(after.parts[0].volumes[0].chapters.some((chapter) => chapter.mysteries.dropped.some((mystery) => mystery.id === target.id)));
 });
 
 test('saved idea draws are readable from the project', () => {
