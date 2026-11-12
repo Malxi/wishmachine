@@ -841,6 +841,36 @@ export function exportManuscript(project, options = {}) {
   };
 }
 
+function outlineChapters(outline) {
+  const chapters = [];
+  for (const part of outline?.parts || []) {
+    for (const volume of part.volumes || []) {
+      chapters.push(...(volume.chapters || []));
+    }
+  }
+  return chapters;
+}
+
+function needsThreadMigration(project) {
+  const setupFile = path.join(project.dir, 'story', 'setup', 'story_setup.json');
+  const outlineFile = path.join(project.dir, 'story', 'compose', 'outline.json');
+  if (!fs.existsSync(setupFile) || !fs.existsSync(outlineFile)) return false;
+  let setup;
+  let outline;
+  try {
+    setup = readJson(setupFile);
+    outline = readJson(outlineFile);
+  } catch {
+    return false;
+  }
+  const setupRegistry = Array.isArray(setup.thread_registry) ? setup.thread_registry : null;
+  const outlineRegistry = Array.isArray(outline.thread_registry) ? outline.thread_registry : null;
+  if (!setupRegistry || !outlineRegistry) return true;
+  if (JSON.stringify(setupRegistry) !== JSON.stringify(outlineRegistry)) return true;
+  if ((setup.storylines || []).some((storyline) => !storyline.thread_id)) return true;
+  return outlineChapters(outline).some((chapter) => !chapter.thread_id);
+}
+
 function migrateThreadRegistry(project) {
   const setupFile = path.join(project.dir, 'story', 'setup', 'story_setup.json');
   const outlineFile = path.join(project.dir, 'story', 'compose', 'outline.json');
@@ -855,7 +885,6 @@ function migrateThreadRegistry(project) {
   }
   const setupRegistry = Array.isArray(setup.thread_registry) ? setup.thread_registry : null;
   const outlineRegistry = Array.isArray(outline.thread_registry) ? outline.thread_registry : null;
-  if (setupRegistry && outlineRegistry) return null;
   const storylines = Array.isArray(setup.storylines) ? setup.storylines : [];
   const registry = setupRegistry || outlineRegistry || storylines.map((storyline, index) => ({
     id: storyline.thread_id || `thread-${index + 1}`,
@@ -866,12 +895,30 @@ function migrateThreadRegistry(project) {
     resolved_in: null,
   }));
   if (!registry.length) return null;
-  setup.thread_registry = registry;
-  setup.storylines = storylines.map((storyline, index) => ({
-    ...storyline,
-    thread_id: storyline.thread_id || registry[index]?.id || `thread-${index + 1}`,
-  }));
-  outline.thread_registry = registry;
+  const mainThreadId = registry[0].id;
+  let changed = false;
+  if (JSON.stringify(setup.thread_registry) !== JSON.stringify(registry)) {
+    setup.thread_registry = registry;
+    changed = true;
+  }
+  if (JSON.stringify(outline.thread_registry) !== JSON.stringify(registry)) {
+    outline.thread_registry = registry;
+    changed = true;
+  }
+  setup.storylines = storylines.map((storyline, index) => {
+    const threadId = storyline.thread_id || registry[index]?.id || mainThreadId;
+    if (threadId !== storyline.thread_id) changed = true;
+    return { ...storyline, thread_id: threadId };
+  });
+  let chapterCount = 0;
+  for (const chapter of outlineChapters(outline)) {
+    if (!chapter.thread_id) {
+      chapter.thread_id = mainThreadId;
+      chapterCount += 1;
+      changed = true;
+    }
+  }
+  if (!changed) return null;
   writeJsonAtomic(setupFile, setup);
   writeJsonAtomic(outlineFile, outline);
   return {
@@ -879,6 +926,7 @@ function migrateThreadRegistry(project) {
     actions: [
       'migrated setup.thread_registry',
       'migrated outline.thread_registry',
+      ...(chapterCount ? [`filled ${chapterCount} chapter thread_id values`] : []),
     ],
   };
 }
@@ -932,21 +980,11 @@ export function doctorProject(project, options = {}) {
   if (!fs.existsSync(path.join(project.dir, 'story', 'compose', 'outline.json'))) add('low', 'artifact.outline', 'outline JSON is missing', 'Write an outline through book write outline.');
   const setupPath = path.join(project.dir, 'story', 'setup', 'story_setup.json');
   const outlinePath = path.join(project.dir, 'story', 'compose', 'outline.json');
-  let hasThreadRegistry = false;
-  if (fs.existsSync(setupPath) && fs.existsSync(outlinePath)) {
-    try {
-      const setupDoc = readJson(setupPath);
-      const outlineDoc = readJson(outlinePath);
-      hasThreadRegistry = Array.isArray(setupDoc.thread_registry) && Array.isArray(outlineDoc.thread_registry);
-    } catch {
-      hasThreadRegistry = false;
-    }
-    if (!hasThreadRegistry) {
-      add('medium', 'thread.registry_missing', 'setup/outline do not both have thread_registry', 'Run doctor --fix to migrate thread ids, or rerun book write setup/outline.');
-      if (fix) {
-        const migration = migrateThreadRegistry(project);
-        if (migration) actions.push(...migration.actions);
-      }
+  if (fs.existsSync(setupPath) && fs.existsSync(outlinePath) && needsThreadMigration(project)) {
+    add('medium', 'thread.registry_missing_or_drift', 'setup/outline thread_registry is missing or inconsistent', 'Run doctor --fix to migrate thread ids, or rerun book write setup/outline.');
+    if (fix) {
+      const migration = migrateThreadRegistry(project);
+      if (migration) actions.push(...migration.actions);
     }
   }
   let status = { orphan_chapters: [], orphan_recaps: [] };

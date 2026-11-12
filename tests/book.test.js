@@ -634,6 +634,25 @@ test('doctor --fix migrates old projects to thread_registry', () => {
   assert.equal(migratedSetup.thread_registry.length, 2);
   assert.equal(migratedSetup.storylines[0].thread_id, 'thread-1');
   assert.equal(migratedOutline.thread_registry.length, 2);
+  assert.equal(migratedOutline.parts[0].volumes[0].chapters[0].thread_id, 'thread-1');
+});
+
+test('doctor --fix repairs setup/outline registry drift', () => {
+  const dir = tempDir();
+  initProject({ name: 'registry repair', dir, parts: 1, volumes: 1, chapter: 10 });
+  const project = loadProject(dir);
+  const outline = drawIdeas({ type: 'outlinepack', genre: '悬疑', count: 1, seed: 42, chapters: 10 }).results[0];
+  writeArtifact(project, { section: 'setup', content: JSON.stringify(outline.setup_draft), apply: true });
+  writeArtifact(project, { section: 'outline', content: JSON.stringify(outline.draft_outline), apply: true });
+  const outlineFile = path.join(dir, 'story', 'compose', 'outline.json');
+  const tampered = JSON.parse(fs.readFileSync(outlineFile, 'utf8'));
+  tampered.thread_registry.pop();
+  fs.writeFileSync(outlineFile, JSON.stringify(tampered, null, 2));
+  const report = doctorProject(project, { fix: true });
+  assert.equal(report.fixed, true);
+  const setup = JSON.parse(fs.readFileSync(path.join(dir, 'story', 'setup', 'story_setup.json'), 'utf8'));
+  const repaired = JSON.parse(fs.readFileSync(outlineFile, 'utf8'));
+  assert.equal(JSON.stringify(setup.thread_registry), JSON.stringify(repaired.thread_registry));
 });
 
 test('saved idea draws are readable from the project', () => {
