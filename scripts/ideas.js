@@ -651,6 +651,9 @@ function buildOutlinePack(plot, seed, options = {}) {
       order: sceneIndex + 1,
       pov: protagonist,
       goal: sceneIndex === 0 ? beat.beat : `${beat.beat}（推进 ${sceneIndex + 1}）`,
+      obstacle: plot.premise?.central_conflict || '规则阻止主角推进',
+      turn: sceneIndex === 0 ? 'choice' : sceneIndex === scenesPerChapter - 1 ? 'reversal' : 'complication',
+      stakes: plot.storyline?.cost || '这一章必须付出代价',
       location: plot.location?.name || '关键地点',
       characters: castNames.slice(0, Math.min(3, castNames.length)),
       words: Math.ceil(targetChars / scenesPerChapter),
@@ -761,6 +764,17 @@ function buildMultiVolumeOutlinePack(plot, seed, options = {}) {
       visible_reward: volumePlot.storyline?.cost || '胜利留下一个可见的代价。',
       reputation_shift: '主角从被规则支配的人变成能改写规则的人。',
       next_bigger_game: volumeIndex === volumes - 1 ? '故事收束，代价留下。' : '更大的对手进入视野。',
+    };
+    volume.opening_beat = `第${volumeIndex + 1}卷开场：${volumePlot.storyline?.promise || '旧规则仍在运转'}`;
+    volume.closing_beat = `第${volumeIndex + 1}卷收束：${volumePlot.storyline?.payoff || '主角付出代价'}`;
+    volume.mysteries = {
+      planted: [volumePlot.storyline?.midpoint, plot.premise?.hidden_truth].filter(Boolean),
+      resolved: [volumePlot.storyline?.cost].filter(Boolean),
+    };
+    volume.timeline = {
+      start: volumeIndex === 0 ? 'before the first rule' : `after volume ${volumeIndex}`,
+      end: `end of volume ${volumeIndex + 1}`,
+      anchor: volumePlot.storyline?.title || plot.premise?.title || '',
     };
     bases.push(base);
   }

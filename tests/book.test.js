@@ -421,6 +421,14 @@ test('outlinepack expands into multiple volumes', () => {
   assert.ok(new Set(outline.volumes.map((volume) => volume.payoff_contract.big_win)).size > 1);
   assert.ok(outline.volumes[0].chapters.every((chapter) => chapter.beat_function !== 'resolution'));
   assert.ok(outline.volumes[2].chapters.some((chapter) => chapter.beat_function === 'resolution'));
+  assert.ok(outline.volumes[0].opening_beat);
+  assert.ok(outline.volumes[0].closing_beat);
+  assert.ok(outline.volumes[0].mysteries.planted.length > 0);
+  assert.ok(outline.volumes[0].timeline.anchor);
+  assert.ok(outline.chapters[0].scenes[0].obstacle);
+  assert.equal(outline.chapters[0].scenes[0].turn, 'choice');
+  assert.equal(outline.chapters[0].scenes[2].turn, 'reversal');
+  assert.ok(outline.chapters[0].scenes[0].stakes);
   assert.ok(outline.setup_draft.storylines.length >= 2);
   assert.ok(outline.setup_draft.storylines.some((storyline) => storyline.type === 'subplot'));
   assert.equal(outline.setup_draft.premises[0].progression.length, 4);
