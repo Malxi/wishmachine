@@ -687,6 +687,9 @@ function buildOutlinePack(plot, seed, options = {}) {
         answer: plot.storyline?.payoff || '',
         payoff: plot.storyline?.cost || '',
         mystery: plot.premise.hidden_truth,
+        importance: 10,
+        thread: 'premise',
+        related_cast: castNames.slice(0, 3),
         planted_in: chapterId,
         status: 'open',
       });
@@ -698,6 +701,9 @@ function buildOutlinePack(plot, seed, options = {}) {
         answer: plot.storyline?.payoff || '',
         payoff: plot.storyline?.cost || '',
         mystery: scenarioB.twist,
+        importance: 8,
+        thread: 'storyline',
+        related_cast: castNames.slice(0, 3),
         planted_in: chapterId,
         status: 'open',
       });
@@ -718,6 +724,9 @@ function buildOutlinePack(plot, seed, options = {}) {
         answer: plot.storyline?.payoff || '答案浮出水面。',
         payoff: plot.storyline?.cost || '',
         mystery: plot.storyline?.midpoint || plot.premise?.hidden_truth || '核心谜题',
+        importance: 10,
+        thread: 'climax',
+        related_cast: castNames,
         resolved_in: chapterId,
         status: 'resolved',
       });
@@ -753,6 +762,9 @@ function buildOutlinePack(plot, seed, options = {}) {
             answer: plot.storyline?.payoff || '',
             payoff: plot.storyline?.cost || '',
             mystery: plot.premise.hidden_truth,
+            importance: 4,
+            thread: 'scene',
+            related_cast: castNames.slice(0, 2),
             status: 'open',
           }]
           : sceneIndex === 1
@@ -762,6 +774,9 @@ function buildOutlinePack(plot, seed, options = {}) {
               answer: plot.storyline?.payoff || '',
               payoff: plot.storyline?.cost || '',
               mystery: `局部问题：${sceneObstacle}`,
+              importance: 4,
+              thread: 'scene',
+              related_cast: castNames.slice(0, 2),
               status: 'open',
             }]
             : [],
@@ -772,6 +787,9 @@ function buildOutlinePack(plot, seed, options = {}) {
             answer: plot.storyline?.payoff || '答案在场景末出现',
             payoff: plot.storyline?.cost || '',
             mystery: plot.storyline?.midpoint || plot.premise?.hidden_truth || '本章疑问',
+            importance: 6,
+            thread: 'scene',
+            related_cast: castNames.slice(0, 2),
             status: 'resolved',
           }]
           : [],
@@ -852,12 +870,37 @@ function buildOutlinePack(plot, seed, options = {}) {
           answer: item.answer,
           payoff: item.payoff,
           mystery: item.question,
+          importance: item.importance,
+          thread: item.thread,
+          related_cast: item.related_cast,
           from: chapterId,
           status: 'open',
         });
       }
     }
-    pendingMysteries = pendingMysteries.slice(-5);
+    for (const scene of scenes) {
+      if (scene.order !== 2) continue;
+      for (const item of scene.mysteries.planted) {
+        if (!pendingMysteries.some((pending) => pending.id === item.id)) {
+          pendingMysteries.push({
+            id: item.id,
+            question: item.question,
+            answer: item.answer,
+            payoff: item.payoff,
+            mystery: item.question,
+            importance: item.importance,
+            thread: item.thread,
+            related_cast: item.related_cast,
+            from: chapterId,
+            source_scene: `${chapterId}-S${scene.order}`,
+            status: 'open',
+          });
+        }
+      }
+    }
+    pendingMysteries = pendingMysteries
+      .sort((left, right) => (right.importance || 0) - (left.importance || 0))
+      .slice(0, 5);
   }
   const volume = {
     id: volumeId || 'P1-V1',

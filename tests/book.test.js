@@ -453,6 +453,10 @@ test('outlinepack expands into multiple volumes', () => {
   assert.ok(outline.chapters[1].mysteries.carried.length > 0);
   assert.ok(outline.chapters[1].mysteries.carried[0].id);
   assert.ok(outline.chapters[1].mysteries.carried[0].question);
+  assert.ok(outline.chapters[1].mysteries.carried[0].importance);
+  assert.ok(outline.chapters[1].mysteries.carried[0].thread);
+  assert.ok(outline.chapters[1].mysteries.carried[0].related_cast.length > 0);
+  assert.ok(outline.chapters[1].mysteries.carried.some((mystery) => mystery.thread === 'scene'));
   assert.ok(outline.chapters[11].mysteries.resolved.length > 0);
   assert.ok(outline.chapters[11].mysteries.resolved[0].answer);
   assert.ok(outline.volumes[1].chapters[0].mysteries.carried.length > 0);
