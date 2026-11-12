@@ -5,7 +5,7 @@ display_name_en: Novel Wish Machine Research
 description: 对小说许愿机抽出的世界包、历史母题、地点、势力、装备和人物关系做联网考究，标注来源、时代与地区错配，阻止离谱组合进入设定。
 description_zh: 对小说许愿机抽出的世界包、历史母题、地点、势力、装备和人物关系做联网考究，标注来源、时代与地区错配，阻止离谱组合进入设定。
 description_en: Research Wishmachine worldpacks, historical motifs, places, factions, equipment and character relations on the web; cite sources, flag anachronisms, and reject implausible combinations before they enter the story bible.
-version: 0.1.2
+version: 0.1.3
 author: Malxi
 ---
 
@@ -47,6 +47,14 @@ Save a raw source card when you open a page:
 
 ```bash
 node scripts/wishmachine.js ideas ingest --dir my-book --url "https://example.org/source"
+```
+
+Or seed from the bundled source catalog:
+
+```bash
+node scripts/wishmachine.js ideas discover --dir my-book --topic history --limit 3
+node scripts/wishmachine.js ideas discover --dir my-book --topic myth --limit 3
+node scripts/wishmachine.js ideas discover --dir my-book --topic novel --limit 3
 ```
 
 For each `relation`:

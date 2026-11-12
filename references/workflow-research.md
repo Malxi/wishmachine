@@ -45,6 +45,14 @@ node scripts/wishmachine.js ideas ingest --url "https://example.org/source" --di
 It stores the title, URL, retrieval time, keywords and a short excerpt in the
 project card pool. It does not semantically verify the page.
 
+The bundled source catalog can seed a history/myth/novel pass:
+
+```bash
+node scripts/wishmachine.js ideas discover --topic history --limit 3 --dir my-book
+node scripts/wishmachine.js ideas discover --topic myth --limit 3 --dir my-book
+node scripts/wishmachine.js ideas discover --topic novel --limit 3 --dir my-book
+```
+
 ## 3. Compatibility check
 
 Classify each entity:

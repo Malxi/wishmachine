@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import http from 'node:http';
-import { initProject, loadProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, doctorProject, saveIdeaDraw, saveImportedIdeas, saveResearchReport, ingestSource, writeArtifact, readSection } from '../scripts/project.js';
+import { initProject, loadProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, doctorProject, saveIdeaDraw, saveImportedIdeas, saveResearchReport, ingestSource, discoverSources, writeArtifact, readSection } from '../scripts/project.js';
 import { checkProject } from '../scripts/schema.js';
 import { drawIdeas } from '../scripts/ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference } from '../scripts/guides.js';
@@ -296,6 +296,14 @@ test('web source ingestion creates a saved source card', async () => {
     assert.equal(result.results[0].source_url, `http://127.0.0.1:${address.port}/source`);
     assert.ok(result.results[0].keywords.includes('海船'));
     assert.ok(result.saved.id);
+    const catalogPath = path.join(dir, 'catalog.json');
+    fs.writeFileSync(catalogPath, JSON.stringify([{
+      id: 'local', title: '本地史料', url: `http://127.0.0.1:${address.port}/local`, topics: ['history'], type: 'history',
+    }]));
+    const discovered = await discoverSources(project, { catalogPath, topic: 'history' });
+    assert.equal(discovered.count, 1);
+    assert.equal(discovered.results[0].id, 'local');
+    assert.ok(discovered.results[0].ok);
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }

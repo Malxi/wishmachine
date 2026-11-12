@@ -1,10 +1,13 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
   ensureDir, readJson, readText, writeJsonAtomic, writeTextAtomic,
   resolveProjectDir, nowIso, stamp, deepMerge, safeSegment, parseJson,
 } from './util.js';
 import { checkCandidate, checkProject, outlineIndex } from './schema.js';
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 export function initProject(options) {
   const name = String(options.name || '').trim();
@@ -230,6 +233,15 @@ export async function ingestSource(project, url, options = {}) {
   const keywords = keywordText
     ? keywordText.split(/[,，;；]/).map((item) => item.trim()).filter(Boolean).slice(0, 12)
     : [...new Set(title.split(/[\s:：·\-—]+/).filter((item) => item.length >= 2))].slice(0, 8);
+  const headings = [...html.matchAll(/<h[1-3][^>]*>([\s\S]*?)<\/h[1-3]>/gi)]
+    .map((match) => decodeHtml(match[1].replace(/<[^>]+>/g, '')).trim())
+    .filter(Boolean)
+    .slice(0, 20);
+  const entities = [...new Set([title, ...headings])].map((label, index) => ({
+    id: `source-${index + 1}`,
+    type: 'heading',
+    label,
+  }));
   const card = {
     title,
     type: 'web-source',
@@ -238,12 +250,56 @@ export async function ingestSource(project, url, options = {}) {
     retrieved_at: nowIso(),
     description,
     keywords,
+    headings,
+    entities,
+    graph: { entities, relations: [] },
     excerpt: text.slice(0, 4000),
   };
   return saveImportedIdeas(project, { results: [card] }, {
     type: options.type || 'source',
     source: parsed.href,
   });
+}
+
+export async function discoverSources(project, options = {}) {
+  const catalogPath = options.catalogPath || path.join(ROOT, 'references', 'source-catalog.json');
+  const catalog = readJson(catalogPath);
+  const topic = String(options.topic || '').toLowerCase();
+  const limit = Math.max(1, Math.min(20, Number(options.limit) || 3));
+  const candidates = catalog
+    .filter((source) => !topic || (source.topics || []).map((item) => item.toLowerCase()).includes(topic))
+    .slice(0, limit);
+  if (!candidates.length) {
+    throw new Error(`no sources for topic: ${topic || '(all)'}`);
+  }
+  const results = [];
+  for (const source of candidates) {
+    try {
+      const draw = await ingestSource(project, source.url, { type: 'source' });
+      results.push({
+        id: source.id,
+        title: source.title,
+        url: source.url,
+        ok: true,
+        saved: draw.saved,
+      });
+    } catch (error) {
+      results.push({
+        id: source.id,
+        title: source.title,
+        url: source.url,
+        ok: false,
+        error: error.message,
+      });
+    }
+  }
+  return {
+    ok: results.some((item) => item.ok),
+    action: 'discover',
+    topic: topic || 'all',
+    count: results.length,
+    results,
+  };
 }
 
 export function saveResearchReport(project, id, report) {
