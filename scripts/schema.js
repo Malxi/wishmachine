@@ -116,6 +116,12 @@ export function validateSetup(setup) {
       }
     });
   }
+  if (setup.mystery_registry_version !== undefined && typeof setup.mystery_registry_version !== 'number') {
+    findings.push(finding('schema.setup.mystery_registry_version', 'medium', 'mystery_registry_version must be a number'));
+  }
+  if (setup.thread_registry_version !== undefined && typeof setup.thread_registry_version !== 'number') {
+    findings.push(finding('schema.setup.thread_registry_version', 'medium', 'thread_registry_version must be a number'));
+  }
   if (setup.thread_registry !== undefined) {
     if (!Array.isArray(setup.thread_registry)) {
       findings.push(finding('schema.setup.thread_registry', 'high', 'thread_registry must be an array'));
@@ -189,6 +195,12 @@ export function validateOutline(outline, config) {
   const threadMap = new Map();
   const mysteryRegistryIds = new Set();
   const hasMysteryRegistry = outline.mystery_registry !== undefined;
+  if (outline.mystery_registry_version !== undefined && typeof outline.mystery_registry_version !== 'number') {
+    findings.push(finding('schema.outline.mystery_registry_version', 'medium', 'mystery_registry_version must be a number'));
+  }
+  if (outline.thread_registry_version !== undefined && typeof outline.thread_registry_version !== 'number') {
+    findings.push(finding('schema.outline.thread_registry_version', 'medium', 'thread_registry_version must be a number'));
+  }
   if (outline.mystery_registry !== undefined) {
     if (!Array.isArray(outline.mystery_registry)) {
       findings.push(finding('schema.outline.mystery_registry', 'high', 'mystery_registry must be an array'));

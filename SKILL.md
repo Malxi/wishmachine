@@ -13,7 +13,7 @@ examples_en:
   - "Create a 3-volume × 5-chapter science-fiction project"
   - "Check the outline for blocking findings"
   - "Draw 12 science-fiction name cards"
-version: 0.1.95
+version: 0.1.96
 author: Malxi
 ---
 
@@ -167,9 +167,10 @@ structured objects with `id`, `question`, `answer`, `payoff`, `importance`,
 `status`. `thread_registry` and `setup_draft.storylines[*].thread_id` share the
 same ids; cast `storyline_refs` use those ids. `thread_registry` entries carry
 `resolved_in`, `resolved_chapters`, `resolved_mysteries`, `abandoned_history` and
-`abandoned_mysteries`. `mystery_registry` stores the deduplicated mystery objects; `check` reports
-setup/outline registry drift (including mystery registry drift), unknown chapter
-thread ids, and thread references to missing or non-registry mystery ids.
+`abandoned_mysteries`. `mystery_registry` stores the deduplicated mystery objects sorted by chapter/id;
+both registries carry `*_registry_version: 1`. `check` reports setup/outline
+registry drift (including mystery registry drift), unknown chapter thread ids,
+and thread references to missing or non-registry mystery ids.
 `doctor --fix` rebuilds a missing or stale mystery registry from chapter data.
 Checks also flag stale registry entries, final-status mismatches and resolved
 or dropped mysteries that are not linked from their thread. `doctor --fix`

@@ -653,7 +653,10 @@ function collectMysteryRegistry(chapters) {
       }
     }
   }
-  return [...registry.values()];
+  return [...registry.values()].sort((left, right) => (
+    String(left.chapter_id || '').localeCompare(String(right.chapter_id || ''))
+    || String(left.id || '').localeCompare(String(right.id || ''))
+  ));
 }
 
 function buildOutlinePack(plot, seed, options = {}) {
@@ -1060,7 +1063,9 @@ function buildOutlinePack(plot, seed, options = {}) {
     cast_relations: plot.cast_relations,
     chapters: chapterList,
     mystery_registry: mysteryRegistry,
+    mystery_registry_version: 1,
     thread_registry: threadRegistry,
+    thread_registry_version: 1,
     draft_outline: draftOutline,
     chapter_config: {
       target_chars: targetChars,
@@ -1148,6 +1153,8 @@ function buildMultiVolumeOutlinePack(plot, seed, options = {}) {
   setupDraft.abandoned_threads = abandonedThreads;
   setupDraft.dropped_mysteries = allDropped;
   setupDraft.mystery_registry = mysteryRegistry;
+  setupDraft.mystery_registry_version = 1;
+  setupDraft.thread_registry_version = 1;
   const threadRegistry = storylines.map((item, index) => {
     const id = item.id || `thread-${index + 1}`;
     const threadChapters = chapters.filter((chapter) => chapter.thread_id === id);
@@ -1188,12 +1195,16 @@ function buildMultiVolumeOutlinePack(plot, seed, options = {}) {
     chapters,
     setup_draft: setupDraft,
     mystery_registry: mysteryRegistry,
+    mystery_registry_version: 1,
     thread_registry: threadRegistry,
+    thread_registry_version: 1,
     draft_outline: {
       thread_registry: threadRegistry,
+      thread_registry_version: 1,
       abandoned_threads: abandonedThreads,
       dropped_mysteries: allDropped,
       mystery_registry: mysteryRegistry,
+      mystery_registry_version: 1,
       parts: [{
         id: 'P1',
         title: plot.premise?.title || '未命名故事',

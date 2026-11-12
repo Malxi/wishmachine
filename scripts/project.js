@@ -870,7 +870,10 @@ function collectOutlineMysteryRegistry(outline) {
       }
     }
   }
-  return [...registry.values()];
+  return [...registry.values()].sort((left, right) => (
+    String(left.chapter_id || '').localeCompare(String(right.chapter_id || ''))
+    || String(left.id || '').localeCompare(String(right.id || ''))
+  ));
 }
 
 function needsThreadMigration(project) {
@@ -891,6 +894,8 @@ function needsThreadMigration(project) {
   if (JSON.stringify(setupRegistry) !== JSON.stringify(outlineRegistry)) return true;
   if ((setup.storylines || []).some((storyline) => !storyline.thread_id)) return true;
   if (outlineChapters(outline).some((chapter) => !chapter.thread_id)) return true;
+  if (setup.thread_registry_version !== 1 || outline.thread_registry_version !== 1) return true;
+  if (setup.mystery_registry_version !== 1 || outline.mystery_registry_version !== 1) return true;
   const expectedMysteries = collectOutlineMysteryRegistry(outline);
   const hasMysteryRegistry = Array.isArray(setup.mystery_registry) || Array.isArray(outline.mystery_registry);
   if (hasMysteryRegistry || expectedMysteries.length > 0) {
@@ -944,6 +949,22 @@ function migrateThreadRegistry(project) {
   }
   if (JSON.stringify(outline.thread_registry) !== JSON.stringify(registry)) {
     outline.thread_registry = registry;
+    changed = true;
+  }
+  if (setup.thread_registry_version !== 1) {
+    setup.thread_registry_version = 1;
+    changed = true;
+  }
+  if (outline.thread_registry_version !== 1) {
+    outline.thread_registry_version = 1;
+    changed = true;
+  }
+  if (setup.mystery_registry_version !== 1) {
+    setup.mystery_registry_version = 1;
+    changed = true;
+  }
+  if (outline.mystery_registry_version !== 1) {
+    outline.mystery_registry_version = 1;
     changed = true;
   }
   setup.storylines = storylines.map((storyline, index) => {
