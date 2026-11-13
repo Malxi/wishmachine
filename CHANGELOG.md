@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.5.3] - 2026-11-13
+
+### Fixed
+
+- `style.setup.name_source`：`authored` 角色的 `namecard_id`（如 `authored-01`）不再被
+  计入抽卡来源覆盖率；4 抽卡 + 4 自建会正确报 0.5（low）而不是 1.0。补了回归测试。
+
 ## [0.5.2] - 2026-11-13
 
 ### Added
@@ -176,7 +183,8 @@
 
 - 完成 P0-P2 审核整改与大规模模块拆分。
 
-[Unreleased]: https://github.com/Malxi/wishmachine/compare/v0.5.2...HEAD
+[Unreleased]: https://github.com/Malxi/wishmachine/compare/v0.5.3...HEAD
+[0.5.3]: https://github.com/Malxi/wishmachine/compare/v0.5.2...v0.5.3
 [0.5.2]: https://github.com/Malxi/wishmachine/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/Malxi/wishmachine/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/Malxi/wishmachine/compare/v0.4.1...v0.5.0

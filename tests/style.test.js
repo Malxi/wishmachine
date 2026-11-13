@@ -86,6 +86,18 @@ test('setup schema validates name_source and naming_style values', (t) => {
   assert.ok(result.findings.some((item) => item.rule_id === 'schema.setup.core_cast.naming_style'));
 });
 
+test('authored namecard ids do not count as drawn-name coverage', () => {
+  const setup = sampleSetup();
+  setup.core_cast = [
+    { name: '周辙', role: 'protagonist', name_source: 'authored', namecard_id: 'authored-01' },
+    { name: '罗绍安', role: 'mentor', name_source: 'draw', namecard_id: 'name-88-04', naming_style: 'plain' },
+    { name: '丁小满', role: 'support', name_source: 'authored', namecard_id: 'authored-02' },
+    { name: '程启明', role: 'support', name_source: 'draw', namecard_id: 'name-88-11', naming_style: 'hard' },
+  ];
+  const metrics = setupMetrics(setup);
+  assert.equal(metrics.nameSourceCoverage, 0.5);
+});
+
 test('chapter style flags padding and configured motif overuse', (t) => {
   const { dir } = tempProject(t, { name: 'padding motif', init: { chapter: 1 } });
   writeChapter(dir, 'P1-V1-C1', `# 第一章\n\n${'她数了一遍。'.repeat(700)}`);

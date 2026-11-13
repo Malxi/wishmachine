@@ -177,7 +177,10 @@ function setupMetrics(setup) {
     surnameCounts.set(surname, (surnameCounts.get(surname) || 0) + 1);
   }
   const descriptorNames = names.filter((name) => /^(?:老|小|阿).+|.+人$|.+那位$|.+者$/.test(name));
-  const sourceCovered = cast.filter((character) => character.name_source === 'draw' || character.namecard_id).length;
+  const sourceCovered = cast.filter((character) => (
+    character.name_source === 'draw'
+    || (!character.name_source && /^name-/.test(String(character.namecard_id || '')))
+  )).length;
   const styles = cast.map((character) => character.naming_style).filter(Boolean);
   return {
     genreCount: asArray(setup?.genres).length,
