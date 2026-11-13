@@ -7,7 +7,7 @@ description_zh: 这是一台许愿机，将你的奇思妙想变成小说：项�
 description_en: A wish machine that turns ideas into a novel: project state, deterministic checks, idea draws and atomic artifact writes.
 examples_zh:
   - "创建一个 3 卷 × 5 章的科幻小说项目"
-version: 0.2.73
+version: 0.3.0
 author: Malxi
 ---
 
