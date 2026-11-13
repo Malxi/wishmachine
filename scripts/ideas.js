@@ -423,6 +423,8 @@ function buildWorldpack(def, packIndex, seed, cast, sources) {
     castRelations.push(relation);
     relate(from, to, type);
   };
+  const leadIndex = Math.max(0, cast.findIndex((character) => (character.role_tags?.[0] || 'support') === 'protagonist'));
+  const leadId = castIds[leadIndex] || castIds[0];
   if (premiseId && engineId) relate(engineId, premiseId, 'governs');
   if (factionId && engineId) relate(factionId, engineId, 'issues');
   if (locationId && engineId) relate(locationId, engineId, 'hosts');
@@ -431,17 +433,34 @@ function buildWorldpack(def, packIndex, seed, cast, sources) {
   for (const id of resourceIds) if (premiseId) relate(id, premiseId, 'constrains');
   for (const id of scenarioIds) if (premiseId) relate(id, premiseId, 'tests');
   for (const id of storylineIds) if (premiseId) relate(id, premiseId, 'dramatizes');
-  if (castIds[0] && premiseId) relate(castIds[0], premiseId, 'pursues');
-  if (castIds[0] && factionId) relate(castIds[0], factionId, 'belongs_to');
-  if (castIds[0] && locationId) relate(castIds[0], locationId, 'starts_at');
-  if (castIds[0] && equipmentId) relate(castIds[0], equipmentId, 'uses');
-  castRelate(castIds[1], castIds[0], 'opposes', '谁来决定谁被留下');
-  castRelate(castIds[2], castIds[0], 'supports', '主角的目标需要这名支持者的技能');
-  castRelate(castIds[3], factionId, 'works_for', '支持者嵌在势力内部，能拿到外部拿不到的东西');
-  castRelate(castIds[0], storylineIds[0], 'drives', '主角的选择推动第一条剧情线');
-  castRelate(castIds[1], storylineIds[0], 'blocks', '反派让第一条剧情线无法顺利完成');
-  castRelate(castIds[1], factionId, 'controls', '反派掌握势力资源');
-  castRelate(castIds[2], locationId, 'guards', '支持者守着关键地点');
+  if (leadId && premiseId) relate(leadId, premiseId, 'pursues');
+  if (leadId && factionId) relate(leadId, factionId, 'belongs_to');
+  if (leadId && locationId) relate(leadId, locationId, 'starts_at');
+  if (leadId && equipmentId) relate(leadId, equipmentId, 'uses');
+  const castIdsByRole = (role) => cast
+    .map((character, index) => ({ character, id: castIds[index] }))
+    .filter((entry) => (entry.character.role_tags?.[0] || 'support') === role)
+    .map((entry) => entry.id);
+  const protagonistIds = castIdsByRole('protagonist');
+  const antagonistIds = castIdsByRole('antagonist');
+  const supportIds = castIdsByRole('support');
+  const leadProtagonists = protagonistIds.slice(1);
+  for (const allyId of leadProtagonists) {
+    castRelate(allyId, leadId, 'allies_with', '两名主角对同一目标有不同做法');
+  }
+  for (const villainId of antagonistIds) {
+    castRelate(villainId, leadId, 'opposes', '谁来决定谁被留下');
+    castRelate(villainId, factionId, 'controls', '反派掌握势力资源');
+  }
+  for (const supportId of supportIds) {
+    castRelate(supportId, leadId, 'supports', '主角的目标需要这名支持者的技能');
+    castRelate(supportId, locationId, 'guards', '支持者守着关键地点');
+  }
+  if (supportIds[0]) castRelate(supportIds[0], factionId, 'works_for', '支持者嵌在势力内部，能拿到外部拿不到的东西');
+  if (leadId) castRelate(leadId, storylineIds[0], 'drives', '主角的选择推动第一条剧情线');
+  if (antagonistIds[0] && storylineIds[0]) {
+    castRelate(antagonistIds[0], storylineIds[0], 'blocks', '反派让第一条剧情线无法顺利完成');
+  }
   const keywords = [...new Set([
     def.theme,
     premise?.title,

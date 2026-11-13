@@ -635,6 +635,9 @@ test('worldpack cast uses genre-aware archetypes', () => {
     castRoles: 'protagonist,antagonist,antagonist,support',
   });
   assert.deepEqual(weighted.results[0].cast.map((character) => character.role_tags[0]), ['protagonist', 'antagonist', 'antagonist', 'support']);
+  const weightedRelations = weighted.results[0].cast_relations;
+  assert.equal(weightedRelations.filter((relation) => relation.type === 'opposes').length, 2);
+  assert.equal(weightedRelations.filter((relation) => relation.type === 'supports').length, 1);
 });
 
 test('worldpacks include motifs and positive/negative prompt packs', () => {
