@@ -417,11 +417,14 @@ function buildWorldpack(def, packIndex, seed, cast, sources) {
     archetype: character.archetype,
   }));
   const castRelations = [];
+  const relationTypes = sources.name === 'romance'
+    ? { opposes: 'rivals_with', supports: 'confides_in', guards: 'shares_space_with', controls: 'funds', allies_with: 'grows_close_to', drives: 'chooses', blocks: 'withholds' }
+    : {};
   const castRelate = (from, to, type, stake) => {
     if (!from || !to) return;
-    const relation = { from, to, type, stake };
+    const relation = { from, to, type: relationTypes[type] || type, stake };
     castRelations.push(relation);
-    relate(from, to, type);
+    relate(from, to, relation.type);
   };
   const leadIndex = Math.max(0, cast.findIndex((character) => (character.role_tags?.[0] || 'support') === 'protagonist'));
   const leadId = castIds[leadIndex] || castIds[0];
@@ -1551,6 +1554,7 @@ export function drawIdeas(options = {}) {
     const castRoles = explicitRoles.length
       ? explicitRoles.slice(0, castCount)
       : Array.from({ length: castCount }, (_, index) => (index === 0 ? 'protagonist' : index === 1 ? 'antagonist' : 'support'));
+    if (!castRoles.includes('protagonist')) castRoles[0] = 'protagonist';
     results = selected.map((def, packIndex) => {
       const cast = namecards(rng, seed + packIndex, castCount, castRoles, deck.name);
       return buildWorldpack(def, packIndex, seed, cast, deck);

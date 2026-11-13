@@ -670,6 +670,8 @@ test('romance plot and outline packs use the romance deck', () => {
   assert.equal(plot.results[0].beats.length, 6);
   assert.ok(plot.results[0].cast.some((character) => ['联姻继承人', '旧信收件人', '替身演员'].includes(character.archetype)));
   assert.ok(plot.results[0].prompt_pack.negative.includes('spaceships'));
+  assert.ok(plot.results[0].cast_relations.some((relation) => relation.type === 'rivals_with'));
+  assert.ok(plot.results[0].cast_relations.some((relation) => relation.type === 'confides_in'));
   const outline = drawIdeas({ type: 'outlinepack', genre: '言情', count: 1, seed: 42, chapters: 10, scenes: 3 });
   assert.equal(outline.meta.deck, 'romance');
   assert.equal(outline.results[0].chapters.length, 10);
@@ -679,6 +681,8 @@ test('romance plot and outline packs use the romance deck', () => {
   const largerCast = drawIdeas({ type: 'worldpack', genre: '言情', count: 1, seed: 42, castCount: 8 });
   assert.equal(largerCast.results[0].cast.length, 8);
   assert.equal(new Set(largerCast.results[0].cast.map((character) => character.archetype)).size, 8);
+  const noLead = drawIdeas({ type: 'worldpack', genre: '言情', count: 1, seed: 42, castRoles: 'antagonist,support' });
+  assert.deepEqual(noLead.results[0].cast.map((character) => character.role_tags[0]), ['protagonist', 'support']);
 });
 
 test('checkProject reports setup/outline thread registry drift', () => {
