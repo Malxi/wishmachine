@@ -238,6 +238,7 @@ test('worldpack bundles premise, resources and scenarios', () => {
   assert.ok(pack.results[0].cast_relations.some((relation) => relation.type === 'counters'));
   assert.ok(pack.results[0].cast_relations.every((relation) => relation.stake));
   assert.ok(pack.results[0].cast.length >= 1);
+  assert.ok(pack.results[0].entities.find((entity) => entity.type === 'character').prompt);
 });
 
 test('state anchor spirit stones must match the previous ledger end', () => {

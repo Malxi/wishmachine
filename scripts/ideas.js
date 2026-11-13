@@ -415,6 +415,9 @@ function buildWorldpack(def, packIndex, seed, cast, sources) {
   const castIds = cast.map((character, index) => addEntity('character', `character-${index + 1}`, character.name, {
     role: character.role_tags?.[0] || 'support',
     archetype: character.archetype,
+    prompt: character.prompt,
+    negative_prompt: character.negative_prompt,
+    want: character.want,
   }));
   const castRelations = [];
   const relationTypes = {
