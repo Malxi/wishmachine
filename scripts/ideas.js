@@ -2,6 +2,14 @@ import { hashSeed, mulberry32, pickMany, pick } from './util.js';
 import { SUSPENSE, URBAN, HISTORY, ROMANCE } from './ideas-genres.js';
 import { XIANXIA_ARCHETYPES, SUSPENSE_ARCHETYPES, URBAN_ARCHETYPES, HISTORY_ARCHETYPES, ROMANCE_ARCHETYPES } from './ideas-archetypes.js';
 
+const GENRE_ARCHETYPE_COUNTS = {
+  xianxia: XIANXIA_ARCHETYPES.length,
+  suspense: SUSPENSE_ARCHETYPES.length,
+  urban: URBAN_ARCHETYPES.length,
+  history: HISTORY_ARCHETYPES.length,
+  romance: ROMANCE_ARCHETYPES.length,
+};
+
 const TYPES = [
   'provocation', 'axiom', 'event', 'law', 'scenario', 'engine',
   'worldpack', 'plotpack', 'outlinepack', 'premise', 'storyline', 'cast', 'namecard',
@@ -1611,6 +1619,12 @@ export function drawIdeas(options = {}) {
       const message = 'cast-roles had no protagonist; the first role was changed to protagonist';
       warnings.push(message);
       warningDetails.push({ code: 'cast.protagonist_autofix', severity: 'warning', message });
+    }
+    const poolSize = GENRE_ARCHETYPE_COUNTS[deck.name] || ARCHETYPES.length;
+    if (castCount > poolSize) {
+      const message = `cast count ${castCount} exceeds the ${deck.name} archetype pool (${poolSize}); some archetypes will repeat`;
+      warnings.push(message);
+      warningDetails.push({ code: 'cast.pool_exhausted', severity: 'info', message });
     }
     results = selected.map((def, packIndex) => {
       const cast = namecards(rng, seed + packIndex, castCount, castRoles, deck.name, Math.max(40, Math.min(500, Number(options.characterPromptChars) || 160)));
