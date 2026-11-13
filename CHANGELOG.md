@@ -7,6 +7,23 @@
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-11-13
+
+### Added
+
+- 取名 pass：`references/name-guide.md`；`core_cast[*]` 新增可选 `namecard_id`、
+  `naming_style`、`naming_logic`、`name_source` 字段；`ideas outlinepack` 的 setup_draft
+  会把 namecard 的来源字段带进 setup。
+- `style.setup.name_*` 检查：姓氏集中度、描述式名字（老X/阿X/收成人/XX那位）、双字姓名里
+  的单字名比例、namecard 来源覆盖率、命名风格多样性、重名；均为 low/medium advisory。
+- setup schema 校验 `name_source`（draw|authored）与 `naming_style`
+  （plain|literary|hard|rustic）取值。
+
+### Changed
+
+- SKILL 的“风格与去 AI 味”流程增加“先定题材 → namecard 抽名 → 写进 setup”步骤；
+  workflow-deai、style-checklist、setup-schema、README 同步。
+
 ## [0.5.0] - 2026-11-13
 
 ### Added
@@ -141,7 +158,8 @@
 
 - 完成 P0-P2 审核整改与大规模模块拆分。
 
-[Unreleased]: https://github.com/Malxi/wishmachine/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/Malxi/wishmachine/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/Malxi/wishmachine/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/Malxi/wishmachine/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/Malxi/wishmachine/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/Malxi/wishmachine/compare/v0.3.3...v0.4.0

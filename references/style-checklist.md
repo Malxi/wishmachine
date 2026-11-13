@@ -40,6 +40,12 @@
 | `abstractPer1k` | premise/theme/rules 抽象词 / 千字 | ≤8，>15 风险 |
 | `themeAphorism` | theme 是否是格言句 | 0（是则风险） |
 | `concreteRulesRatio` | 含数量/上限/代价/后果的规则占比 | ≥0.5，<0.3 风险 |
+| `nameSurnameConcentration` | 同一姓氏占比 | ≤40%，>60% 风险 |
+| `nameDescriptorRatio` | 老X/阿X/收成人/XX那位式名字占比 | ≤20%，>40% 风险 |
+| `nameSingleCharGivenRatio` | 双字姓名中的单字名占比 | ≤50%，>75% 风险 |
+| `nameSourceCoverage` | core_cast 有 namecard_id/name_source 的占比 | ≥60%，<30% 风险 |
+| `nameStyleDiversity` | 不同 naming_style / 有风格记录的角色数 | ≥0.5，<0.25 风险 |
+| `nameDuplicateCount` | 重复姓名数 | 0 |
 
 ## 用法
 

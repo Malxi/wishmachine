@@ -141,6 +141,26 @@ node scripts/wishmachine.js book write setup --dir my-book --from-idea <outlinep
 - `importance` 是数字；`long_form_plan.target_chapters` / `target_volumes` 是数字。
 - `replace` 覆盖整个 setup；`patch` 只传改动字段。
 
+## 人物命名（namecard pass）
+
+`core_cast[*]` 可选命名来源字段，推荐用抽卡结果填写：
+
+```json
+{
+  "name": "沈穗",
+  "namecard_id": "name-13-03",
+  "naming_style": "plain",
+  "naming_logic": "先定原型“档案员”，再选音感；姓氏“沈”与名字“穗”组合为“沈穗”。",
+  "name_source": "draw"
+}
+```
+
+- `name_source`：`draw` 或 `authored`；`naming_style`：`plain|literary|hard|rustic`。
+- 取名流程：先定最终题材 → `ideas draw --type namecard --genre <题材> --count 20` →
+  选名字 → 把 `namecard_id/naming_style/naming_logic` 抄进 setup。
+- `check --profile style --target setup` 会检查姓氏集中度、描述式名字、单字名比例、
+  来源覆盖率、命名风格多样性、重名；详见 `references/name-guide.md`。
+
 ## Derived registries: thread_registry / mystery_registry
 
 setup 与 outline 都可以带顶层 `thread_registry`、`mystery_registry` 数组。它们是

@@ -9,7 +9,7 @@ import {
 } from '../scripts/project.js';
 import { checkProject } from '../scripts/schema.js';
 import { chapterMetrics, setupMetrics } from '../scripts/rules/style/metrics.js';
-import { fixtureSet, sampleSetup, sampleOutline, longChapter } from './fixtures.js';
+import { fixtureSet, sampleSetup, sampleOutline, longChapter, outlinepack } from './fixtures.js';
 
 const { tempProject, tempDir } = fixtureSet('wishmachine-style-');
 
@@ -44,6 +44,46 @@ test('setup metrics flag genre salad, aphoristic theme and abstract terms', () =
   assert.equal(metrics.themeAphorism, 1);
   assert.ok(metrics.abstractPer1k > 15, JSON.stringify(metrics));
   assert.ok(metrics.concreteRulesRatio < 0.3);
+});
+
+test('setup metrics flag name provenance and naming style problems', (t) => {
+  const setup = sampleSetup();
+  setup.core_cast = [
+    { name: '沈穗', role: 'protagonist' },
+    { name: '沈砚', role: 'support' },
+    { name: '老井', role: 'support' },
+    { name: '阿箬', role: 'support' },
+    { name: '收成人', role: 'antagonist' },
+  ];
+  const metrics = setupMetrics(setup);
+  assert.equal(metrics.nameSurnameConcentration, 0.4);
+  assert.equal(metrics.nameDescriptorRatio, 0.6);
+  assert.equal(metrics.nameSingleCharGivenRatio, 0.8);
+  assert.equal(metrics.nameSourceCoverage, 0);
+  assert.equal(metrics.nameStyleDiversity, 0);
+  const { dir } = tempProject(t, { name: 'name metrics', init: { chapter: 1 } });
+  writeArtifact(loadProject(dir), { section: 'setup', mode: 'replace', apply: true, content: JSON.stringify(setup) });
+  const result = checkProject(loadProject(dir), { profile: 'style', target: 'setup' });
+  assert.ok(result.findings.some((item) => item.rule_id === 'style.setup.name_source'));
+});
+
+test('namecard provenance is carried into generated setup drafts', () => {
+  const pack = outlinepack({ chapters: 3 });
+  const cast = pack.setup_draft.core_cast || [];
+  assert.ok(cast.length > 0);
+  assert.ok(cast.some((character) => character.namecard_id), JSON.stringify(cast));
+  assert.ok(cast.some((character) => character.name_source === 'draw'));
+});
+
+test('setup schema validates name_source and naming_style values', (t) => {
+  const { dir } = tempProject(t, { name: 'name schema', init: { chapter: 1 } });
+  const setup = sampleSetup();
+  setup.core_cast[0].name_source = 'invented';
+  setup.core_cast[0].naming_style = 'unknown';
+  writeArtifact(loadProject(dir), { section: 'setup', mode: 'replace', apply: true, content: JSON.stringify(setup) });
+  const result = checkProject(loadProject(dir), { profile: 'schema', target: 'setup' });
+  assert.ok(result.findings.some((item) => item.rule_id === 'schema.setup.core_cast.name_source'));
+  assert.ok(result.findings.some((item) => item.rule_id === 'schema.setup.core_cast.naming_style'));
 });
 
 test('style check is advisory: findings are low/medium and never blocking', (t) => {

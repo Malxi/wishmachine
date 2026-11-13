@@ -79,6 +79,12 @@ const CHAPTER_ID_PATTERN = /^P\d+-V\d+-C\d+$/;
 // Ids that become filesystem segments must never contain a separator or be dot-paths.
 const UNSAFE_ID_PATTERN = /[\\/]|^\.\.?$/;
 
+// Optional setup cast naming provenance. Namecards carry an id/style/logic; setup
+// copies them so the drawn name is auditable and name quality can be checked.
+const CAST_NAME_SOURCE_VALUES = Object.freeze(['draw', 'authored']);
+const CAST_NAMING_STYLE_VALUES = Object.freeze(['plain', 'literary', 'hard', 'rustic']);
+const CAST_NAMING_FIELDS = Object.freeze(['namecard_id', 'naming_style', 'naming_logic', 'name_source']);
+
 // --- resources -------------------------------------------------------------
 
 // Setup resource categories. Deck resourceCategories maps genre categories onto
@@ -89,6 +95,9 @@ const DEFAULT_RESOURCE_CATEGORY = '材料';
 
 export {
   ABANDONED_THREADS_FIELD,
+  CAST_NAMING_FIELDS,
+  CAST_NAMING_STYLE_VALUES,
+  CAST_NAME_SOURCE_VALUES,
   CHAPTER_ID_PATTERN,
   CLIMAX_BEAT_FUNCTIONS,
   DEFAULT_RESOURCE_CATEGORY,

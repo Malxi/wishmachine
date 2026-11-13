@@ -27,6 +27,12 @@ const DEFAULT_THRESHOLDS = {
     abstractPer1k: { warn: 8, risk: 15 },
     themeAphorism: { risk: 1 },
     concreteRulesRatio: { min: 0.5, riskMin: 0.3 },
+    nameSurnameConcentration: { warn: 0.4, risk: 0.6 },
+    nameDescriptorRatio: { warn: 0.2, risk: 0.4 },
+    nameSingleCharGivenRatio: { warn: 0.5, risk: 0.75 },
+    nameSourceCoverage: { min: 0.6, riskMin: 0.3 },
+    nameStyleDiversity: { min: 0.5, riskMin: 0.25 },
+    nameDuplicateCount: { warn: 0, risk: 1 },
   },
 };
 
@@ -50,6 +56,12 @@ const SETUP_RULES = [
   ['abstractPer1k', 'style.setup.abstract_terms', '抽象词密度', 'premise/theme/rules 里抽象大词偏多', '换成可操作、可观察、有代价的具体规则与细节。'],
   ['themeAphorism', 'style.setup.theme_aphorism', '格言式主题', 'theme 写成了格言/总结句', '把主题写成人物每天必须执行的规矩或账目，让读者自己得出。'],
   ['concreteRulesRatio', 'style.setup.rules_concrete', '规则不可操作', '规则缺少数量、上限、代价或后果', '每条规则写清“能做什么、不能做什么、违反后付什么代价”。'],
+  ['nameSurnameConcentration', 'style.setup.name_surname', '姓氏集中', '同一姓氏占比过高', '换姓或使用抽卡名字；主角团不要全是一个姓。', 'nameExamples'],
+  ['nameDescriptorRatio', 'style.setup.name_descriptor', '描述式名字', '老X/阿X/收成人/XX那位式名字偏多', '给角色正常姓名，绰号只作为补充；抽卡里优先选 plain 风格。', 'nameExamples'],
+  ['nameSingleCharGivenRatio', 'style.setup.name_single_char', '单字名过多', '双字姓名里的单字名占比过高', '抽 1–2 个双字名或日常名，避免所有主角都是单字雅名。', 'nameExamples'],
+  ['nameSourceCoverage', 'style.setup.name_source', '名字来源缺失', 'core_cast 缺少 namecard_id/name_source 记录', '先跑 ideas draw --type namecard --genre <实际题材>，把选中的 namecard_id、naming_style、naming_logic 写进 setup。', 'nameExamples'],
+  ['nameStyleDiversity', 'style.setup.name_style', '命名风格单一', 'naming_style 只有一种或缺失', '抽卡时混用 plain/literary/rustic/hard，并保留每张卡的 naming_style。'],
+  ['nameDuplicateCount', 'style.setup.name_duplicate', '重名', 'core_cast 里有重复姓名', '改名或合并角色。', 'nameExamples'],
 ];
 
 function numeric(value) {

@@ -1,6 +1,9 @@
 // Shape (JSON schema) rules for craft, recap and setup artifacts.
 import {
   ABANDONED_THREADS_FIELD,
+  CAST_NAMING_FIELDS,
+  CAST_NAMING_STYLE_VALUES,
+  CAST_NAME_SOURCE_VALUES,
   MYSTERY_REGISTRY_FIELD,
   SETUP_ARRAY_FIELDS,
   SETUP_OBJECT_FIELDS,
@@ -122,8 +125,24 @@ function validateSetupCore(setup, findings) {
     setup[key].forEach((item, index) => {
       if (!item || typeof item !== 'object' || Array.isArray(item)) {
         findings.push(finding(`schema.setup.${key}`, 'high', `${key}[${index}] must be an object`, '', 'Use an object array; strings are not accepted here.'));
+        return;
       }
+      if (key === 'core_cast') validateSetupCastItem(item, index, findings);
     });
+  }
+}
+
+function validateSetupCastItem(item, index, findings) {
+  for (const field of CAST_NAMING_FIELDS) {
+    if (item[field] !== undefined && typeof item[field] !== 'string') {
+      findings.push(finding(`schema.setup.core_cast.${field}`, 'medium', `core_cast[${index}].${field} must be a string`, item.name || `cast_${index + 1}`));
+    }
+  }
+  if (item.name_source !== undefined && !CAST_NAME_SOURCE_VALUES.includes(item.name_source)) {
+    findings.push(finding('schema.setup.core_cast.name_source', 'medium', `core_cast[${index}].name_source must be ${CAST_NAME_SOURCE_VALUES.join('|')}`, item.name || `cast_${index + 1}`));
+  }
+  if (item.naming_style !== undefined && !CAST_NAMING_STYLE_VALUES.includes(item.naming_style)) {
+    findings.push(finding('schema.setup.core_cast.naming_style', 'medium', `core_cast[${index}].naming_style must be ${CAST_NAMING_STYLE_VALUES.join('|')}`, item.name || `cast_${index + 1}`));
   }
 }
 

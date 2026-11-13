@@ -42,7 +42,11 @@ wishmachine check --dir <project> --profile style --target setup
 ```
 
 关注 `style.setup.genre_salad`（题材堆叠）、`style.setup.abstract_terms`（抽象词密度）、
-`style.setup.theme_aphorism`（格言式主题）、`style.setup.rules_concrete`（规则不可操作）。
+`style.setup.theme_aphorism`（格言式主题）、`style.setup.rules_concrete`（规则不可操作），
+以及 `style.setup.name_*`（姓氏集中、描述式名字、单字名、来源缺失、重名）。
+取名先做 namecard pass：先定最终题材，再 `ideas draw --type namecard --genre <实际题材>
+--count 20`，把选中的 `namecard_id/naming_style/naming_logic` 写进 setup；详见
+`references/name-guide.md`。
 改法：
 
 - theme 不要写“守住边界的不是墙，是……”这种格言，改成一条人物每天要执行的规矩。

@@ -166,6 +166,16 @@ function setupMetrics(setup) {
   const text = [premise, theme, ...rules].join('\n');
   const cjk = cjkCount(text);
   const concreteRules = rules.filter((rule) => CONCRETE_RULE.test(rule)).length;
+  const cast = asArray(setup?.core_cast).filter((character) => isObject(character));
+  const names = cast.map((character) => String(character.name || '')).filter(Boolean);
+  const surnameCounts = new Map();
+  for (const name of names) {
+    const surname = name.slice(0, 1);
+    surnameCounts.set(surname, (surnameCounts.get(surname) || 0) + 1);
+  }
+  const descriptorNames = names.filter((name) => /^(?:老|小|阿).+|.+人$|.+那位$|.+者$/.test(name));
+  const sourceCovered = cast.filter((character) => character.name_source === 'draw' || character.namecard_id).length;
+  const styles = cast.map((character) => character.naming_style).filter(Boolean);
   return {
     genreCount: asArray(setup?.genres).length,
     premiseCjk: cjkCount(premise),
@@ -174,9 +184,20 @@ function setupMetrics(setup) {
     themeAphorism: APHORISM.test(theme) ? 1 : 0,
     rules: rules.length,
     concreteRulesRatio: round(ratio(concreteRules, rules.length)),
-    castCount: asArray(setup?.core_cast).length,
+    castCount: cast.length,
     resourceCount: asArray(setup?.world_resources).length,
+    nameSurnameConcentration: round(ratio(Math.max(0, ...surnameCounts.values()), names.length)),
+    nameDescriptorRatio: round(ratio(descriptorNames.length, names.length)),
+    nameSingleCharGivenRatio: round(ratio(names.filter((name) => [...name].length === 2).length, names.length)),
+    nameSourceCoverage: round(ratio(sourceCovered, names.length)),
+    nameStyleDiversity: round(ratio(new Set(styles).size, styles.length || names.length)),
+    nameDuplicateCount: names.length - new Set(names).size,
+    nameExamples: names.slice(0, 8),
   };
+}
+
+function isObject(value) {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
 export {

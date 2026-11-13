@@ -13,7 +13,7 @@ examples_en:
   - "Create a 3-volume × 5-chapter science-fiction project"
   - "Check the outline for blocking findings"
   - "Draw 12 science-fiction name cards"
-version: 0.5.0
+version: 0.5.1
 author: Malxi
 ---
 
@@ -118,13 +118,17 @@ $WM doctor --dir my-book                             # 目录/配置/JSON/regist
 1. 建 voice card（每本书一次）：`book write style --dir my-book --apply < voice.json`，
    写 `voice.description/principles/avoid` + 2–3 段 `samples`；写正文前 `book read style`
    或 `book read context`（含 style summary）。
-2. 设定 loop：`check --profile style --target setup` → 按 `style.setup.*` 具体化/代价化，
-   最多 2 轮。
-3. 章节 loop：初稿 → `check --profile style --target chapter --id` → 只改命中句/段 →
+2. 取名 pass（setup 前）：先定最终题材，再
+   `ideas draw --type namecard --genre <实际题材> --count 20 --seed <n> --output names.json`，
+   把选中的 `namecard_id/naming_style/naming_logic/name_source` 写进 `core_cast`；
+   规则见 `references/name-guide.md`。
+3. 设定 loop：`check --profile style --target setup` → 按 `style.setup.*`（含 `name_*`）
+   具体化/代价化/换名，最多 2 轮。
+4. 章节 loop：初稿 → `check --profile style --target chapter --id` → 只改命中句/段 →
    复检，最多 2 轮；指标回到健康带即可，不追 0。退出条件与阈值见
    `references/workflow-deai.md`。
-4. 书级 loop：每 3 章 `audit --profile style --view summary`，指标漂移写回 voice card。
-5. 不要先写 AI 味再 humanize；humanizer 只能做第二遍清理。style 检查是体检，不是裁判。
+5. 书级 loop：每 3 章 `audit --profile style --view summary`，指标漂移写回 voice card。
+6. 不要先写 AI 味再 humanize；humanizer 只能做第二遍清理。style 检查是体检，不是裁判。
 
 - blocking = `severity` 为 `high` 或 `critical`；check/audit/doctor/write 此时退出码 2；
   `--no-strict` 让 check/audit/doctor 强制退出 0（脚本容错用）。
@@ -181,7 +185,8 @@ $WM export --dir my-book --format html --output drafts/我的书-阅读版.html
 - artifact 格式、写入与输出契约：`references/stage-contracts.md`
 - setup/outline 字段与 `book write` 细节：`setup-schema.md`、`outline-schema.md`、`book-write.md`
 - profile/规则/findings：`references/check-profiles.md`
-- 风格与去 AI 味：`references/workflow-deai.md`、`references/style-checklist.md`
+- 风格与去 AI 味：`references/workflow-deai.md`、`references/style-checklist.md`、
+  `references/name-guide.md`
 - 流程与编辑性审查：`references/workflow-*.md`、`references/review-checklist.md`
 
 读取：`$WM gen reference read <name>`、`$WM gen workflow read <name>`。
