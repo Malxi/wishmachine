@@ -417,9 +417,13 @@ function buildWorldpack(def, packIndex, seed, cast, sources) {
     archetype: character.archetype,
   }));
   const castRelations = [];
-  const relationTypes = sources.name === 'romance'
-    ? { opposes: 'rivals_with', supports: 'confides_in', guards: 'shares_space_with', controls: 'funds', allies_with: 'grows_close_to', drives: 'chooses', blocks: 'withholds' }
-    : {};
+  const relationTypes = {
+    romance: { opposes: 'rivals_with', supports: 'confides_in', guards: 'shares_space_with', controls: 'funds', allies_with: 'grows_close_to', drives: 'chooses', blocks: 'withholds', works_for: 'works_for' },
+    suspense: { opposes: 'suspects', supports: 'corroborates', guards: 'secures', controls: 'handles', allies_with: 'backs_up', drives: 'investigates', blocks: 'covers_up' },
+    history: { opposes: 'contends_with', supports: 'petitions', guards: 'garrisons', controls: 'holds_seal', allies_with: 'allies_with', drives: 'memorializes', blocks: 'obstructs' },
+    urban: { opposes: 'competes_with', supports: 'covers_for', guards: 'keeps_keys', controls: 'owns', allies_with: 'networks_with', drives: 'pitches', blocks: 'stalls' },
+    xianxia: { opposes: 'sworn_enemy', supports: 'sworn_ally', guards: 'wards', controls: 'commands', allies_with: 'shares_dao', drives: 'seeks', blocks: 'curses' },
+  }[sources.name] || {};
   const castRelate = (from, to, type, stake) => {
     if (!from || !to) return;
     const relation = { from, to, type: relationTypes[type] || type, stake };

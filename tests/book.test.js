@@ -636,8 +636,8 @@ test('worldpack cast uses genre-aware archetypes', () => {
   });
   assert.deepEqual(weighted.results[0].cast.map((character) => character.role_tags[0]), ['protagonist', 'antagonist', 'antagonist', 'support']);
   const weightedRelations = weighted.results[0].cast_relations;
-  assert.equal(weightedRelations.filter((relation) => relation.type === 'opposes').length, 2);
-  assert.equal(weightedRelations.filter((relation) => relation.type === 'supports').length, 1);
+  assert.equal(weightedRelations.filter((relation) => relation.type === 'suspects').length, 2);
+  assert.equal(weightedRelations.filter((relation) => relation.type === 'corroborates').length, 1);
 });
 
 test('worldpacks include motifs and positive/negative prompt packs', () => {
@@ -653,7 +653,12 @@ test('worldpacks include motifs and positive/negative prompt packs', () => {
 });
 
 test('genre decks cover suspense, urban, history and romance', () => {
-  for (const [genre, deck] of [['悬疑', 'suspense'], ['都市', 'urban'], ['历史', 'history'], ['言情', 'romance']]) {
+  for (const [genre, deck, relationType] of [
+    ['悬疑', 'suspense', 'suspects'],
+    ['都市', 'urban', 'competes_with'],
+    ['历史', 'history', 'contends_with'],
+    ['言情', 'romance', 'rivals_with'],
+  ]) {
     const premise = drawIdeas({ type: 'premise', genre, count: 1, seed: 42 });
     assert.equal(premise.meta.deck, deck);
     assert.ok(premise.results[0].title);
@@ -661,6 +666,7 @@ test('genre decks cover suspense, urban, history and romance', () => {
     assert.equal(pack.meta.deck, deck);
     assert.ok(pack.results[0].engine);
     assert.ok(pack.results[0].location);
+    assert.ok(pack.results[0].cast_relations.some((relation) => relation.type === relationType));
   }
 });
 
