@@ -679,6 +679,7 @@ test('romance plot and outline packs use the romance deck', () => {
   assert.ok(plot.results[0].prompt_pack.negative.includes('spaceships'));
   assert.ok(plot.results[0].cast_relations.some((relation) => relation.type === 'rivals_with'));
   assert.ok(plot.results[0].cast_relations.some((relation) => relation.type === 'confides_in'));
+  assert.ok(plot.results[0].prompt_pack.positive.includes('rivals_with'));
   const outline = drawIdeas({ type: 'outlinepack', genre: '言情', count: 1, seed: 42, chapters: 10, scenes: 3 });
   assert.equal(outline.meta.deck, 'romance');
   assert.equal(outline.results[0].chapters.length, 10);

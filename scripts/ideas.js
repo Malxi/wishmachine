@@ -478,6 +478,7 @@ function buildWorldpack(def, packIndex, seed, cast, sources) {
     faction?.name,
     equipment?.name,
     ...cast.map((character) => character.name),
+    ...new Set(castRelations.map((relation) => relation.type)),
   ].filter(Boolean))];
   const styleByDeck = {
     default: '近未来科幻，制度悬疑，冷峻，低饱和',
@@ -504,6 +505,7 @@ function buildWorldpack(def, packIndex, seed, cast, sources) {
     location?.name,
     faction?.name,
     equipment?.name,
+    [...new Set(castRelations.map((relation) => relation.type))].join(' / '),
   ].filter(Boolean).join('，');
   const promptPack = {
     positive: prompt,
