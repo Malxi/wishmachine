@@ -168,3 +168,59 @@ export const HISTORY = {
     { theme: 'history-sea', premise: '海禁：片板不许下海', engine: '市舶抽分制度', resources: ['海引', '军功札'], scenarios: ['海禁开闸', '宫变前夜'], storylines: ['海禁与海商', '旧案与新政'], location: '码头', faction: '海商', equipment: '火铳' },
   ],
 };
+
+export const ROMANCE = {
+  name: 'romance',
+  premises: [
+    { title: '联姻对赌：婚约写进收购条款', statement: '两家公司以一年婚约为抵押，任何一方先提出离婚都要让出董事会席位。', surface_rule: '婚约存续期间，双方不得公开绯闻。', hidden_truth: '这场联姻真正要锁住的不是婚姻，而是收购完成前的表决权。', scarcity: '婚约只有一年，董事会每季度复核一次。', conflict: '继承人、董事会与公关团队争夺婚约的解释权。', leverage: '用一份婚前补充协议证明对方先违约。', counter: '在股东大会上公开完整财报。' },
+    { title: '旧信未寄：十年前的那封', statement: '一封十年前没有寄出的信，被旧书店夹在一本二手书里重新出现。', surface_rule: '信上只有一个日期，没有署名。', hidden_truth: '信是别人代写的，真正想说的话在信封背面。', scarcity: '信只有一封，邮戳只能验证一次。', conflict: '旧友、现任与写信人争夺这封信的解释。', leverage: '用邮戳和纸张年份证明信被调换过。', counter: '在旧友聚会上当众读信。' },
+    { title: '替身合约：镜头外的名字', statement: '剧组替身合约规定，替身不得在片尾署名，也不得公开受伤记录。', surface_rule: '所有危险镜头必须由持证替身完成。', hidden_truth: '制片方用替身掩盖主演已经无法完成拍摄的事实。', scarcity: '替身署名名额每部戏只有一个。', conflict: '替身、主演、经纪公司与制片方争夺署名权。', leverage: '用场记板和原始素材证明镜头里不是主演。', counter: '把未剪辑素材交给媒体。' },
+    { title: '合租边界：房东要卖房', statement: '合租协议规定，房东卖房需提前三十天通知，租客有优先续租权。', surface_rule: '任何室友不得擅自带人过夜。', hidden_truth: '房东急着卖房，是因为这套房子牵着一笔旧债。', scarcity: '附近同价位房源一周内只剩两套。', conflict: '室友、房东与中介争夺续租与押金。', leverage: '用租赁合同和转账记录证明房东违约。', counter: '联合所有租客一起谈。' },
+  ],
+  resources: [
+    { name: '婚约合同', category: '契约', meaning: '约定婚期、财产与董事会表决权的合同。', issuer: '两家家族董事会', spend_rule: '每次修改都需双方律师签字。', scarcity: '只有一份原件，副本各持一份。' },
+    { name: '旧信', category: '信物', meaning: '十年前没有寄出的信，可能改变三个人的关系。', issuer: '写信人', spend_rule: '只能公开一次，公开后无法收回。', scarcity: '只有一封，邮戳已经模糊。' },
+    { name: '替身合约', category: '合同', meaning: '规定替身工作范围、署名与保密义务。', issuer: '制片公司', spend_rule: '违约条款可被单方援引。', scarcity: '署名名额每部戏只有一个。' },
+    { name: '合租协议', category: '契约', meaning: '约定租金、押金、续租与带人过夜规则。', issuer: '房东与租客', spend_rule: '任何补充条款需全体签字。', scarcity: '优先续租权只有一次。' },
+  ],
+  scenarios: [
+    { title: '婚礼前夜', pressure: '婚礼前夜，婚约合同被匿名寄给媒体。', twist: '寄合同的人希望婚礼取消，但不是为了拆散两人。' },
+    { title: '旧信被公开', pressure: '旧友聚会上，有人当众读出那封旧信。', twist: '信里写的不是爱情，而是一桩被掩盖的事故。' },
+    { title: '试镜换角', pressure: '开拍前三天，主演被换掉，替身被推到镜头前。', twist: '换角是制片方为了掩盖主演受伤。' },
+    { title: '房东卖房', pressure: '房东突然通知一周内卖房，所有租客必须搬走。', twist: '买家是主角前任的家人。' },
+  ],
+  engines: [
+    { title: '联姻对赌', artifact: '婚约合同', issuer: '家族董事会', holder: '继承人', stated_purpose: '稳定两家公司的合作关系', hidden_function: '用婚姻锁住收购前的表决权', loophole: '合同只写婚期，不写必须同住', cost: '每拖一天，就多一个人被卷进董事会斗争', protagonist_role: '被写进合同的继承人', counter_expectation: '主角在股东大会上公开合同' },
+    { title: '经纪合约', artifact: '经纪合同', issuer: '经纪公司', holder: '演员', stated_purpose: '安排通告与形象管理', hidden_function: '用违约金控制演员的公开表达', loophole: '合同只约束公开恋情，不约束私下关系', cost: '每上一次热搜，就多一条违约风险', protagonist_role: '拒绝炒作的演员', counter_expectation: '主角公开完整合约' },
+    { title: '旧信保管', artifact: '旧信', issuer: '写信人', holder: '收信人', stated_purpose: '保存一段没有说出口的话', hidden_function: '用沉默保护另一个人', loophole: '信没有署名，谁都可以否认', cost: '每读一次，就多一个人受伤', protagonist_role: '替人保管旧信的书店老板', counter_expectation: '主角把信还给写信人' },
+    { title: '合租规则', artifact: '合租协议', issuer: '房东', holder: '租客', stated_purpose: '维持合租秩序', hidden_function: '用押金和续租权筛选租客', loophole: '协议只写租客义务，不写房东维修责任', cost: '每争一次，就多一个人搬走', protagonist_role: '组织租客谈判的人', counter_expectation: '主角联合所有租客重签协议' },
+  ],
+  storylines: [
+    { title: '契约与真心', promise: '主角想在婚约结束前弄明白对方到底在算什么。', escalation: '每查一次账，就多一个家族成员插手。', midpoint: '主角发现对方也在利用这场婚约。', payoff: '主角在董事会上公开合同。', cost: '公开后两家公司都会受损。' },
+    { title: '旧情与现在', promise: '主角想把十年前没说完的话说完。', escalation: '每接近真相，就多一个旧友退出。', midpoint: '旧信其实是别人代写的。', payoff: '主角把信还给真正写信的人。', cost: '还信后旧友圈彻底破裂。' },
+    { title: '事业与爱情', promise: '主角想靠自己的名字拿到署名。', escalation: '每争一次署名，就多一条封杀传闻。', midpoint: '制片方用替身事故威胁主角。', payoff: '主角公开未剪辑素材。', cost: '公开后可能再也接不到戏。' },
+    { title: '家庭与选择', promise: '主角想保住住处，也想保住和室友的关系。', escalation: '每拖一天，就多一个室友找好下家。', midpoint: '买家是主角前任的家人。', payoff: '主角联合租客买下续租权。', cost: '买下后要背一笔共同债务。' },
+  ],
+  locations: [
+    { name: '民政局', type: '公共机构', description: '排队、拍照、盖章，以及门口永远有人在吵架。', function: '婚约登记、离婚、财产公证。', danger: '任何一份文件都可能被媒体拍到。' },
+    { name: '老书店', type: '旧书店', description: '二手书、旧信、灰尘和一只不认人的猫。', function: '旧信、旧书、旧关系。', danger: '信被夹在哪本书里，只有老板知道。' },
+    { name: '片场', type: '拍摄现场', description: '灯架、轨道、场记板和随时会改的通告。', function: '替身、署名、事故。', danger: '危险镜头没有第二次。' },
+    { name: '合租公寓', type: '住宅', description: '四间卧室、一个厨房、永远不够用的热水。', function: '合租、续租、边界。', danger: '房东随时可能带人看房。' },
+  ],
+  factions: [
+    { name: '家族董事会', type: '家族企业', goal: '完成收购并保住表决权。', resource: '婚约合同', method: '用婚姻和席位交换利益。', secret: '董事会里有人希望婚约失败。' },
+    { name: '经纪公司', type: '公司', goal: '维持艺人形象并控制舆论。', resource: '经纪合同', method: '用热搜和违约金施压。', secret: '公司知道主演受伤的真相。' },
+    { name: '旧友圈', type: '朋友圈', goal: '维持十年前的体面。', resource: '旧信', method: '用沉默保护彼此。', secret: '旧信被公开是圈内人策划的。' },
+    { name: '房东与邻里', type: '社区', goal: '卖房、续租、维持关系。', resource: '合租协议', method: '用押金和优先权谈判。', secret: '房东的买家与主角前任有关。' },
+  ],
+  equipment: [
+    { name: '婚戒', type: '信物', function: '证明婚约关系。', cost: '摘下就会被媒体解读。', limit: '只在公开场合有效。' },
+    { name: '旧信', type: '信物', function: '证明十年前发生过什么。', cost: '每公开一次就伤害一个人。', limit: '只有一封，无法复制。' },
+    { name: '剧本', type: '工作文件', function: '决定谁有台词、谁只能做替身。', cost: '改一页就要重新走一遍通告。', limit: '最终版只在制片人手里。' },
+    { name: '备用钥匙', type: '钥匙', function: '打开合租公寓的门。', cost: '借出去就收不回边界。', limit: '房东随时可以换锁。' },
+  ],
+  packs: [
+    { theme: 'romance-contract', premise: '联姻对赌：婚约写进收购条款', engine: '联姻对赌', resources: ['婚约合同', '合租协议'], scenarios: ['婚礼前夜', '试镜换角'], storylines: ['契约与真心', '家庭与选择'], location: '民政局', faction: '家族董事会', equipment: '婚戒' },
+    { theme: 'romance-reunion', premise: '旧信未寄：十年前的那封', engine: '旧信保管', resources: ['旧信', '剧本'], scenarios: ['旧信被公开', '房东卖房'], storylines: ['旧情与现在', '事业与爱情'], location: '老书店', faction: '旧友圈', equipment: '旧信' },
+  ],
+};

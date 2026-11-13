@@ -1,6 +1,6 @@
 import { hashSeed, mulberry32, pickMany, pick } from './util.js';
-import { SUSPENSE, URBAN, HISTORY } from './ideas-genres.js';
-import { XIANXIA_ARCHETYPES, SUSPENSE_ARCHETYPES, URBAN_ARCHETYPES, HISTORY_ARCHETYPES } from './ideas-archetypes.js';
+import { SUSPENSE, URBAN, HISTORY, ROMANCE } from './ideas-genres.js';
+import { XIANXIA_ARCHETYPES, SUSPENSE_ARCHETYPES, URBAN_ARCHETYPES, HISTORY_ARCHETYPES, ROMANCE_ARCHETYPES } from './ideas-archetypes.js';
 
 const TYPES = [
   'provocation', 'axiom', 'event', 'law', 'scenario', 'engine',
@@ -277,6 +277,7 @@ function selectDeck(genre) {
   if (/悬疑|推理|侦探|犯罪|恐怖|thriller|mystery/i.test(value)) return SUSPENSE;
   if (/都市|现代|职场|娱乐|校园|urban/i.test(value)) return URBAN;
   if (/历史|古代|朝代|民国|战争|history/i.test(value)) return HISTORY;
+  if (/言情|爱情|婚恋|romance/i.test(value)) return ROMANCE;
   return null;
 }
 
@@ -464,6 +465,7 @@ function buildWorldpack(def, packIndex, seed, cast, sources) {
     suspense: 'supernatural solution, magic, coincidental evidence, genre mismatch',
     urban: 'fantasy races, spaceships, medieval setting, genre mismatch',
     history: 'modern technology, plastic, neon, anachronistic bureaucracy, genre mismatch',
+    romance: 'spaceships, fantasy races, magic systems, battle scenes, genre mismatch',
   };
   const style = styleByDeck[sources.name] || styleByDeck.default;
   const prompt = [
@@ -1354,6 +1356,7 @@ function namecards(rng, seed, count, roles = [], genre = '') {
     suspense: SUSPENSE_ARCHETYPES,
     urban: URBAN_ARCHETYPES,
     history: HISTORY_ARCHETYPES,
+    romance: ROMANCE_ARCHETYPES,
   };
   const genrePool = genrePools[genre] || null;
   const surnames = pickMany(rng, SURNAMES, Math.min(count, SURNAMES.length));

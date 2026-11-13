@@ -13,7 +13,7 @@ examples_en:
   - "Create a 3-volume × 5-chapter science-fiction project"
   - "Check the outline for blocking findings"
   - "Draw 12 science-fiction name cards"
-version: 0.2.23
+version: 0.2.24
 author: Malxi
 ---
 
@@ -113,6 +113,7 @@ node scripts/wishmachine.js ideas draw --type premise --genre 修仙 --count 3 -
 node scripts/wishmachine.js ideas draw --type premise --genre 悬疑 --count 3 --seed 7
 node scripts/wishmachine.js ideas draw --type premise --genre 都市 --count 3 --seed 7
 node scripts/wishmachine.js ideas draw --type premise --genre 历史 --count 3 --seed 7
+node scripts/wishmachine.js ideas draw --type premise --genre 言情 --count 3 --seed 7
 node scripts/wishmachine.js ideas draw --type provocation --count 4 --seed 9
 node scripts/wishmachine.js ideas draw --type law --count 4 --seed 9
 node scripts/wishmachine.js ideas draw --type event --count 4 --seed 9
@@ -211,7 +212,7 @@ Some packs also include a `motif` and an `inspired_by` graph edge.
 location and the first storyline; each relation carries a `stake`.
 `prompt_pack` contains positive, negative, style and keywords; `prompt` is
 kept as the positive prompt for compatibility.
-Genre decks currently cover default sci-fi, xianxia, suspense, urban and history.
+Genre decks currently cover default sci-fi, xianxia, suspense, urban, history and romance.
 
 ## 4. 读取指导
 

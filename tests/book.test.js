@@ -622,6 +622,7 @@ test('worldpack cast uses genre-aware archetypes', () => {
     悬疑: ['现场刑警', '记忆鉴定师', '承办检察官', '职业证人', '档案员', '辩护律师'],
     都市: ['被合同锁住的主播', '被竞业协议困住的员工', '平台经理', '家族委员会主席', '租客互助会组织者', '财经记者'],
     历史: ['边镇书吏', '海商', '户部主事', '边军主将', '官匠', '史官'],
+    言情: ['联姻继承人', '旧信收件人', '替身演员', '家族董事', '经纪人', '合租室友'],
   };
   for (const [genre, names] of Object.entries(expected)) {
     const pack = drawIdeas({ type: 'worldpack', genre, count: 1, seed: 42 });
@@ -641,8 +642,8 @@ test('worldpacks include motifs and positive/negative prompt packs', () => {
   assert.ok(paper.relations.some((relation) => relation.type === 'inspired_by'));
 });
 
-test('genre decks cover suspense, urban and history', () => {
-  for (const [genre, deck] of [['悬疑', 'suspense'], ['都市', 'urban'], ['历史', 'history']]) {
+test('genre decks cover suspense, urban, history and romance', () => {
+  for (const [genre, deck] of [['悬疑', 'suspense'], ['都市', 'urban'], ['历史', 'history'], ['言情', 'romance']]) {
     const premise = drawIdeas({ type: 'premise', genre, count: 1, seed: 42 });
     assert.equal(premise.meta.deck, deck);
     assert.ok(premise.results[0].title);
