@@ -12,7 +12,6 @@
 //  6. The public facades (schema.js, ideas.js, project.js) contain no logic,
 //     only imports and re-exports.
 //  7. scripts/decks/*.js data modules (except index.js) have no local imports.
-//  8. No source file exceeds MAX_LINES lines.
 //
 // Run with `npm run lint:modules`; tests/modules.test.js also calls checkModules().
 
@@ -22,7 +21,6 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SCRIPTS = path.join(ROOT, 'scripts');
-const MAX_LINES = 600;
 const FACADES = new Set(['schema.js', 'ideas.js', 'project.js']);
 const DELETED = new Set(['artifacts.js']);
 
@@ -30,9 +28,9 @@ const DELETED = new Set(['artifacts.js']);
 const LAYERS = [
   { layer: 0, match: (rel) => rel === 'util.js' },
   { layer: 1, match: (rel) => rel === 'paths.js' || rel === 'registry.js' || rel === 'rules/finding.js' || rel.startsWith('decks/') },
-  { layer: 2, match: (rel) => /^(rules|ideas|decks)\//.test(rel) || /^(graph|store|state|write|read|export|sources|doctor|registry-store|registry-actions|registry-rules|guides|schema|ideas)\.js$/.test(rel) },
+  { layer: 2, match: (rel) => /^(rules|ideas|decks|sources)\//.test(rel) || /^(graph|store|state|write|read|export|sources|doctor|registry-store|registry-actions|registry-rules|guides|schema|ideas)\.js$/.test(rel) },
   { layer: 3, match: (rel) => /^(project-core|project)\.js$/.test(rel) },
-  { layer: 4, match: (rel) => rel === 'cli.js' || rel.startsWith('cli/') || /^(wishmachine|pack|check-imports)\.js$/.test(rel) },
+  { layer: 4, match: (rel) => rel === 'cli.js' || rel.startsWith('cli/') || /^(wishmachine|pack|check-imports|check-structure)\.js$/.test(rel) },
 ];
 
 const CLI_ALLOWED = new Set(['project.js', 'schema.js', 'ideas.js', 'guides.js', 'util.js']);
@@ -163,9 +161,6 @@ export function checkModules(root = ROOT) {
     for (const item of logic.slice(0, 5)) violations.push(`${rel}:${item.number} facade must only re-export, found: ${item.line.slice(0, 80)}`);
   }
 
-  for (const [rel, count] of lineCounts) {
-    if (count > MAX_LINES) violations.push(`${rel}: ${count} lines > ${MAX_LINES} limit (split it)`);
-  }
 
   return { ok: violations.length === 0, files: files.length, violations, lineCounts };
 }

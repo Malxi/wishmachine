@@ -71,9 +71,8 @@ const REQUIRED_TEXT_FIELDS = [
   'promptStyle', 'promptNegative', 'portraitStyle', 'portraitNegative',
 ];
 
-function referenceErrors(deck, motifs) {
+function deckShapeErrors(deck) {
   const errors = [];
-  const has = (list, key, value) => (list || []).some((item) => item[key] === value);
   for (const field of REQUIRED_LIST_FIELDS) {
     if (!Array.isArray(deck[field]) || deck[field].length === 0) {
       errors.push(`${deck.name}.${field} must be a non-empty array`);
@@ -90,6 +89,11 @@ function referenceErrors(deck, motifs) {
   if (!deck.resourceCategories || typeof deck.resourceCategories !== 'object') {
     errors.push(`${deck.name}.resourceCategories must be an object`);
   }
+  return errors;
+}
+
+function deckResourceErrors(deck) {
+  const errors = [];
   const allowedCategories = new Set(['能源', '消耗品', '材料', '货币']);
   for (const resource of deck.resources || []) {
     if (!resource?.name || !resource?.category) {
@@ -103,6 +107,11 @@ function referenceErrors(deck, motifs) {
       errors.push(`${deck.name}.resourceCategories maps ${resource.category} to unsupported setup category ${mapped}`);
     }
   }
+  return errors;
+}
+
+function deckArchetypeErrors(deck) {
+  const errors = [];
   const archetypeNames = new Set();
   for (const archetype of deck.archetypes || []) {
     if (!archetype?.name) {
@@ -131,6 +140,12 @@ function referenceErrors(deck, motifs) {
       }
     }
   }
+  return errors;
+}
+
+function deckPackErrors(deck, motifs) {
+  const errors = [];
+  const has = (list, key, value) => (list || []).some((item) => item[key] === value);
   for (const pack of deck.packs || []) {
     const check = (list, key, value, label) => {
       if (!has(list, key, value)) errors.push(`${deck.name}.packs.${pack.theme} references unknown ${label} ${value}`);
@@ -152,6 +167,15 @@ function referenceErrors(deck, motifs) {
     }
   }
   return errors;
+}
+
+function referenceErrors(deck, motifs) {
+  return [
+    ...deckShapeErrors(deck),
+    ...deckResourceErrors(deck),
+    ...deckArchetypeErrors(deck),
+    ...deckPackErrors(deck, motifs),
+  ];
 }
 
 // Validate every pack reference at load time so a typo in deck data fails fast

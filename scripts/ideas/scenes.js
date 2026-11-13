@@ -55,7 +55,9 @@ function plantChapterMystery(mysteries, pendingMysteries, mystery, chapterId) {
 
 // Scene mysteries stay local to their scene: they are planted and resolved
 // inside the chapter and never leak into the chapter-level pending queue.
-function buildSceneMysteries(plot, chapterId, sceneIndex, scenesPerChapter, sceneObstacle, castInfo, threadId) {
+function buildSceneMysteries({
+  plot, chapterId, sceneIndex, scenesPerChapter, sceneObstacle, castInfo, threadId,
+}) {
   const lastScene = sceneIndex === scenesPerChapter - 1;
   const sceneId = `${chapterId}-scene-${sceneIndex + 1}-mystery`;
   const common = {
@@ -86,7 +88,9 @@ function buildSceneMysteries(plot, chapterId, sceneIndex, scenesPerChapter, scen
   return { planted, resolved };
 }
 
-function buildScenes(plot, chapterId, beat, castInfo, chapterObstacle, entrySummary, targetChars, scenesPerChapter, threadId) {
+function buildScenes({
+  plot, chapterId, beat, castInfo, chapterObstacle, entrySummary, targetChars, scenesPerChapter, threadId,
+}) {
   const scenarioA = plot.scenarios?.[0] || null;
   const scenarioB = plot.scenarios?.[1] || null;
   const blocking = (plot.cast_relations || []).find((relation) => relation.semantic === 'blocks' || relation.type === 'blocks') || null;
@@ -126,7 +130,9 @@ function buildScenes(plot, chapterId, beat, castInfo, chapterObstacle, entrySumm
       characters: castInfo.names.slice(0, Math.min(3, castInfo.names.length)),
       words: Math.ceil(targetChars / scenesPerChapter),
       tone: beat.act,
-      mysteries: buildSceneMysteries(plot, chapterId, sceneIndex, scenesPerChapter, sceneObstacle, castInfo, threadId),
+      mysteries: buildSceneMysteries({
+        plot, chapterId, sceneIndex, scenesPerChapter, sceneObstacle, castInfo, threadId,
+      }),
       beats: [beat.function, lastScene ? 'turn' : 'pressure'],
     });
     previousConsequence = consequence;
@@ -134,7 +140,7 @@ function buildScenes(plot, chapterId, beat, castInfo, chapterObstacle, entrySumm
   return scenes;
 }
 
-function buildChapterEvents(plot, chapterId, scenes, castInfo, globalIndex, totalChapters) {
+function buildChapterEvents({ chapterId, scenes, castInfo, globalIndex, totalChapters }) {
   const eventsPerChapter = totalChapters <= 20 ? Math.min(2, scenes.length) : 1;
   return Array.from({ length: eventsPerChapter }, (_, eventIndex) => {
     const scene = scenes[eventIndex === 0 ? 0 : scenes.length - 1];

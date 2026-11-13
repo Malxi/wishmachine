@@ -10,7 +10,9 @@ import {
   resultId,
 } from './shared.js';
 import { buildMultiVolumeOutlinePack } from './outlinepack.js';
-import { buildPlotpack, buildWorldpack, namecards } from './worldpack.js';
+import { buildPlotpack } from './plotpack.js';
+import { buildWorldpack } from './worldpack.js';
+import { namecards } from './namecards.js';
 
 export function ideasTypes() {
   return TYPES.map((name) => ({ name }));
@@ -154,8 +156,16 @@ function drawWorldpackResults(context) {
   const selected = pickMany(rng, deck.packs, Math.min(count, deck.packs.length));
   const characterPromptChars = clampNumber(options.characterPromptChars, 40, 500, 160);
   const results = selected.map((def, packIndex) => {
-    const cast = namecards(rng, seed + packIndex, plan.castCount, plan.castRoles, deck.name, characterPromptChars, warningSink);
-    return buildWorldpack(def, packIndex, seed, cast, deck, options);
+    const cast = namecards({
+      rng,
+      seed: seed + packIndex,
+      count: plan.castCount,
+      roles: plan.castRoles,
+      deckName: deck.name,
+      promptChars: characterPromptChars,
+      warnings: warningSink,
+    });
+    return buildWorldpack({ def, packIndex, seed, cast, sources: deck, options });
   });
   castMeta.archetypes = [...new Set(results.flatMap((item) => item.cast.map((character) => character.archetype)))];
   castMeta.archetype_roles = results[0]?.cast.reduce((roles, character) => {
@@ -234,7 +244,10 @@ function drawByType(type, context) {
   if (type === 'outlinepack') return drawOutlinepackResults(context);
   if (type === 'namecard' || type === 'name' || type === 'cast') {
     const { rng, seed, count, deck, warningSink } = context;
-    return { results: namecards(rng, seed, count, [], deck.name, 160, warningSink), castMeta: null };
+    return {
+      results: namecards({ rng, seed, count, deckName: deck.name, warnings: warningSink }),
+      castMeta: null,
+    };
   }
   return drawSimpleCardResults(type, context);
 }

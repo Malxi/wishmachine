@@ -59,11 +59,11 @@ function validateThreadMysteryLinks(ctx, thread) {
       }
       linkIds.add(mystery.id);
     }
-    for (const mystery of links) validateThreadMysteryLink(ctx, thread, key, ruleId, mystery);
+    for (const mystery of links) validateThreadMysteryLink(ctx, { thread, key, ruleId, mystery });
   }
 }
 
-function validateThreadMysteryLink(ctx, thread, key, ruleId, mystery) {
+function validateThreadMysteryLink(ctx, { thread, key, ruleId, mystery }) {
   const { findings } = ctx;
   if (!mystery?.id || !ctx.mysteryChapter.has(mystery.id)) {
     findings.push(finding(ruleId, 'high', `${thread.id}.${key} references unknown mystery ${mystery?.id || '(missing)'}`, thread.id));

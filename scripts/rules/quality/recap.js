@@ -19,7 +19,7 @@ function qualityRecapFindings(project, id, override) {
     findings.push(finding('quality.recap.chapter_id', 'high', `recap declares chapter_id ${recap.chapter_id}, expected ${id}`, id));
   }
   const found = qualityRecapOutlineFindings(project, id, recap, findings);
-  qualityRecapTextFindings(project, id, recap, found, findings);
+  qualityRecapTextFindings(project, { id, recap, found, findings });
   return findings;
 }
 
@@ -50,7 +50,7 @@ function qualityRecapOutlineFindings(project, id, recap, findings) {
   return found;
 }
 
-function qualityRecapTextFindings(project, id, recap, found, findings) {
+function qualityRecapTextFindings(project, { id, recap, found, findings }) {
   const chapterPath = path.join(project.dir, 'chapters', `${safeSegment(id, 'chapter id')}.md`);
   if (!fs.existsSync(chapterPath)) return;
   const chapterText = readText(chapterPath);

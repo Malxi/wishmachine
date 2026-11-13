@@ -1,18 +1,6 @@
-// worldpack / plotpack assembly and namecard (cast) generation.
-import { DEFAULT_DECK, DECKS, MOTIFS, ROLE_NAMES } from '../decks/index.js';
-import { pick, pickMany } from '../util.js';
-import {
-  addWarning,
-  buildCastPromptMeta,
-  clampNumber,
-  findCard,
-  resultId,
-  truncatePrompt,
-} from './shared.js';
-
-// ---------------------------------------------------------------------------
-// worldpack
-// ---------------------------------------------------------------------------
+// worldpack assembly: card resolution, entity graph and prompt pack.
+import { DEFAULT_DECK, MOTIFS } from '../decks/index.js';
+import { clampNumber, findCard, truncatePrompt } from './shared.js';
 
 function resolveWorldpackCards(def, sources) {
   return {
@@ -115,7 +103,7 @@ function buildWorldpackGraph(packId, cast, cards, sources) {
   return { entities, relations, castRelations };
 }
 
-function buildWorldpackPrompt(def, cards, cast, castRelations, sources, options) {
+function buildWorldpackPrompt({ def, cards, cast, castRelations, sources, options }) {
   const keywords = [...new Set([
     def.theme,
     cards.premise?.title,
@@ -157,11 +145,13 @@ function buildWorldpackPrompt(def, cards, cast, castRelations, sources, options)
   };
 }
 
-function buildWorldpack(def, packIndex, seed, cast, sources, options = {}) {
+function buildWorldpack({ def, packIndex, seed, cast, sources, options = {} }) {
   const cards = resolveWorldpackCards(def, sources);
   const packId = `worldpack-${seed}-${String(packIndex + 1).padStart(2, '0')}`;
   const graph = buildWorldpackGraph(packId, cast, cards, sources);
-  const { keywords, promptPack } = buildWorldpackPrompt(def, cards, cast, graph.castRelations, sources, options);
+  const { keywords, promptPack } = buildWorldpackPrompt({
+    def, cards, cast, castRelations: graph.castRelations, sources, options,
+  });
   return {
     id: packId,
     theme: def.theme,
@@ -189,219 +179,4 @@ function buildWorldpack(def, packIndex, seed, cast, sources, options = {}) {
   };
 }
 
-// ---------------------------------------------------------------------------
-// plotpack
-// ---------------------------------------------------------------------------
-
-function resolvePlotpackRefs(pack) {
-  const storyline = pack.storylines?.[0] || null;
-  return {
-    premise: pack.premise,
-    storyline,
-    scenarioA: pack.scenarios?.[0] || null,
-    scenarioB: pack.scenarios?.[1] || null,
-    blocking: (pack.cast_relations || []).find((relation) => relation.semantic === 'blocks' || relation.type === 'blocks') || null,
-    support: (pack.cast_relations || []).find((relation) => relation.semantic === 'supports' || relation.type === 'supports') || null,
-    storylineRef: storyline?.id || storyline?.title || '',
-  };
-}
-
-function buildPlotBeats(pack, refs) {
-  const { premise, storyline, scenarioA, scenarioB, blocking, storylineRef } = refs;
-  const beats = [
-    {
-      act: 'Act I',
-      chapter: 1,
-      function: 'setup',
-      beat: premise ? `${premise.title}：先让读者看见${premise.surface_rule}` : '先展示世界规则与主角的日常。',
-      source: 'premise',
-      source_id: pack.id,
-    },
-    {
-      act: 'Act I',
-      chapter: 2,
-      function: 'inciting',
-      beat: scenarioA ? scenarioA.pressure : '一个事件打破日常，主角被迫做出第一次选择。',
-      source: 'scenario',
-      source_id: scenarioA?.id || '',
-    },
-    {
-      act: 'Act II',
-      chapter: 3,
-      function: 'midpoint',
-      beat: scenarioB ? scenarioB.twist : storyline?.midpoint || '主角发现规则背后还有一层规则。',
-      source: 'scenario',
-      source_id: scenarioB?.id || '',
-    },
-    {
-      act: 'Act II',
-      chapter: 4,
-      function: 'crisis',
-      beat: blocking
-        ? `${blocking.stake}；反派让主角第一次付出无法回收的代价。`
-        : storyline?.payoff || '主角必须在两个都不想要的答案之间选择。',
-      source: 'cast_relation',
-      source_id: blocking ? `${blocking.from}->${blocking.to}` : '',
-    },
-    {
-      act: 'Act III',
-      chapter: 5,
-      function: 'climax',
-      beat: storyline ? storyline.payoff : '主角用自己的方式改写规则。',
-      source: 'storyline',
-      source_id: storylineRef,
-    },
-    {
-      act: 'Act III',
-      chapter: 6,
-      function: 'resolution',
-      beat: storyline ? `代价落地：${storyline.cost}` : '胜利留下一个无法撤销的代价。',
-      source: 'storyline',
-      source_id: storylineRef,
-    },
-  ];
-  if (refs.support) {
-    beats[3].support = refs.support.stake;
-  }
-  return beats;
-}
-
-function buildPlotGraph(pack, id, premise, beats) {
-  return {
-    entities: [
-      ...(pack.graph?.entities || []),
-      { id: `${id}:plot`, type: 'plot', label: `${premise?.title || 'plot'} 剧情包` },
-      ...beats.map((beat) => ({
-        id: `${id}:beat-${beat.chapter}`,
-        type: 'beat',
-        label: `${beat.act} · ${beat.function}`,
-      })),
-    ],
-    relations: [
-      ...(pack.graph?.relations || []),
-      { from: `${id}:plot`, to: `${id}:beat-1`, type: 'starts_with' },
-      { from: `${id}:plot`, to: `${id}:beat-6`, type: 'ends_with' },
-    ],
-  };
-}
-
-function buildPlotpack(pack, seed, index) {
-  const refs = resolvePlotpackRefs(pack);
-  const beats = buildPlotBeats(pack, refs);
-  const id = `plotpack-${seed}-${String(index + 1).padStart(2, '0')}`;
-  return {
-    id,
-    worldpack_id: pack.id,
-    genre: pack.genre || '',
-    theme: pack.theme,
-    premise: refs.premise,
-    location: pack.location,
-    faction: pack.faction,
-    equipment: pack.equipment,
-    engine: pack.engine,
-    cast: pack.cast,
-    cast_relations: pack.cast_relations,
-    resources: pack.resources,
-    scenarios: pack.scenarios,
-    storyline: refs.storyline,
-    storylines: pack.storylines,
-    beats,
-    keywords: pack.keywords,
-    motif: pack.motif,
-    prompt_pack: pack.prompt_pack,
-    graph: buildPlotGraph(pack, id, refs.premise, beats),
-  };
-}
-
-// ---------------------------------------------------------------------------
-// namecard
-// ---------------------------------------------------------------------------
-
-function archetypesForRole(deck, role) {
-  const pool = deck.archetypes || [];
-  const named = deck.roleArchetypes?.[role];
-  if (Array.isArray(named) && named.length > 0) {
-    const resolved = named.map((name) => findCard(pool, 'name', name)).filter(Boolean);
-    if (resolved.length > 0) return resolved;
-  }
-  return pool.filter((item) => (item.roles || []).includes(role));
-}
-
-function namecards(rng, seed, count, roles = [], deckName = 'default', promptChars = 160, warnings = null) {
-  const deck = DECKS[deckName] || DEFAULT_DECK;
-  const pool = deck.archetypes || [];
-  const surnames = pickMany(rng, DEFAULT_DECK.surnames || [], Math.min(count, 20));
-  const given = pickMany(rng, DEFAULT_DECK.givenNames || [], Math.min(count, 20));
-  const used = new Set();
-  const usedArchetypes = new Set();
-  const results = [];
-  for (let i = 0; i < count; i += 1) {
-    let surname = surnames[i % (surnames.length || 1)] || '孟';
-    let givenName = given[i % (given.length || 1)] || '启明';
-    let name = `${surname}${givenName}`;
-    let attempt = 0;
-    while (used.has(name) && attempt < 40) {
-      surname = pick(rng, DEFAULT_DECK.surnames || ['孟']);
-      givenName = pick(rng, DEFAULT_DECK.givenNames || ['启明']);
-      name = `${surname}${givenName}`;
-      attempt += 1;
-    }
-    used.add(name);
-    const role = roles[i] || ROLE_NAMES[i % ROLE_NAMES.length];
-    const roleArchetypes = archetypesForRole(deck, role);
-    const availableForRole = roleArchetypes.filter((item) => !usedArchetypes.has(item.name));
-    let archetype = availableForRole.length > 0 ? pick(rng, availableForRole) : null;
-    if (!archetype) {
-      const available = pool.filter((item) => !usedArchetypes.has(item.name));
-      const fallback = available.length > 0 ? available : pool;
-      archetype = pick(rng, fallback.length > 0 ? fallback : [{
-        name: '无名者', personality: [], contradiction: '尚未确定。', want: '尚未确定。', fear: '尚未确定。',
-        mask: '尚未确定。', speech: '尚未确定。', body: '尚未确定。', backstory: '尚未确定。',
-      }]);
-      if (warnings) {
-        addWarning(warnings, {
-          code: 'cast.role_archetype_mismatch',
-          severity: 'warning',
-          message: `no unused ${role} archetype left in the ${deck.name} deck; ${archetype.name} is cast as ${role}`,
-          requested_role: role,
-          archetype: archetype.name,
-        });
-      }
-    }
-    usedArchetypes.add(archetype.name);
-    const id = resultId('name', seed, i);
-    const rawCharacterPrompt = [
-      deck.portraitStyle || DEFAULT_DECK.portraitStyle || '',
-      name,
-      archetype.name,
-      ...(archetype.personality || []),
-      archetype.body,
-      archetype.want,
-    ].filter(Boolean).join('，');
-    results.push({
-      id,
-      name,
-      surname,
-      given_name: givenName,
-      naming_style: pick(rng, ['hard', 'literary', 'plain']),
-      role_tags: [role],
-      archetype: archetype.name,
-      prompt: truncatePrompt(rawCharacterPrompt, promptChars),
-      prompt_meta: buildCastPromptMeta(rawCharacterPrompt, promptChars),
-      negative_prompt: deck.portraitNegative || DEFAULT_DECK.portraitNegative || '',
-      personality: archetype.personality,
-      contradiction: archetype.contradiction,
-      want: archetype.want,
-      fear: archetype.fear,
-      social_mask: archetype.mask,
-      speech_style: archetype.speech,
-      body_language: archetype.body,
-      backstory_hook: archetype.backstory,
-      naming_logic: `先定原型“${archetype.name}”，再选音感；姓氏“${surname}”与名字“${givenName}”组合为“${name}”。`,
-      derivation: ['archetype', 'personality', 'contradiction', 'naming_style', 'surname', 'given_name'],
-    });
-  }
-  return results;
-}
-
-export { buildPlotpack, buildWorldpack, namecards };
+export { buildWorldpack };

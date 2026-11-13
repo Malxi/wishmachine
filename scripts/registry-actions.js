@@ -148,7 +148,7 @@ function markMysteryDropped(docs, found, mysteryId, reason) {
   }
 }
 
-function linkAbandonedThreads(docs, mysteryId, threadId, chapterId, question) {
+function linkAbandonedThreads({ docs, mysteryId, threadId, chapterId, question }) {
   for (const doc of [docs.setup, docs.outline]) {
     for (const thread of doc.thread_registry || []) {
       if (thread.id !== threadId) continue;
@@ -185,7 +185,7 @@ export function abandonMystery(project, mysteryId, reason = 'manual', options = 
   }
   const backup = createRegistryBackup(project, 'abandon');
   markMysteryDropped(docs, found, mysteryId, reason);
-  linkAbandonedThreads(docs, mysteryId, threadId, chapterId, question);
+  linkAbandonedThreads({ docs, mysteryId, threadId, chapterId, question });
   const expected = collectOutlineMysteryRegistry(docs.outline);
   docs.setup.mystery_registry = expected;
   docs.outline.mystery_registry = expected;

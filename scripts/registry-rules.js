@@ -10,6 +10,7 @@ import {
   outlineChapters, chapterResolvedMysteries, collectMysteryRegistry,
   sortMysteryLinks, sortThreadArray,
 } from './registry.js';
+import { finding } from './rules/finding.js';
 
 export function outlineEvidence(outline) {
   const chapters = outlineChapters(outline);
@@ -140,9 +141,8 @@ export function registryRepairReasons(setup, outline) {
   return reasons;
 }
 
-function rule(ruleId, severity, issue, targetId = '', suggestion = '') {
-  return { rule_id: ruleId, severity, issue, target_id: targetId, suggestion };
-}
+// Same rule vocabulary as rules/finding.js: one definition, stable ids included.
+const rule = finding;
 
 function threadRegistryFindings(setup, outline) {
   const setupRegistry = setup.thread_registry;

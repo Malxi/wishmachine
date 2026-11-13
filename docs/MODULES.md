@@ -21,7 +21,17 @@
 - **CLI 边界**：`cli.js` / `cli/**` 只能 import `../project.js`、`../schema.js`、`../ideas.js`、`../guides.js`、`../util.js` 和 cli 内部文件，不能直接 import 领域内部模块。
 - **features 隔离**：`rules/**` 不得 import `ideas/**`、`project*`、`state`、`write/read/export/sources/graph/doctor`；`ideas/**` 不得 import `rules/**`。
 - **数据模块纯净**：`decks/*.js`（除 `index.js`）没有任何本地 import。
-- **无环、无坏引用、单文件 ≤600 行**（门面 ≤80 行）。
+- **无环、无坏引用**；门面 ≤80 行。
+
+另有独立的**结构门禁**（`scripts/check-structure.js`，`npm run lint:structure`）：
+
+| 限制 | 阈值 | 说明 |
+|---|---|---|
+| 文件行数 | **≤350** | 超了拆模块；数据/门面文件同样适用 |
+| 函数行数 | **≤80** | 超了抽 helper 或拆函数 |
+| 参数个数 | **≤4** | 超了改为传 options 对象（`fn({ a, b, c, d, e })`） |
+
+唯一例外是 `rules/finding.js:finding`（规则词汇表本身，5 个位置参数；改成对象会让每条规则调用难读），在 `PARAM_ALLOWLIST` 中显式登记。`npm run lint:modules` 会同时跑边界与结构两个 checker，`tests/modules.test.js`、`tests/structure.test.js` 也在测试里锁住。
 
 ## 2. 公共面（稳定 API）
 
@@ -75,27 +85,25 @@
 4. 跨 scope 的接口变更：在 commit message/report 里列出「新增公共符号」，依赖方按需跟进。
 5. 合并前门禁：`npm test && npm run lint && npm run lint:modules && npm run format:check`（CI 同款）。
 
-## 6. 当前状态（v0.3.x 重构后）
+## 6. 当前状态（v0.3.x 两轮重构后）
 
-2026-11-13 的并发友好重构已落地：
+2026-11-13 的并发友好重构已全部落地：
 
-- `artifacts.js`（371 行、23 导出、与 `graph.js` 构成唯一循环）已拆成 `paths.js`(119) / `state.js`(150) / `store.js`(119) / `project-core.js`(204)，`project.js` 由 220 行混合实现变为 **19 行纯门面**；循环清零。
-- `rules/quality.js`(473) 按 target 拆成 `rules/quality/{setup,craft,recap,chapter,outline,shared}.js`（最大 283 行），新增 `rules/index.js` 公共面。
-- `cli/args.js`(238) 拆成 `args.js`(147，解析/助手) + `spec.js`(70) + `spec/{book,ideas,project,gen}.js`，新增 `cli/index.js`；`book.js`/`ideas.js` 的 registry 与 validate 子命令再拆出独立文件。
-- 全仓 **68 个模块、0 循环**；`project.js`/`schema.js`/`ideas.js` 门面 18/6/4 行；`npm run lint:modules` 与 `tests/modules.test.js` 强制层方向、无环、门面纯净、CLI/features 隔离；CI 已加这一步。
+- 第一轮：`artifacts.js`(371/23 导出/唯一循环) → `paths.js`(119) / `state.js`(150) / `store.js`(119) / `project-core.js`(204)；`project.js` 变 19 行纯门面；循环清零。`rules/quality.js`(473) 按 target 拆分；`cli/args.js`(238) 拆成 args/spec/分组 spec + `cli/index.js`。
+- 第二轮：`ideas/outlinepack.js`(443) → `outlinepack.js`(134) / `outline-volume.js`(284) / `registry-build.js`(39)；`worldpack.js`(407) → worldpack(182) / `plotpack.js`(122) / `namecards.js`(95)；`sources.js`(368) → 门面(116) / `sources/net.js`(117) / `sources/cards.js`(129)；`rules/outline-shape.js`(352) → 门面(46) / `outline-index.js`(30) / `outline-registries.js`(86) / `outline-chapters.js`(104) / `outline-structure.js`(96)。
+- 新增**结构门禁**：文件 ≤350 行、函数 ≤80 行、参数 ≤4 个（超了传 options 对象），唯一例外是规则词汇表 `rules/finding.js:finding`（`PARAM_ALLOWLIST` 登记）；`registry-rules.js` 原本重复的 rule 工厂已改为复用该词汇表。
+- 全仓 **79 个模块、0 循环**；`project.js`/`schema.js`/`ideas.js` 门面 19/6/4 行；两个 checker（`lint:modules` = boundaries + structure）与 `tests/modules.test.js`、`tests/structure.test.js` 锁住规则，CI 已执行。
 
-依赖中枢（fan-in）现状：`util.js` 24、`rules/finding.js` 12、`paths.js` 10、`cli/args.js` 8、`registry.js` 7；它们都是稳定的低层契约，改动时由对应 owner 串行处理即可。
+依赖中枢（fan-in）现状：`util.js` 24、`rules/finding.js` 16、`paths.js` 10、`registry.js` 9、`cli/args.js` 8；它们都是稳定的低层契约，改动时由对应 owner 串行处理即可。
 
 ## 7. 下一步拆分候选（按并发收益排序）
 
 | 位置 | 行数 | 问题 | 建议 |
 |---|---|---|---|
-| `ideas/outlinepack.js` | 443 | 单/多卷装配、registry、setup_draft 都在一处 | 拆 `volume.js` + `assemble.js` + `registry-build.js` |
-| `ideas/worldpack.js` | 407 | worldpack/plotpack/namecards 混在一起 | 按 product 拆 3 个文件 |
-| `sources.js` | 368 | URL 校验/重定向/HTML 解析/card 映射/保存 | 拆 `net.js` + `wikipedia.js` + `cards.js` |
-| `rules/outline-shape.js` | 352 | 形状+语义+排序都在一处 | 按 part/volume/chapter/event 拆 |
-| `ideas/draw.js` | 317 | 16 类型分派 + cast 规划 | 分派表 + `cast-plan.js` |
+| `ideas/draw.js` | 330 | 16 类型分派 + cast 规划 + 结果信封 | 分派表 + `cast-plan.js` |
 | `registry-store.js` | 303 | 快照/日志/undo/redo 全在一起 | 拆 `snapshot.js` + `operations-log.js` |
+| `rules/quality/outline.js` | 283 | 大纲质量规则仍偏大 | 按 event/item/relationship 拆 |
+| `registry-actions.js` | 270 | clean/abandon/repair 操作 | 与 store 一起重构 |
 | 数据契约 | — | `rules/shape.js`（校验形状）与 `ideas/**`（生成形状）各维护一份 setup/outline 字段知识 | 远期抽 `contracts.js`（字段/枚举/必填的单一来源），rules 与 ideas 都从它派生 |
 
 以上都不影响现有并发边界：拆分只发生在单一 scope/dir 内部，公共面保持不变。
@@ -106,4 +114,5 @@
 - [ ] 在 `scripts/check-imports.js` 的 `LAYERS` 里登记（若属于新顶层文件）。
 - [ ] 跨目录使用者只从公共面 import；目录内实现文件可以自由拆分。
 - [ ] 补该 scope 的测试（`tests/<scope>.test.js`）。
+- [ ] 检查结构门禁：文件 ≤350 行、函数 ≤80 行、参数 ≤4 个（超了改 options 对象）。
 - [ ] 跑 `npm test && npm run lint:modules && npm run lint && npm run format:check`。

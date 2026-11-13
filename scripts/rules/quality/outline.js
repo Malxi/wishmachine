@@ -189,7 +189,7 @@ function validateChapterEventQuality(state, chapter) {
       applyCharacterStateChange(state, action, target);
     }
     if (target && (targetType === 'item' || type === 'item')) {
-      applyItemStateChange(state, chapter, action, target, findings);
+      applyItemStateChange(state, { chapter, action, target, findings });
     }
   }
 }
@@ -207,7 +207,7 @@ function applyCharacterStateChange(state, action, target) {
   }
 }
 
-function applyItemStateChange(state, chapter, action, target, findings) {
+function applyItemStateChange(state, { chapter, action, target, findings }) {
   if (['acquire', 'get', 'pickup', 'receive', 'gain'].includes(action)) {
     state.itemState.set(target, true);
   } else if (['use', 'consume', 'equip', 'spend'].includes(action) && !state.itemState.get(target) && !state.knownItems.has(target)) {

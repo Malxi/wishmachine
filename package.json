@@ -34,7 +34,8 @@
   "scripts": {
     "test": "node --test",
     "lint": "eslint .",
-    "lint:modules": "node scripts/check-imports.js",
+    "lint:modules": "node scripts/check-imports.js && node scripts/check-structure.js",
+    "lint:structure": "node scripts/check-structure.js",
     "format:check": "prettier --check package.json .prettierrc eslint.config.js .github/workflows/ci.yml",
     "pack": "node scripts/pack.js",
     "prepublishOnly": "npm test"
