@@ -383,6 +383,13 @@ const XIANXIA_PACKS = [
 
 XIANXIA.packs = XIANXIA_PACKS;
 
+function truncatePrompt(rawPrompt, maxChars) {
+  if (rawPrompt.length <= maxChars) return rawPrompt;
+  const head = rawPrompt.slice(0, maxChars - 1);
+  const breakAt = Math.max(head.lastIndexOf('，'), head.lastIndexOf(','), head.lastIndexOf(' / '));
+  return `${(breakAt > maxChars * 0.5 ? head.slice(0, breakAt) : head).trimEnd()}…`;
+}
+
 function buildWorldpack(def, packIndex, seed, cast, sources, options = {}) {
   const find = (list, key, value) => list.find((item) => item[key] === value);
   const premise = find(sources.premises, 'title', def.premise);
@@ -512,12 +519,7 @@ function buildWorldpack(def, packIndex, seed, cast, sources, options = {}) {
   ].filter(Boolean).join('，');
   const promptChars = Math.max(80, Math.min(2000, Number(options.promptChars) || 800));
   const rawPromptLength = rawPrompt.length;
-  let prompt = rawPrompt;
-  if (rawPromptLength > promptChars) {
-    const head = rawPrompt.slice(0, promptChars - 1);
-    const breakAt = Math.max(head.lastIndexOf('，'), head.lastIndexOf(','), head.lastIndexOf(' / '));
-    prompt = `${(breakAt > promptChars * 0.5 ? head.slice(0, breakAt) : head).trimEnd()}…`;
-  }
+  const prompt = truncatePrompt(rawPrompt, promptChars);
   const promptPack = {
     positive: prompt,
     negative: negativeByDeck[sources.name] || negativeByDeck.default,
@@ -1393,7 +1395,7 @@ function resultId(prefix, seed, index) {
   return `${prefix}-${seed}-${String(index + 1).padStart(2, '0')}`;
 }
 
-function namecards(rng, seed, count, roles = [], genre = '') {
+function namecards(rng, seed, count, roles = [], genre = '', promptChars = 160) {
   const genrePools = {
     xianxia: XIANXIA_ARCHETYPES,
     suspense: SUSPENSE_ARCHETYPES,
@@ -1461,7 +1463,7 @@ function namecards(rng, seed, count, roles = [], genre = '') {
       naming_style: pick(rng, ['hard', 'literary', 'plain']),
       role_tags: [role],
       archetype: archetype.name,
-      prompt: [visualStyle, name, archetype.name, ...(archetype.personality || []), archetype.body, archetype.want].filter(Boolean).join('，'),
+      prompt: truncatePrompt([visualStyle, name, archetype.name, ...(archetype.personality || []), archetype.body, archetype.want].filter(Boolean).join('，'), promptChars),
       negative_prompt: visualNegative,
       personality: archetype.personality,
       contradiction: archetype.contradiction,
@@ -1597,7 +1599,7 @@ export function drawIdeas(options = {}) {
       : Array.from({ length: castCount }, (_, index) => (index === 0 ? 'protagonist' : index === 1 ? 'antagonist' : 'support'));
     if (!castRoles.includes('protagonist')) castRoles[0] = 'protagonist';
     results = selected.map((def, packIndex) => {
-      const cast = namecards(rng, seed + packIndex, castCount, castRoles, deck.name);
+      const cast = namecards(rng, seed + packIndex, castCount, castRoles, deck.name, Math.max(40, Math.min(500, Number(options.characterPromptChars) || 160)));
       return buildWorldpack(def, packIndex, seed, cast, deck, options);
     });
   } else if (type === 'plotpack') {
