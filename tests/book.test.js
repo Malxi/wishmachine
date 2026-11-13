@@ -630,6 +630,11 @@ test('worldpack cast uses genre-aware archetypes', () => {
     const archetypes = pack.results[0].cast.map((character) => character.archetype);
     assert.equal(new Set(archetypes).size, archetypes.length);
   }
+  const weighted = drawIdeas({
+    type: 'worldpack', genre: '悬疑', count: 1, seed: 42,
+    castRoles: 'protagonist,antagonist,antagonist,support',
+  });
+  assert.deepEqual(weighted.results[0].cast.map((character) => character.role_tags[0]), ['protagonist', 'antagonist', 'antagonist', 'support']);
 });
 
 test('worldpacks include motifs and positive/negative prompt packs', () => {

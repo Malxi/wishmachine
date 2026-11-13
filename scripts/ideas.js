@@ -1524,9 +1524,16 @@ export function drawIdeas(options = {}) {
   if (type === 'worldpack') {
     const packDefs = deck.packs;
     const selected = pickMany(rng, packDefs, Math.min(count, packDefs.length));
-    const castCount = Math.max(1, Math.min(12, Number(options.castCount) || 4));
+    const allowedRoles = new Set(['protagonist', 'antagonist', 'support']);
+    const explicitRoles = (Array.isArray(options.castRoles) ? options.castRoles : String(options.castRoles || '').split(','))
+      .map((role) => String(role || '').trim())
+      .filter((role) => allowedRoles.has(role));
+    const castCount = Math.max(1, Math.min(12, explicitRoles.length || Number(options.castCount) || 4));
+    const castRoles = explicitRoles.length
+      ? explicitRoles.slice(0, castCount)
+      : Array.from({ length: castCount }, (_, index) => (index === 0 ? 'protagonist' : index === 1 ? 'antagonist' : 'support'));
     results = selected.map((def, packIndex) => {
-      const cast = namecards(rng, seed + packIndex, castCount, ['protagonist', 'antagonist', 'support', 'support'], deck.name);
+      const cast = namecards(rng, seed + packIndex, castCount, castRoles, deck.name);
       return buildWorldpack(def, packIndex, seed, cast, deck);
     });
   } else if (type === 'plotpack') {

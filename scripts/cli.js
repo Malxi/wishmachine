@@ -4,7 +4,7 @@ import { readJson } from './util.js';
 import { drawIdeas, ideasTypes, validateIdeaDraw } from './ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference, listSkills, readSkill } from './guides.js';
 
-const VERSION = '0.2.28';
+const VERSION = '0.2.29';
 const BOOLEAN_FLAGS = new Set(['apply', 'json', 'help', 'h', 'dry-run', 'force', 'ingest']);
 const COMMANDS = new Set(['book', 'check', 'ideas', 'gen', 'state', 'audit', 'refresh', 'export', 'doctor', 'version', 'help']);
 
@@ -110,7 +110,7 @@ Commands:
   check [--profile quality|schema|custom|all] [--target setup|outline|chapter] [--id <id>]
   ideas draw --type namecard|premise|resource|scenario ... [--count 5] [--seed 42] [--dir <project> --save]
   ideas draw --type outlinepack [--chapters 10] [--scenes 3] [--target-chars 3000]
-  ideas draw --type worldpack|plotpack [--cast-count 4]
+  ideas draw --type worldpack|plotpack [--cast-count 4] [--cast-roles protagonist,antagonist,support]
   ideas draw --type outlinepack [--volumes 3] [--chapters-per-volume 10]
   ideas import --file <cards.json> [--dir <project>] [--type <type>] [--source <source>]
   ideas discover [--topic history|myth|novel] [--limit 3] [--dir <project>]
@@ -378,6 +378,7 @@ async function runIdeas(args, flags) {
     volumes: intFlag(flags, 'volumes', 1),
     chaptersPerVolume: intFlag(flags, 'chapters-per-volume', 0),
     castCount: intFlag(flags, 'cast-count', 4),
+    castRoles: stringFlag(flags, 'cast-roles', ''),
   });
   if (boolFlag(flags, 'save')) {
     const project = loadProject(stringFlag(flags, 'dir', ''));

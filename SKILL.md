@@ -13,7 +13,7 @@ examples_en:
   - "Create a 3-volume × 5-chapter science-fiction project"
   - "Check the outline for blocking findings"
   - "Draw 12 science-fiction name cards"
-version: 0.2.28
+version: 0.2.29
 author: Malxi
 ---
 
@@ -111,6 +111,7 @@ all       quality + schema
 node scripts/wishmachine.js ideas draw --type namecard --genre 科幻 --count 12 --seed 42
 node scripts/wishmachine.js ideas draw --type premise --genre 修仙 --count 3 --seed 7
 node scripts/wishmachine.js ideas draw --type worldpack --genre 悬疑 --cast-count 6 --seed 7
+node scripts/wishmachine.js ideas draw --type worldpack --genre 悬疑 --cast-roles protagonist,antagonist,support,support --seed 7
 node scripts/wishmachine.js ideas draw --type premise --genre 悬疑 --count 3 --seed 7
 node scripts/wishmachine.js ideas draw --type premise --genre 都市 --count 3 --seed 7
 node scripts/wishmachine.js ideas draw --type premise --genre 历史 --count 3 --seed 7
