@@ -729,6 +729,17 @@ test('romance plot and outline packs use the romance deck', () => {
   assert.ok(shortCharacter.results[0].cast.some((character) => character.prompt_meta.truncated));
 });
 
+test('cast validation catches missing protagonist and duplicate archetypes', () => {
+  const pack = drawIdeas({ type: 'worldpack', genre: '言情', count: 1, seed: 42 });
+  assert.equal(validateIdeaDraw({ results: [pack.results[0]] }).findings.length, 0);
+  const missing = JSON.parse(JSON.stringify(pack.results[0]));
+  missing.cast.forEach((character) => { character.role_tags = ['support']; });
+  assert.ok(validateIdeaDraw({ results: [missing] }).findings.some((finding) => finding.rule_id === 'idea.cast.missing_protagonist'));
+  const duplicate = JSON.parse(JSON.stringify(pack.results[0]));
+  duplicate.cast[1].archetype = duplicate.cast[0].archetype;
+  assert.ok(validateIdeaDraw({ results: [duplicate] }).findings.some((finding) => finding.rule_id === 'idea.cast.duplicate_archetype'));
+});
+
 test('checkProject reports setup/outline thread registry drift', () => {
   const dir = tempDir();
   initProject({ name: 'registry drift', dir, parts: 1, volumes: 1, chapter: 10 });

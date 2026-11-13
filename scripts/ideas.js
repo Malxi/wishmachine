@@ -1510,6 +1510,23 @@ export function validateIdeaDraw(draw) {
     findings.push({ rule_id: rule, severity, target_id: target, issue, suggestion });
   };
   for (const result of results) {
+    if (Array.isArray(result.cast)) {
+      const castRoles = new Set();
+      const castArchetypes = new Set();
+      for (const character of result.cast) {
+        const role = character?.role_tags?.[0];
+        if (role) castRoles.add(role);
+        if (character?.archetype) {
+          if (castArchetypes.has(character.archetype)) {
+            add('low', 'idea.cast.duplicate_archetype', character.archetype, `duplicate cast archetype ${character.archetype}`, 'Pick a different archetype or reduce cast count.');
+          }
+          castArchetypes.add(character.archetype);
+        }
+      }
+      if (!castRoles.has('protagonist')) {
+        add('high', 'idea.cast.missing_protagonist', result.id || 'worldpack', 'cast has no protagonist', 'Add a protagonist or let cast-roles auto-fix it.');
+      }
+    }
     const registry = result.thread_registry;
     if (!Array.isArray(registry)) continue;
     const ids = new Set();
