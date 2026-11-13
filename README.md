@@ -137,6 +137,7 @@ logs/
 - `book write outline --from-idea <id>` 把 outlinepack 的 draft_outline 送入正常候选检查
 - `book write setup --from-idea <id>` 把 outlinepack 的 setup_draft 送入正常候选检查
 - `ideas` 题材牌堆：科幻默认 / 修仙 / 悬疑 / 都市 / 历史 / 言情（4 packs）
+- 校验输出带 schema_version: 1
 - findings 按 severity 降序、rule_id 升序排序
 - `--output` 自动创建父目录并原子写入
 - `ideas validate --output <file>` 将校验结果写入文件

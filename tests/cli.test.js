@@ -60,5 +60,6 @@ test('CLI init, status and ideas', () => {
   const outputFile = path.join(dir, 'nested', 'validation.json');
   const written = JSON.parse(run(['ideas', 'validate', '--all', '--dir', dir, '--output', outputFile]));
   assert.equal(written.output, outputFile);
+  assert.equal(JSON.parse(fs.readFileSync(outputFile, 'utf8')).schema_version, 1);
   assert.equal(JSON.parse(fs.readFileSync(outputFile, 'utf8')).action, 'validate-all');
 });
