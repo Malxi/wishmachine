@@ -6,7 +6,7 @@ import { readJson } from './util.js';
 import { drawIdeas, ideasTypes, validateIdeaDraw } from './ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference, listSkills, readSkill } from './guides.js';
 
-const VERSION = '0.2.69';
+const VERSION = '0.2.70';
 const BOOLEAN_FLAGS = new Set(['apply', 'json', 'help', 'h', 'dry-run', 'force', 'ingest']);
 const COMMANDS = new Set(['book', 'check', 'ideas', 'gen', 'state', 'audit', 'refresh', 'export', 'doctor', 'version', 'help']);
 
@@ -117,7 +117,7 @@ Commands:
   ideas import --file <cards.json> [--dir <project>] [--type <type>] [--source <source>]
   ideas discover [--topic history|myth|novel] [--limit 3] [--dir <project>]
   ideas search --query <text> [--provider wikipedia|gutenberg] [--limit 3] [--ingest] [--dir <project>]
-  ideas validate --id <saved-outlinepack-id> | --all [--strict] [--min-severity low|medium|high|critical] [--max-findings 0] [--ignore rule_id,...] [--output <file|->] [--dir <project>]
+  ideas validate --id <saved-outlinepack-id> | --all [--strict] [--min-severity low|medium|high|critical] [--max-findings 0] [--ignore rule_id,...] [--ignore-file <json>] [--output <file|->] [--dir <project>]
   ideas types
   gen workflow list|read <name>
   gen skill list|read <name>
@@ -362,7 +362,16 @@ async function runIdeas(args, flags) {
       fail(`unknown min-severity: ${minSeverity}`);
     }
     const maxFindings = Math.max(0, intFlag(flags, 'max-findings', 0));
-    const ignoreRules = stringFlag(flags, 'ignore', '').split(',').map((rule) => rule.trim()).filter(Boolean);
+    const ignoreFile = stringFlag(flags, 'ignore-file', '');
+    let fileIgnore = [];
+    if (ignoreFile) {
+      const doc = readJson(path.resolve(ignoreFile));
+      fileIgnore = Array.isArray(doc) ? doc : (doc.rules || []);
+    }
+    const ignoreRules = [
+      ...stringFlag(flags, 'ignore', '').split(',').map((rule) => rule.trim()).filter(Boolean),
+      ...fileIgnore.map((rule) => String(rule || '').trim()).filter(Boolean),
+    ];
     const output = stringFlag(flags, 'output', '');
     const emit = (payload, code) => {
       if (output && output !== '-') {

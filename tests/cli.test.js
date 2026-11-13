@@ -65,4 +65,8 @@ test('CLI init, status and ideas', () => {
   const stdout = JSON.parse(run(['ideas', 'validate', '--all', '--dir', dir, '--output', '-']));
   assert.equal(stdout.action, 'validate-all');
   assert.equal(stdout.schema_version, 1);
+  const ignoreFile = path.join(dir, 'ignore.json');
+  fs.writeFileSync(ignoreFile, JSON.stringify({ rules: ['idea.cast_relation.duplicate'] }));
+  const ignored = JSON.parse(run(['ideas', 'validate', '--all', '--dir', dir, '--ignore-file', ignoreFile]));
+  assert.equal(ignored.action, 'validate-all');
 });
