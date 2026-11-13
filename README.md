@@ -85,7 +85,7 @@ my-book/
 npm test           # node:test（node --test）
 npm run lint       # eslint（需先 npm install）
 npm run lint:modules  # 模块分层/循环依赖/门面边界检查
-npm run pack       # 构建 dist/wishmachine-skill-{,-flat-}v<version>.zip
+npm run pack       # 构建 dist/wishmachine-skill-{,-flat-}v<version>.zip（先校验 SKILL.md 的 YAML frontmatter）
 ```
 
 模块分层、目录所有权与并发编辑规则见 [docs/MODULES.md](docs/MODULES.md)。

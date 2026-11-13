@@ -12,11 +12,22 @@ import fs from 'node:fs';
 import path from 'node:path';
 import zlib from 'node:zlib';
 import { fileURLToPath } from 'node:url';
+import { validateSkillManifest } from './skill-manifest.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = path.join(ROOT, 'dist');
 const PACKAGE = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
 const VERSION = PACKAGE.version;
+
+// A skill host parses the YAML frontmatter to find the skill name/description.
+// Building a package with invalid frontmatter produces a zip that every host
+// rejects with a misleading "missing YAML name/description" error, so refuse.
+const manifest = validateSkillManifest(fs.readFileSync(path.join(ROOT, 'SKILL.md'), 'utf8'), { expectedVersion: VERSION });
+if (!manifest.ok) {
+  process.stderr.write('SKILL.md manifest is invalid; refusing to build a package:\n');
+  for (const error of manifest.errors) process.stderr.write(`  - ${error}\n`);
+  process.exit(1);
+}
 
 const CRC_TABLE = (() => {
   const table = new Uint32Array(256);
@@ -59,7 +70,13 @@ function collectFiles() {
     }
   }
   // Developer-only tools are not part of the installable Skill.
-  return files.filter((file) => file.relative !== 'scripts/pack.js');
+  const devOnly = new Set([
+    'scripts/pack.js',
+    'scripts/skill-manifest.js',
+    'scripts/check-imports.js',
+    'scripts/check-structure.js',
+  ]);
+  return files.filter((file) => !devOnly.has(file.relative));
 }
 
 function dosTime(date) {

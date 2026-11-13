@@ -1,13 +1,19 @@
 ---
 name: wishmachine
+description: "这是一台许愿机，将你的奇思妙想变成小说：项目状态、确定性检查、参考抽卡与 artifact 原子写入"
+description_zh: "这是一台许愿机，将你的奇思妙想变成小说：项目状态、确定性检查、参考抽卡与 artifact 原子写入"
+description_en: "A wish machine that turns ideas into a novel: project state, deterministic checks, idea draws and atomic artifact writes."
 display_name: 小说许愿机
 display_name_en: Novel Wish Machine
-description: 这是一台许愿机，将你的奇思妙想变成小说：项目状态、确定性检查、参考抽卡与 artifact 原子写入
-description_zh: 这是一台许愿机，将你的奇思妙想变成小说：项目状态、确定性检查、参考抽卡与 artifact 原子写入
-description_en: A wish machine that turns ideas into a novel: project state, deterministic checks, idea draws and atomic artifact writes.
 examples_zh:
   - "创建一个 3 卷 × 5 章的科幻小说项目"
-version: 0.3.1
+  - "检查大纲的阻塞问题"
+  - "抽 12 个科幻角色名卡"
+examples_en:
+  - "Create a 3-volume × 5-chapter science-fiction project"
+  - "Check the outline for blocking findings"
+  - "Draw 12 science-fiction name cards"
+version: 0.3.2
 author: Malxi
 ---
 
