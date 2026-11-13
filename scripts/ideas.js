@@ -1584,6 +1584,7 @@ export function drawIdeas(options = {}) {
   }
   const rng = mulberry32(hashSeed(`${seed}:${type}:${options.genre || ''}`));
   const warnings = [];
+  const warningDetails = [];
   const deck = selectDeck(options.genre) || DEFAULT_DECK;
   const premises = deck.premises;
   const resources = deck.resources;
@@ -1607,7 +1608,9 @@ export function drawIdeas(options = {}) {
       : Array.from({ length: castCount }, (_, index) => (index === 0 ? 'protagonist' : index === 1 ? 'antagonist' : 'support'));
     if (!castRoles.includes('protagonist')) {
       castRoles[0] = 'protagonist';
-      warnings.push('cast-roles had no protagonist; the first role was changed to protagonist');
+      const message = 'cast-roles had no protagonist; the first role was changed to protagonist';
+      warnings.push(message);
+      warningDetails.push({ code: 'cast.protagonist_autofix', severity: 'warning', message });
     }
     results = selected.map((def, packIndex) => {
       const cast = namecards(rng, seed + packIndex, castCount, castRoles, deck.name, Math.max(40, Math.min(500, Number(options.characterPromptChars) || 160)));
@@ -1730,6 +1733,7 @@ export function drawIdeas(options = {}) {
       mode: type,
       seed,
       warnings,
+      warning_details: warningDetails,
       replay_command: `wishmachine ideas draw --type ${type}${options.genre ? ` --genre ${options.genre}` : ''} --seed ${seed} --count ${count}`,
       usage: [
         'Use names and traits as reference, not as fixed canon.',
