@@ -1429,6 +1429,7 @@ function namecards(rng, seed, count, roles = [], genre = '') {
       naming_style: pick(rng, ['hard', 'literary', 'plain']),
       role_tags: [role],
       archetype: archetype.name,
+      prompt: [name, archetype.name, ...(archetype.personality || []), archetype.body, archetype.want].filter(Boolean).join('，'),
       personality: archetype.personality,
       contradiction: archetype.contradiction,
       want: archetype.want,
