@@ -1421,6 +1421,24 @@ function namecards(rng, seed, count, roles = [], genre = '') {
       : (remaining.length ? pick(rng, remaining) : pick(rng, fallback));
     usedArchetypes.add(archetype.name);
     const id = resultId('name', seed, i);
+    const styleByGenre = {
+      default: '近未来科幻，冷峻，低饱和',
+      xianxia: '东方玄幻，水墨，清冷',
+      suspense: '犯罪悬疑，冷色，写实',
+      urban: '都市现实，冷调',
+      history: '历史写实，旧纸色',
+      romance: '爱情片，柔和光，浅景深',
+    };
+    const negativeByGenre = {
+      default: 'anachronism, neon, inconsistent costume',
+      xianxia: 'guns, modern clothing, neon',
+      suspense: 'magic, fantasy costume',
+      urban: 'medieval, fantasy armor',
+      history: 'modern clothing, plastic, neon',
+      romance: 'spaceships, fantasy races, battle armor',
+    };
+    const visualStyle = styleByGenre[genre] || styleByGenre.default;
+    const visualNegative = negativeByGenre[genre] || negativeByGenre.default;
     results.push({
       id,
       name,
@@ -1429,7 +1447,8 @@ function namecards(rng, seed, count, roles = [], genre = '') {
       naming_style: pick(rng, ['hard', 'literary', 'plain']),
       role_tags: [role],
       archetype: archetype.name,
-      prompt: [name, archetype.name, ...(archetype.personality || []), archetype.body, archetype.want].filter(Boolean).join('，'),
+      prompt: [visualStyle, name, archetype.name, ...(archetype.personality || []), archetype.body, archetype.want].filter(Boolean).join('，'),
+      negative_prompt: visualNegative,
       personality: archetype.personality,
       contradiction: archetype.contradiction,
       want: archetype.want,

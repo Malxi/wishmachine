@@ -629,6 +629,7 @@ test('worldpack cast uses genre-aware archetypes', () => {
     const pack = drawIdeas({ type: 'worldpack', genre, count: 1, seed: 42 });
     assert.ok(pack.results[0].cast.every((character) => names.includes(character.archetype)));
     assert.ok(pack.results[0].cast.every((character) => character.prompt));
+    assert.ok(pack.results[0].cast.every((character) => character.negative_prompt));
     const archetypes = pack.results[0].cast.map((character) => character.archetype);
     assert.equal(new Set(archetypes).size, archetypes.length);
   }
@@ -681,6 +682,7 @@ test('romance plot and outline packs use the romance deck', () => {
   assert.ok(plot.results[0].cast_relations.some((relation) => relation.type === 'rivals_with'));
   assert.ok(plot.results[0].cast_relations.some((relation) => relation.type === 'confides_in'));
   assert.ok(plot.results[0].prompt_pack.positive.includes('rivals_with'));
+  assert.ok(plot.results[0].cast.every((character) => character.prompt.includes('爱情片')));
   const outline = drawIdeas({ type: 'outlinepack', genre: '言情', count: 1, seed: 42, chapters: 10, scenes: 3 });
   assert.equal(outline.meta.deck, 'romance');
   assert.equal(outline.results[0].chapters.length, 10);
