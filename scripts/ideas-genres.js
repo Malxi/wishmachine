@@ -222,5 +222,7 @@ export const ROMANCE = {
   packs: [
     { theme: 'romance-contract', premise: '联姻对赌：婚约写进收购条款', engine: '联姻对赌', resources: ['婚约合同', '合租协议'], scenarios: ['婚礼前夜', '试镜换角'], storylines: ['契约与真心', '家庭与选择'], location: '民政局', faction: '家族董事会', equipment: '婚戒' },
     { theme: 'romance-reunion', premise: '旧信未寄：十年前的那封', engine: '旧信保管', resources: ['旧信', '剧本'], scenarios: ['旧信被公开', '房东卖房'], storylines: ['旧情与现在', '事业与爱情'], location: '老书店', faction: '旧友圈', equipment: '旧信' },
+    { theme: 'romance-career', premise: '替身合约：镜头外的名字', engine: '经纪合约', resources: ['替身合约', '剧本'], scenarios: ['试镜换角', '婚礼前夜'], storylines: ['事业与爱情', '契约与真心'], location: '片场', faction: '经纪公司', equipment: '剧本' },
+    { theme: 'romance-roommate', premise: '合租边界：房东要卖房', engine: '合租规则', resources: ['合租协议', '备用钥匙'], scenarios: ['房东卖房', '旧信被公开'], storylines: ['家庭与选择', '旧情与现在'], location: '合租公寓', faction: '房东与邻里', equipment: '备用钥匙' },
   ],
 };

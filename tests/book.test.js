@@ -654,6 +654,18 @@ test('genre decks cover suspense, urban, history and romance', () => {
   }
 });
 
+test('romance plot and outline packs use the romance deck', () => {
+  const plot = drawIdeas({ type: 'plotpack', genre: '言情', count: 1, seed: 42 });
+  assert.equal(plot.meta.deck, 'romance');
+  assert.equal(plot.results[0].beats.length, 6);
+  assert.ok(plot.results[0].cast.some((character) => ['联姻继承人', '旧信收件人', '替身演员'].includes(character.archetype)));
+  assert.ok(plot.results[0].prompt_pack.negative.includes('spaceships'));
+  const outline = drawIdeas({ type: 'outlinepack', genre: '言情', count: 1, seed: 42, chapters: 10, scenes: 3 });
+  assert.equal(outline.meta.deck, 'romance');
+  assert.equal(outline.results[0].chapters.length, 10);
+  assert.ok(outline.results[0].mystery_registry.length > 0);
+});
+
 test('checkProject reports setup/outline thread registry drift', () => {
   const dir = tempDir();
   initProject({ name: 'registry drift', dir, parts: 1, volumes: 1, chapter: 10 });
