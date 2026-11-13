@@ -1626,7 +1626,12 @@ export function validateIdeaDraw(draw, options = {}) {
   }
   const severityRank = { low: 1, medium: 2, high: 3, critical: 4 };
   const minSeverity = options.minSeverity || 'low';
-  const filtered = findings.filter((finding) => (severityRank[finding.severity] || 0) >= (severityRank[minSeverity] || 1));
+  const filtered = findings
+    .filter((finding) => (severityRank[finding.severity] || 0) >= (severityRank[minSeverity] || 1))
+    .sort((left, right) => (
+      (severityRank[right.severity] || 0) - (severityRank[left.severity] || 0)
+      || String(left.rule_id || '').localeCompare(String(right.rule_id || ''))
+    ));
   return {
     ok: filtered.length === 0,
     findings: filtered,
