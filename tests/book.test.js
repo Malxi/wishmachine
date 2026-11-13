@@ -699,7 +699,10 @@ test('romance plot and outline packs use the romance deck', () => {
   assert.equal(noLead.meta.warning_details[0].code, 'cast.protagonist_autofix');
   assert.equal(noLead.meta.warning_details[0].severity, 'warning');
   const exhausted = drawIdeas({ type: 'worldpack', genre: '悬疑', count: 1, seed: 42, castCount: 8 });
-  assert.ok(exhausted.meta.warning_details.some((warning) => warning.code === 'cast.pool_exhausted'));
+  const poolWarning = exhausted.meta.warning_details.find((warning) => warning.code === 'cast.pool_exhausted');
+  assert.ok(poolWarning);
+  assert.equal(poolWarning.pool_size, 6);
+  assert.equal(poolWarning.recommended_cast_count, 6);
   const shortPrompt = drawIdeas({ type: 'worldpack', genre: '言情', count: 1, seed: 42, castCount: 12, promptChars: 120 });
   assert.ok(shortPrompt.results[0].prompt_pack.positive.length <= 120);
   assert.ok(shortPrompt.results[0].prompt_pack.positive.endsWith('…'));

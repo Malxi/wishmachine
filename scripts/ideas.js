@@ -1624,7 +1624,14 @@ export function drawIdeas(options = {}) {
     if (castCount > poolSize) {
       const message = `cast count ${castCount} exceeds the ${deck.name} archetype pool (${poolSize}); some archetypes will repeat`;
       warnings.push(message);
-      warningDetails.push({ code: 'cast.pool_exhausted', severity: 'info', message });
+      warningDetails.push({
+        code: 'cast.pool_exhausted',
+        severity: 'info',
+        message,
+        cast_count: castCount,
+        pool_size: poolSize,
+        recommended_cast_count: poolSize,
+      });
     }
     results = selected.map((def, packIndex) => {
       const cast = namecards(rng, seed + packIndex, castCount, castRoles, deck.name, Math.max(40, Math.min(500, Number(options.characterPromptChars) || 160)));

@@ -137,6 +137,7 @@ logs/
 - `book write outline --from-idea <id>` 把 outlinepack 的 draft_outline 送入正常候选检查
 - `book write setup --from-idea <id>` 把 outlinepack 的 setup_draft 送入正常候选检查
 - `ideas` 题材牌堆：科幻默认 / 修仙 / 悬疑 / 都市 / 历史 / 言情（4 packs）
+- cast.pool_exhausted 带 pool_size / cast_count / recommended_cast_count
 - 超过 archetype 池容量时返回 cast.pool_exhausted 警告
 - meta.warning_details 提供 code / severity / message
 - cast-roles 缺 protagonist 时自动补第一个角色，并写入 meta.warnings
