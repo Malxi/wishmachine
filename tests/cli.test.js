@@ -11,6 +11,7 @@ function run(args, options = {}) {
   return execFileSync(process.execPath, [entry, ...args], {
     encoding: 'utf8',
     cwd: options.cwd || process.cwd(),
+    maxBuffer: 20 * 1024 * 1024,
     env: { ...process.env, TEMP: os.tmpdir(), TMP: os.tmpdir() },
   });
 }
@@ -49,4 +50,10 @@ test('CLI init, status and ideas', () => {
   const ideas = JSON.parse(run(['ideas', 'draw', '--type', 'namecard', '--genre', '科幻', '--count', '2', '--seed', '7']));
   assert.equal(ideas.count, 2);
   assert.equal(ideas.results.length, 2);
+  const saved = JSON.parse(run(['ideas', 'draw', '--type', 'outlinepack', '--genre', '悬疑', '--chapters', '10', '--seed', '42', '--dir', dir, '--save']));
+  assert.equal(saved.ok, true);
+  const validated = JSON.parse(run(['ideas', 'validate', '--all', '--dir', dir]));
+  assert.equal(validated.action, 'validate-all');
+  assert.ok(validated.count >= 1);
+  assert.ok(validated.results.every((item) => item.ok));
 });
