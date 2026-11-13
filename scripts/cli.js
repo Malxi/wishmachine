@@ -6,7 +6,7 @@ import { readJson } from './util.js';
 import { drawIdeas, ideasTypes, validateIdeaDraw } from './ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference, listSkills, readSkill } from './guides.js';
 
-const VERSION = '0.2.70';
+const VERSION = '0.2.71';
 const BOOLEAN_FLAGS = new Set(['apply', 'json', 'help', 'h', 'dry-run', 'force', 'ingest']);
 const COMMANDS = new Set(['book', 'check', 'ideas', 'gen', 'state', 'audit', 'refresh', 'export', 'doctor', 'version', 'help']);
 
@@ -400,6 +400,7 @@ async function runIdeas(args, flags) {
           id: item.id,
           ok: result.ok,
           total_findings: result.findings.length,
+          ignored_findings: result.ignored_findings,
           findings: maxFindings ? result.findings.slice(0, maxFindings) : result.findings,
         };
       });
@@ -412,7 +413,7 @@ async function runIdeas(args, flags) {
     const result = validateIdeaDraw(draw, { minSeverity, ignoreRules });
     const findings = maxFindings ? result.findings.slice(0, maxFindings) : result.findings;
     return emit(
-      { schema_version: 1, ok: result.ok, section: 'ideas', action: 'validate', id, total_findings: result.findings.length, findings },
+      { schema_version: 1, ok: result.ok, section: 'ideas', action: 'validate', id, total_findings: result.findings.length, ignored_findings: result.ignored_findings, findings },
       boolFlag(flags, 'strict') && !result.ok ? 1 : 0,
     );
   }
