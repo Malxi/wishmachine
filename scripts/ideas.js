@@ -517,6 +517,9 @@ function buildWorldpack(def, packIndex, seed, cast, sources, options = {}) {
     negative: negativeByDeck[sources.name] || negativeByDeck.default,
     style,
     keywords,
+    max_chars: promptChars,
+    raw_chars: rawPrompt.length,
+    truncated: rawPrompt.length > promptChars,
   };
   return {
     id: packId,
