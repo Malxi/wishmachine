@@ -1,10 +1,12 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import { loadProject, initProject, projectStatus, projectState, auditProject, refreshProject, exportManuscript, doctorProject, saveIdeaDraw, saveImportedIdeas, saveResearchReport, discoverSources, searchSources, readSection, writeArtifact, projectRegistryStatus, cleanRegistry, abandonMystery, registryOperations, undoRegistryOperation, redoRegistryOperation, registryBackups, createRegistrySnapshot, restoreRegistryBackup, checkRegistryBackups } from './project.js';
 import { checkProject } from './schema.js';
 import { readJson } from './util.js';
 import { drawIdeas, ideasTypes, validateIdeaDraw } from './ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference, listSkills, readSkill } from './guides.js';
 
-const VERSION = '0.2.60';
+const VERSION = '0.2.61';
 const BOOLEAN_FLAGS = new Set(['apply', 'json', 'help', 'h', 'dry-run', 'force', 'ingest']);
 const COMMANDS = new Set(['book', 'check', 'ideas', 'gen', 'state', 'audit', 'refresh', 'export', 'doctor', 'version', 'help']);
 
@@ -115,7 +117,7 @@ Commands:
   ideas import --file <cards.json> [--dir <project>] [--type <type>] [--source <source>]
   ideas discover [--topic history|myth|novel] [--limit 3] [--dir <project>]
   ideas search --query <text> [--provider wikipedia|gutenberg] [--limit 3] [--ingest] [--dir <project>]
-  ideas validate --id <saved-outlinepack-id> | --all [--strict] [--min-severity low|medium|high|critical] [--max-findings 0] [--dir <project>]
+  ideas validate --id <saved-outlinepack-id> | --all [--strict] [--min-severity low|medium|high|critical] [--max-findings 0] [--output <file>] [--dir <project>]
   ideas types
   gen workflow list|read <name>
   gen skill list|read <name>
@@ -360,6 +362,17 @@ async function runIdeas(args, flags) {
       fail(`unknown min-severity: ${minSeverity}`);
     }
     const maxFindings = Math.max(0, intFlag(flags, 'max-findings', 0));
+    const output = stringFlag(flags, 'output', '');
+    const emit = (payload, code) => {
+      if (output) {
+        const file = path.resolve(output);
+        fs.writeFileSync(file, `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
+        print({ ok: payload.ok, action: payload.action, output: file, count: payload.count, total_findings: payload.total_findings });
+      } else {
+        print(payload);
+      }
+      return code;
+    };
     if (boolFlag(flags, 'all')) {
       const list = readSection(project, 'ideas').results || [];
       const results = list.map((item) => {
@@ -373,16 +386,17 @@ async function runIdeas(args, flags) {
         };
       });
       const ok = results.every((item) => item.ok);
-      print({ ok, section: 'ideas', action: 'validate-all', count: results.length, results });
-      return boolFlag(flags, 'strict') && !ok ? 1 : 0;
+      return emit({ ok, section: 'ideas', action: 'validate-all', count: results.length, results }, boolFlag(flags, 'strict') && !ok ? 1 : 0);
     }
     const id = stringFlag(flags, 'id', '');
     if (!id) fail('ideas validate requires --id or --all');
     const draw = readSection(project, 'idea', { id }).draw;
     const result = validateIdeaDraw(draw, { minSeverity });
     const findings = maxFindings ? result.findings.slice(0, maxFindings) : result.findings;
-    print({ ok: result.ok, section: 'ideas', action: 'validate', id, total_findings: result.findings.length, findings });
-    return boolFlag(flags, 'strict') && !result.ok ? 1 : 0;
+    return emit(
+      { ok: result.ok, section: 'ideas', action: 'validate', id, total_findings: result.findings.length, findings },
+      boolFlag(flags, 'strict') && !result.ok ? 1 : 0,
+    );
   }
   if (sub !== 'draw') fail(`unknown ideas subcommand: ${sub}`);
   const draw = drawIdeas({

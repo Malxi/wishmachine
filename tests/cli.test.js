@@ -57,4 +57,8 @@ test('CLI init, status and ideas', () => {
   assert.ok(validated.count >= 1);
   assert.ok(validated.results.every((item) => item.ok));
   assert.throws(() => run(['ideas', 'validate', '--all', '--dir', dir, '--min-severity', 'nope']), /unknown min-severity/);
+  const outputFile = path.join(dir, 'validation.json');
+  const written = JSON.parse(run(['ideas', 'validate', '--all', '--dir', dir, '--output', outputFile]));
+  assert.equal(written.output, outputFile);
+  assert.equal(JSON.parse(fs.readFileSync(outputFile, 'utf8')).action, 'validate-all');
 });
