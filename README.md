@@ -137,6 +137,7 @@ logs/
 - `book write outline --from-idea <id>` 把 outlinepack 的 draft_outline 送入正常候选检查
 - `book write setup --from-idea <id>` 把 outlinepack 的 setup_draft 送入正常候选检查
 - `ideas` 题材牌堆：科幻默认 / 修仙 / 悬疑 / 都市 / 历史 / 言情（4 packs）
+- `ideas validate --max-findings` 限制输出条数，保留 total_findings
 - `ideas validate --min-severity` 按严重级别过滤 findings
 - `ideas validate --strict` 有 findings 时返回非零退出码
 - `ideas validate` 检查 cast_relation type 是否属于关系词表

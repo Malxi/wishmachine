@@ -4,7 +4,7 @@ import { readJson } from './util.js';
 import { drawIdeas, ideasTypes, validateIdeaDraw } from './ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference, listSkills, readSkill } from './guides.js';
 
-const VERSION = '0.2.57';
+const VERSION = '0.2.58';
 const BOOLEAN_FLAGS = new Set(['apply', 'json', 'help', 'h', 'dry-run', 'force', 'ingest']);
 const COMMANDS = new Set(['book', 'check', 'ideas', 'gen', 'state', 'audit', 'refresh', 'export', 'doctor', 'version', 'help']);
 
@@ -115,7 +115,7 @@ Commands:
   ideas import --file <cards.json> [--dir <project>] [--type <type>] [--source <source>]
   ideas discover [--topic history|myth|novel] [--limit 3] [--dir <project>]
   ideas search --query <text> [--provider wikipedia|gutenberg] [--limit 3] [--ingest] [--dir <project>]
-  ideas validate --id <saved-outlinepack-id> [--strict] [--min-severity low|medium|high|critical] [--dir <project>]
+  ideas validate --id <saved-outlinepack-id> [--strict] [--min-severity low|medium|high|critical] [--max-findings 0] [--dir <project>]
   ideas types
   gen workflow list|read <name>
   gen skill list|read <name>
@@ -359,7 +359,9 @@ async function runIdeas(args, flags) {
     const project = loadProject(stringFlag(flags, 'dir', ''));
     const draw = readSection(project, 'idea', { id }).draw;
     const result = validateIdeaDraw(draw, { minSeverity: stringFlag(flags, 'min-severity', 'low') });
-    print({ ok: result.ok, section: 'ideas', action: 'validate', id, findings: result.findings });
+    const maxFindings = Math.max(0, intFlag(flags, 'max-findings', 0));
+    const findings = maxFindings ? result.findings.slice(0, maxFindings) : result.findings;
+    print({ ok: result.ok, section: 'ideas', action: 'validate', id, total_findings: result.findings.length, findings });
     return boolFlag(flags, 'strict') && !result.ok ? 1 : 0;
   }
   if (sub !== 'draw') fail(`unknown ideas subcommand: ${sub}`);
