@@ -1385,9 +1385,11 @@ function namecards(rng, seed, count, roles = [], genre = '') {
         .map((archetypeName) => ARCHETYPES.find((item) => item.name === archetypeName))
         .filter(Boolean);
     const available = pool.filter((item) => !usedArchetypes.has(item.name));
+    const fallback = genrePool || ARCHETYPES;
+    const remaining = fallback.filter((item) => !usedArchetypes.has(item.name));
     const archetype = available.length
       ? pick(rng, available)
-      : (pool.length ? pick(rng, pool) : pick(rng, ARCHETYPES));
+      : (remaining.length ? pick(rng, remaining) : pick(rng, fallback));
     usedArchetypes.add(archetype.name);
     const id = resultId('name', seed, i);
     results.push({
@@ -1522,8 +1524,9 @@ export function drawIdeas(options = {}) {
   if (type === 'worldpack') {
     const packDefs = deck.packs;
     const selected = pickMany(rng, packDefs, Math.min(count, packDefs.length));
+    const castCount = Math.max(1, Math.min(12, Number(options.castCount) || 4));
     results = selected.map((def, packIndex) => {
-      const cast = namecards(rng, seed + packIndex, 4, ['protagonist', 'antagonist', 'support', 'support'], deck.name);
+      const cast = namecards(rng, seed + packIndex, castCount, ['protagonist', 'antagonist', 'support', 'support'], deck.name);
       return buildWorldpack(def, packIndex, seed, cast, deck);
     });
   } else if (type === 'plotpack') {

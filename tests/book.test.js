@@ -668,6 +668,9 @@ test('romance plot and outline packs use the romance deck', () => {
   assert.ok(outline.results[0].mystery_registry.length > 0);
   const ancient = drawIdeas({ type: 'premise', genre: '古言', count: 1, seed: 42 });
   assert.equal(ancient.meta.deck, 'romance');
+  const largerCast = drawIdeas({ type: 'worldpack', genre: '言情', count: 1, seed: 42, castCount: 8 });
+  assert.equal(largerCast.results[0].cast.length, 8);
+  assert.equal(new Set(largerCast.results[0].cast.map((character) => character.archetype)).size, 8);
 });
 
 test('checkProject reports setup/outline thread registry drift', () => {
