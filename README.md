@@ -82,9 +82,12 @@ my-book/
 ## 开发
 
 ```bash
-npm test        # node:test（node --test）
-npm run lint    # eslint（需先 npm install）
-npm run pack    # 构建 dist/wishmachine-skill-{,-flat-}v<version>.zip
+npm test           # node:test（node --test）
+npm run lint       # eslint（需先 npm install）
+npm run lint:modules  # 模块分层/循环依赖/门面边界检查
+npm run pack       # 构建 dist/wishmachine-skill-{,-flat-}v<version>.zip
 ```
+
+模块分层、目录所有权与并发编辑规则见 [docs/MODULES.md](docs/MODULES.md)。
 
 CI：`.github/workflows/ci.yml`，Node 18/20/22 跑 `npm test` 与 `npm run lint`。

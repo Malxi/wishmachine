@@ -1,21 +1,8 @@
 // Top-level project commands: state / audit / refresh / export / doctor / check.
 import { auditProject, doctorProject, exportManuscript, loadProject, projectState, refreshProject } from '../project.js';
 import { checkProject } from '../schema.js';
-import {
-  CHECK_TARGETS,
-  EXIT_OK,
-  FORMAT_VALUES,
-  PROFILE_VALUES,
-  REFRESH_TARGETS,
-  SEVERITY_VALUES,
-  boolFlag,
-  checkExit,
-  enumFlag,
-  fail,
-  maxFindingsFlag,
-  print,
-  stringFlag,
-} from './args.js';
+import { EXIT_OK, boolFlag, checkExit, enumFlag, fail, maxFindingsFlag, print, stringFlag } from './args.js';
+import { CHECK_TARGETS, FORMAT_VALUES, PROFILE_VALUES, REFRESH_TARGETS, SEVERITY_VALUES } from './spec.js';
 
 function runState(flags) {
   const view = enumFlag(flags, 'view', ['brief', 'full'], 'brief');

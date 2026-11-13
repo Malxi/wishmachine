@@ -5,8 +5,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { assertInside, ensureDir, readText, writeTextAtomic } from './util.js';
 import {
-  chapterFile, projectStatus, readOptionalJson, setupFile, outlineFile,
-} from './artifacts.js';
+  chapterFile, outlineFile, readOptionalJson, setupFile,
+} from './paths.js';
+import { projectStatus } from './state.js';
 import { outlineChapters } from './registry.js';
 
 function chapterPath(project, id) {

@@ -3,7 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { readJson } from './util.js';
-import { projectPath } from './artifacts.js';
+import { projectPath } from './paths.js';
 
 function graphFindingsInvalidDraw(file) {
   return {

@@ -7,7 +7,7 @@ import net from 'node:net';
 import dns from 'node:dns/promises';
 import { fileURLToPath } from 'node:url';
 import { readJson, nowIso } from './util.js';
-import { saveImportedIdeas } from './artifacts.js';
+import { saveImportedIdeas } from './store.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const USER_AGENT = 'Wishmachine/0.1 (source ingest)';

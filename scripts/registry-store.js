@@ -7,7 +7,7 @@ import { randomUUID, createHash } from 'node:crypto';
 import {
   ensureDir, readJson, writeJsonAtomic, nowIso, stamp, assertInside, toPosixPath,
 } from './util.js';
-import { outlineFile, registryBackupsDir, registryOperationsFile, setupFile } from './artifacts.js';
+import { outlineFile, registryBackupsDir, registryOperationsFile, setupFile } from './paths.js';
 
 function fileChecksum(file) {
   return createHash('sha256').update(fs.readFileSync(file)).digest('hex');

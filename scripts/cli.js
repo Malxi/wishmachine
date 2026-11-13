@@ -1,19 +1,8 @@
 // CLI entry: parses argv once, then dispatches to the handlers under ./cli/.
-import {
-  COMMANDS,
-  EXIT_ERROR,
-  EXIT_OK,
-  boolFlag,
-  commandKey,
-  fail,
-  parseArgs,
-  validateFlags,
-} from './cli/args.js';
-import { runBook } from './cli/book.js';
-import { runGen } from './cli/gen.js';
+import { EXIT_ERROR, EXIT_OK, boolFlag, fail, parseArgs } from './cli/args.js';
+import { runAudit, runBook, runCheck, runDoctor, runExport, runGen, runIdeas, runRefresh, runState } from './cli/index.js';
 import { help } from './cli/help.js';
-import { runIdeas } from './cli/ideas.js';
-import { runAudit, runCheck, runDoctor, runExport, runRefresh, runState } from './cli/project.js';
+import { COMMANDS, commandKey, validateFlags } from './cli/spec.js';
 import { VERSION } from './cli/version.js';
 
 export async function main(argv = process.argv.slice(2)) {

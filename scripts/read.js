@@ -4,8 +4,9 @@ import fs from 'node:fs';
 import { readJson, readText, safeSegment } from './util.js';
 import {
   chapterFile, craftFile, ideaFile, listFilesWithSizes, outlineFile,
-  projectPath, projectStatus, readOptionalJson, recapFile, researchFile, setupFile,
-} from './artifacts.js';
+  projectPath, readOptionalJson, recapFile, researchFile, setupFile,
+} from './paths.js';
+import { projectStatus } from './state.js';
 import { outlineIndex } from './schema.js';
 import { buildProjectGraph } from './graph.js';
 

@@ -5,7 +5,7 @@
 import fs from 'node:fs';
 import { readJson, writeJsonAtomic } from './util.js';
 import { collectOutlineMysteryRegistry, outlineChapters } from './registry.js';
-import { outlineFile, setupFile } from './artifacts.js';
+import { outlineFile, setupFile } from './paths.js';
 import { registryExpectations, registryRepairReasons } from './registry-rules.js';
 import { appendRegistryOperation, createRegistryBackup, readRegistryOperations } from './registry-store.js';
 import { checkProject } from './schema.js';

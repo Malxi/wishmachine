@@ -5,8 +5,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { ensureDir, readJson } from './util.js';
 import {
-  configFile, listJsonFiles, outlineFile, projectPath, projectStatus, setupFile,
-} from './artifacts.js';
+  configFile, listJsonFiles, outlineFile, projectPath, setupFile,
+} from './paths.js';
+import { projectStatus } from './state.js';
 import { loadRegistryDocs, repairRegistry } from './registry-actions.js';
 import { registryRepairReasons } from './registry-rules.js';
 

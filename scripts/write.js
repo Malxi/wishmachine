@@ -12,7 +12,7 @@ import {
   chapterFile, configFile, craftFile, outlineFile, outlineMarkdownFile,
   recapFile, renderOutlineMarkdown, renderSetupMarkdown, setupFile,
   setupMarkdownFile,
-} from './artifacts.js';
+} from './paths.js';
 import { checkCandidate, checkProject } from './schema.js';
 
 const WRITE_MODES = {

@@ -13,7 +13,7 @@ import {
 } from './finding.js';
 import { validateCraft, validateRecap, validateSetup } from './shape.js';
 import { validateOutline } from './outline-shape.js';
-import { qualityFindings } from './quality.js';
+import { qualityFindings } from './quality/index.js';
 import { customFindings } from './custom.js';
 import { threadConsistencyFindings } from './thread.js';
 
