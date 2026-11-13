@@ -744,6 +744,9 @@ test('cast validation catches missing protagonist and duplicate archetypes', () 
   const duplicateRelation = JSON.parse(JSON.stringify(pack.results[0]));
   duplicateRelation.cast_relations.push(JSON.parse(JSON.stringify(duplicateRelation.cast_relations[0])));
   assert.ok(validateIdeaDraw({ results: [duplicateRelation] }).findings.some((finding) => finding.rule_id === 'idea.cast_relation.duplicate'));
+  const twiceDuplicate = JSON.parse(JSON.stringify(duplicateRelation));
+  twiceDuplicate.cast_relations.push(JSON.parse(JSON.stringify(twiceDuplicate.cast_relations[0])));
+  assert.equal(validateIdeaDraw({ results: [twiceDuplicate] }).findings.filter((finding) => finding.rule_id === 'idea.cast_relation.duplicate').length, 1);
   const unknownType = JSON.parse(JSON.stringify(pack.results[0]));
   unknownType.cast_relations[0].type = 'nonsense_relation';
   assert.ok(validateIdeaDraw({ results: [unknownType] }).findings.some((finding) => finding.rule_id === 'idea.cast_relation.unknown_type'));

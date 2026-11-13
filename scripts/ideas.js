@@ -1639,10 +1639,17 @@ export function validateIdeaDraw(draw, options = {}) {
       const hash = createHash('sha1').update(key).digest('hex').slice(0, 8);
       return { id: `finding-${hash}`, ...finding };
     });
+  const deduped = [];
+  const seenFindingIds = new Set();
+  for (const finding of filtered) {
+    if (seenFindingIds.has(finding.id)) continue;
+    seenFindingIds.add(finding.id);
+    deduped.push(finding);
+  }
   return {
     schema_version: 1,
-    ok: filtered.length === 0,
-    findings: filtered,
+    ok: deduped.length === 0,
+    findings: deduped,
   };
 }
 
