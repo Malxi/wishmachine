@@ -700,8 +700,9 @@ test('romance plot and outline packs use the romance deck', () => {
   assert.ok(shortPrompt.results[0].prompt_pack.positive.endsWith('…'));
   assert.equal(shortPrompt.results[0].prompt_pack.truncated, true);
   assert.ok(shortPrompt.results[0].prompt_pack.raw_chars > 120);
-  const shortCharacter = drawIdeas({ type: 'worldpack', genre: '言情', count: 1, seed: 42, characterPromptChars: 80 });
-  assert.ok(shortCharacter.results[0].cast.every((character) => character.prompt.length <= 80));
+  const shortCharacter = drawIdeas({ type: 'worldpack', genre: '言情', count: 1, seed: 42, characterPromptChars: 40 });
+  assert.ok(shortCharacter.results[0].cast.every((character) => character.prompt.length <= 40));
+  assert.ok(shortCharacter.results[0].cast.some((character) => character.prompt_meta.truncated));
 });
 
 test('checkProject reports setup/outline thread registry drift', () => {

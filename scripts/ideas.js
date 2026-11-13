@@ -423,6 +423,7 @@ function buildWorldpack(def, packIndex, seed, cast, sources, options = {}) {
     role: character.role_tags?.[0] || 'support',
     archetype: character.archetype,
     prompt: character.prompt,
+    prompt_meta: character.prompt_meta,
     negative_prompt: character.negative_prompt,
     want: character.want,
   }));
@@ -1455,6 +1456,7 @@ function namecards(rng, seed, count, roles = [], genre = '', promptChars = 160) 
     };
     const visualStyle = styleByGenre[genre] || styleByGenre.default;
     const visualNegative = negativeByGenre[genre] || negativeByGenre.default;
+    const rawCharacterPrompt = [visualStyle, name, archetype.name, ...(archetype.personality || []), archetype.body, archetype.want].filter(Boolean).join('，');
     results.push({
       id,
       name,
@@ -1463,7 +1465,12 @@ function namecards(rng, seed, count, roles = [], genre = '', promptChars = 160) 
       naming_style: pick(rng, ['hard', 'literary', 'plain']),
       role_tags: [role],
       archetype: archetype.name,
-      prompt: truncatePrompt([visualStyle, name, archetype.name, ...(archetype.personality || []), archetype.body, archetype.want].filter(Boolean).join('，'), promptChars),
+      prompt: truncatePrompt(rawCharacterPrompt, promptChars),
+      prompt_meta: {
+        max_chars: promptChars,
+        raw_chars: rawCharacterPrompt.length,
+        truncated: rawCharacterPrompt.length > promptChars,
+      },
       negative_prompt: visualNegative,
       personality: archetype.personality,
       contradiction: archetype.contradiction,
