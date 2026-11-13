@@ -1363,6 +1363,7 @@ function namecards(rng, seed, count, roles = [], genre = '') {
   const given = pickMany(rng, GIVEN, Math.min(count, GIVEN.length));
   const results = [];
   const used = new Set();
+  const usedArchetypes = new Set();
   for (let i = 0; i < count; i += 1) {
     let surname = surnames[i % surnames.length];
     let givenName = given[i % given.length];
@@ -1383,7 +1384,11 @@ function namecards(rng, seed, count, roles = [], genre = '') {
       : (ROLE_ARCHETYPES[role] || [])
         .map((archetypeName) => ARCHETYPES.find((item) => item.name === archetypeName))
         .filter(Boolean);
-    const archetype = (pool.length ? pick(rng, pool) : ARCHETYPES[Math.floor(rng() * ARCHETYPES.length)]);
+    const available = pool.filter((item) => !usedArchetypes.has(item.name));
+    const archetype = available.length
+      ? pick(rng, available)
+      : (pool.length ? pick(rng, pool) : pick(rng, ARCHETYPES));
+    usedArchetypes.add(archetype.name);
     const id = resultId('name', seed, i);
     results.push({
       id,

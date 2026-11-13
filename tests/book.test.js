@@ -627,6 +627,8 @@ test('worldpack cast uses genre-aware archetypes', () => {
   for (const [genre, names] of Object.entries(expected)) {
     const pack = drawIdeas({ type: 'worldpack', genre, count: 1, seed: 42 });
     assert.ok(pack.results[0].cast.every((character) => names.includes(character.archetype)));
+    const archetypes = pack.results[0].cast.map((character) => character.archetype);
+    assert.equal(new Set(archetypes).size, archetypes.length);
   }
 });
 
