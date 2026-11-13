@@ -1529,10 +1529,16 @@ export function validateIdeaDraw(draw) {
     }
     if (Array.isArray(result.cast) && Array.isArray(result.cast_relations) && Array.isArray(result.entities)) {
       const entityIds = new Set(result.entities.map((entity) => entity.id));
+      const relationKeys = new Set();
       for (const relation of result.cast_relations) {
         if (!relation?.from || !relation?.to || !entityIds.has(relation.from) || !entityIds.has(relation.to)) {
           add('high', 'idea.cast_relation.unknown_entity', result.id || 'worldpack', `cast relation references an unknown entity: ${relation?.from} -> ${relation?.to}`, 'Point cast relations at ids from the graph entities.');
         }
+        const key = `${relation?.from}|${relation?.to}|${relation?.type}`;
+        if (relationKeys.has(key)) {
+          add('low', 'idea.cast_relation.duplicate', result.id || 'worldpack', `duplicate cast relation ${key}`, 'Remove the duplicate relation.');
+        }
+        relationKeys.add(key);
       }
     }
     const registry = result.thread_registry;

@@ -741,6 +741,9 @@ test('cast validation catches missing protagonist and duplicate archetypes', () 
   const badRelation = JSON.parse(JSON.stringify(pack.results[0]));
   badRelation.cast_relations[0].from = 'missing-entity';
   assert.ok(validateIdeaDraw({ results: [badRelation] }).findings.some((finding) => finding.rule_id === 'idea.cast_relation.unknown_entity'));
+  const duplicateRelation = JSON.parse(JSON.stringify(pack.results[0]));
+  duplicateRelation.cast_relations.push(JSON.parse(JSON.stringify(duplicateRelation.cast_relations[0])));
+  assert.ok(validateIdeaDraw({ results: [duplicateRelation] }).findings.some((finding) => finding.rule_id === 'idea.cast_relation.duplicate'));
 });
 
 test('checkProject reports setup/outline thread registry drift', () => {
