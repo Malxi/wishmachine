@@ -9,6 +9,7 @@ import {
 } from './util.js';
 import { checkProject } from './schema.js';
 import { finding } from './rules/finding.js';
+import { styleAudit } from './rules/style/index.js';
 import {
   configFile, outlineFile, outlineMarkdownFile, projectPath, renderOutlineMarkdown,
   renderSetupMarkdown, setupFile, setupMarkdownFile,
@@ -209,6 +210,14 @@ function summarizeAudit(project, targets, view) {
 }
 
 export function auditProject(project, options = {}) {
+  if (options.profile === 'style') {
+    return styleAudit(project, {
+      view: options.view || 'brief',
+      minSeverity: options.minSeverity,
+      maxFindings: options.maxFindings,
+      ignoreRules: options.ignoreRules,
+    });
+  }
   const view = ['full', 'summary'].includes(options.view) ? options.view : 'brief';
   const targets = collectAuditTargets(project, {
     maxFindings: options.maxFindings || 0,

@@ -13,7 +13,7 @@ examples_en:
   - "Create a 3-volume × 5-chapter science-fiction project"
   - "Check the outline for blocking findings"
   - "Draw 12 science-fiction name cards"
-version: 0.4.1
+version: 0.5.0
 author: Malxi
 ---
 
@@ -36,7 +36,7 @@ artifact 写入。它**不调用模型、不生成 setup/outline/正文**；创�
 
 ## 0. 三条最小路径
 
-创作流：`init → ideas draw（可选）→ setup → outline → 逐章（正文→check→recap）→ audit → doctor（有 registry 漂移时 --fix）→ refresh → export`。
+创作流：`init → ideas draw（可选）→ setup（style setup loop）→ outline → 逐章（正文→check→style pass→recap）→ audit → style audit → doctor → refresh → export`。
 
 ### 路径 A：快路（推荐，空目录 → 合法 setup + outline）
 
@@ -95,17 +95,37 @@ $WM book write recap --dir my-book --id P1-V1-C1 --mode replace --apply < recap.
 | quality | 结构、引用、ID、章节数量、谜题/线程一致性 |
 | schema | setup/outline/craft/recap 的 JSON 形状 |
 | custom | `references/builtin-rules.json` + 项目 `.wishmachine/rules/*.json` |
-| all | quality + schema + custom（默认） |
+| style | 风格/AI 味统计指标（advisory，low/medium，永不 blocking） |
+| all | quality + schema + custom（默认，不含 style） |
 
 ```bash
 $WM check --dir my-book --profile all --target outline --max-findings 20
+$WM check --dir my-book --profile style --target chapter --id P1-V1-C1
+$WM check --dir my-book --profile style --target setup
 $WM audit --dir my-book --view brief                 # 全项目审计
 $WM audit --dir my-book --view summary               # 只看 totals + failing_targets
+$WM audit --dir my-book --profile style --view summary  # 全书风格指标 + 每章指标
 $WM doctor --dir my-book                             # 目录/配置/JSON/registry 完整性；加 --fix 修复
 ```
 
 - `quality.registry.drift`（medium）：setup/outline 的派生 registry 不一致；`doctor --fix`
   或重新 `book write setup/outline --apply` 自动重建，不会阻塞。
+- `style.*`（low/medium）：单字谓语、否定式谓语、句首复用、段尾升华、比喻密度、模板句、
+  对话比例等统计指标；只给方向和命中句，不阻塞写入。详见 `references/style-checklist.md`。
+
+## 风格与去 AI 味
+
+1. 建 voice card（每本书一次）：`book write style --dir my-book --apply < voice.json`，
+   写 `voice.description/principles/avoid` + 2–3 段 `samples`；写正文前 `book read style`
+   或 `book read context`（含 style summary）。
+2. 设定 loop：`check --profile style --target setup` → 按 `style.setup.*` 具体化/代价化，
+   最多 2 轮。
+3. 章节 loop：初稿 → `check --profile style --target chapter --id` → 只改命中句/段 →
+   复检，最多 2 轮；指标回到健康带即可，不追 0。退出条件与阈值见
+   `references/workflow-deai.md`。
+4. 书级 loop：每 3 章 `audit --profile style --view summary`，指标漂移写回 voice card。
+5. 不要先写 AI 味再 humanize；humanizer 只能做第二遍清理。style 检查是体检，不是裁判。
+
 - blocking = `severity` 为 `high` 或 `critical`；check/audit/doctor/write 此时退出码 2；
   `--no-strict` 让 check/audit/doctor 强制退出 0（脚本容错用）。
 - `--min-severity low|medium|high|critical` 只过滤展示，`summary` 仍统计全量；
@@ -161,6 +181,7 @@ $WM export --dir my-book --format html --output drafts/我的书-阅读版.html
 - artifact 格式、写入与输出契约：`references/stage-contracts.md`
 - setup/outline 字段与 `book write` 细节：`setup-schema.md`、`outline-schema.md`、`book-write.md`
 - profile/规则/findings：`references/check-profiles.md`
+- 风格与去 AI 味：`references/workflow-deai.md`、`references/style-checklist.md`
 - 流程与编辑性审查：`references/workflow-*.md`、`references/review-checklist.md`
 
 读取：`$WM gen reference read <name>`、`$WM gen workflow read <name>`。

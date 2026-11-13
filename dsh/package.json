@@ -1,6 +1,6 @@
 {
   "name": "wishmachine-dsh",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "DeepSeek Harness bundle for 小说许愿机 Wishmachine: a deterministic novel-project CLI exposed as the wishmachine skill.",
   "type": "module",
   "license": "MIT",

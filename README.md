@@ -27,7 +27,7 @@ setup/outline、写入风险）见 [SKILL.md](SKILL.md)。
 ### DeepSeek Harness（链接安装）
 
 仓库里包含一个 DSH bundle（`dsh/`）：在 DSH 的 **Plugins → Add plugin** 粘贴
-`git+https://github.com/Malxi/wishmachine.git#v0.4.1&path:/dsh` 即可安装 `wishmachine` 技能；
+`git+https://github.com/Malxi/wishmachine.git#v0.5.0&path:/dsh` 即可安装 `wishmachine` 技能；
 也可以用自定义插件索引在 Discover 里安装。详见 [docs/DSH.md](docs/DSH.md)。
 
 ## 项目格式
@@ -42,6 +42,7 @@ my-book/
   story/craft/*.json
   story/recaps/<chapter-id>.json
   story/ideas/*.json        抽卡结果（--save）
+  story/style/voice.json    voice card（风格契约，推荐）
   chapters/<chapter-id>.md
   drafts/                   export 输出
   logs/                     registry 日志与备份
@@ -56,7 +57,7 @@ my-book/
 |---|---|---|
 | 项目 | `book init`、`book status`、`state` | 初始化、状态快照与下一步 |
 | 阅读/写入 | `book read`、`book write` | 读 artifact；dry-run → `--apply` 写 |
-| 检查 | `check`、`audit`、`doctor` | 确定性检查、全项目审计、目录/配置修复 |
+| 检查 | `check`、`audit`、`doctor` | 确定性检查、全项目审计、风格指标（`--profile style`）、目录/配置修复 |
 | 抽卡 | `ideas draw/import/search/discover/validate/types` | 确定性参考卡 |
 | 导出 | `export`、`refresh` | 导出 Markdown/自包含 HTML 阅读页、刷新 md 伴生文件 |
 | 指导 | `gen <workflow\|reference\|skill> <list\|read>` | 读 references 与 SKILL.md |
@@ -77,6 +78,10 @@ my-book/
   `export --format html` 生成无外链、无脚本的单文件阅读页。
 - setup/outline 写入会自动重建派生的 `thread_registry`/`mystery_registry`；`check` 也会报
   `quality.registry.drift`，不再出现“audit 100 分、doctor 报漂移”的假绿灯。
+- `check --profile style` 用统计指标查 AI 味（单字谓语、否定式谓语、句首复用、段尾升华、
+  比喻/模板句密度、对话比例等），`audit --profile style` 汇总全书与每章指标；只报
+  low/medium，永不 blocking。voice card 用 `book write style` 写入、`book read style` 读取，
+  改稿流程见 [references/workflow-deai.md](references/workflow-deai.md)。
 
 ## 边界
 

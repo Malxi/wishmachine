@@ -3,7 +3,7 @@ const PROJECT_COMMAND_FLAGS = {
   version: [],
   help: [],
   state: ['dir', 'view'],
-  audit: ['dir', 'view', 'min-severity', 'max-findings', 'ignore', 'ignore-file', 'no-strict'],
+  audit: ['dir', 'view', 'profile', 'min-severity', 'max-findings', 'ignore', 'ignore-file', 'no-strict'],
   refresh: ['dir', 'target'],
   export: ['dir', 'output', 'format', 'force'],
   doctor: ['dir', 'fix', 'no-strict'],

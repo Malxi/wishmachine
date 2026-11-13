@@ -3,7 +3,7 @@
 import { createHash } from 'node:crypto';
 
 const SEVERITIES = ['critical', 'high', 'medium', 'low'];
-const PROFILE_VALUES = ['quality', 'schema', 'custom', 'all'];
+const PROFILE_VALUES = ['quality', 'schema', 'custom', 'style', 'all'];
 const CHECK_TARGETS = ['setup', 'outline', 'chapter', 'craft', 'recap'];
 const SEVERITY_RANK = { critical: 0, high: 1, medium: 2, low: 3 };
 

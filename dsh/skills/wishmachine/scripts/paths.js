@@ -21,6 +21,8 @@ const PATHS = {
   recaps: ['story', 'recaps'],
   ideas: ['story', 'ideas'],
   research: ['story', 'research'],
+  styleVoice: ['story', 'style', 'voice.json'],
+  styleSamples: ['story', 'style', 'samples'],
   registryBackups: ['logs', 'registry-backups'],
   registryOperations: ['logs', 'registry-operations.jsonl'],
 };
@@ -59,6 +61,14 @@ export function recapFile(dir, id) {
 
 export function craftFile(dir, kind) {
   return path.join(projectPath(dir, 'craft'), `${safeSegment(kind, 'craft kind')}.json`);
+}
+
+export function styleVoiceFile(dir) {
+  return projectPath(dir, 'styleVoice');
+}
+
+export function styleSamplesDir(dir) {
+  return projectPath(dir, 'styleSamples');
 }
 
 export function ideaFile(dir, id) {

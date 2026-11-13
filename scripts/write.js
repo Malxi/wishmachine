@@ -11,9 +11,10 @@ import {
 import {
   chapterFile, configFile, craftFile, outlineFile, outlineMarkdownFile,
   recapFile, renderOutlineMarkdown, renderSetupMarkdown, setupFile,
-  setupMarkdownFile,
+  setupMarkdownFile, styleVoiceFile,
 } from './paths.js';
 import { checkCandidate, checkProject } from './schema.js';
+import { validateVoiceCard, voiceCardSummary } from './style-card.js';
 import { loadRegistryDocs } from './registry-docs.js';
 import { registryRepairReasons } from './registry-rules.js';
 import { repairRegistry } from './registry-repair.js';
@@ -24,6 +25,7 @@ const WRITE_MODES = {
   craft: ['replace', 'patch'],
   recap: ['replace', 'patch'],
   chapter: ['replace', 'append'],
+  style: ['replace'],
 };
 const WRITE_TARGETS = {
   setup: [''],
@@ -31,6 +33,7 @@ const WRITE_TARGETS = {
   craft: ['', 'character', 'item', 'location', 'organization'],
   recap: [''],
   chapter: [''],
+  style: [''],
 };
 const CHECKPOINT_LIMIT = 10;
 
@@ -235,8 +238,7 @@ function autoRepairRegistries(project, section) {
   }
 }
 
-function candidateStats(section, candidate) {
-  if (section !== 'chapter') return null;
+function candidateStats(section, candidate) {  if (section !== 'chapter') return null;
   const text = String(candidate);
   return {
     cjk: (text.match(/[\u3400-\u9fff]/g) || []).length,
@@ -264,8 +266,24 @@ function runPostWriteCheck(project, section, config, options) {
   });
 }
 
+function writeStyleArtifact(project, options) {
+  const card = parseJson(options.content ?? '', 'style voice card');
+  validateVoiceCard(card);
+  const summary = voiceCardSummary(card);
+  if (!options.apply) {
+    return { ok: true, applied: false, dry_run: true, section: 'style', voice: summary };
+  }
+  const file = styleVoiceFile(project.dir);
+  ensureDir(path.dirname(file));
+  checkpoint(file, 'style');
+  writeJsonAtomic(file, card);
+  touchProjectConfig(project);
+  return { ok: true, applied: true, dry_run: false, section: 'style', changed: true, voice: summary };
+}
+
 export function writeArtifact(project, options) {
   const section = options.section;
+  if (section === 'style') return writeStyleArtifact(project, options);
   const mode = options.mode || 'replace';
   const apply = Boolean(options.apply);
   const target = options.target || '';

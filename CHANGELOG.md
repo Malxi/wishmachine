@@ -7,6 +7,28 @@
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-13
+
+### Added
+
+- `check --profile style`：确定性风格/AI 味统计指标（单字谓语、否定式单字谓语、句首复用、
+  段尾升华、比喻密度、模板连接句、对话比例、句长/段长节奏、短句簇），setup 另有题材堆叠、
+  抽象词密度、格言式主题、规则可操作性；findings 只报 low/medium，永不 blocking，带
+  `metrics`、`evidence` 和改写建议。阈值可在 `novel.json.style` 覆盖。
+- `audit --profile style`：全书 pooled metrics + 每章 metrics + 书级 findings，支持
+  `--view summary`、`--min-severity`、`--max-findings`、`--ignore`/`--ignore-file`。
+- voice card（`story/style/voice.json`）：`book write style` / `book read style`，
+  `book read context` 带 `style` summary；记录声音描述、原则、禁用项与正/反样本。
+- `references/workflow-deai.md` + `references/style-checklist.md`：设定 loop、章节 loop
+  （最多 2 轮 + 指标退出条件）、书级 loop、具体性置换/句法去模板/重复纪律/对话口语化/
+  场景裁剪等改稿手法，以及第七垄实测反例。
+
+### Changed
+
+- `check` / `audit` 的 profile 列表增加 `style`；`audit` 新增 `--profile` 参数。
+- `SKILL.md` 增加“风格与去 AI 味”流程与 voice card 用法；README、check-profiles、
+  book-write、stage-contracts 同步更新。
+
 ## [0.4.1] - 2026-11-13
 
 ### Added
@@ -119,7 +141,8 @@
 
 - 完成 P0-P2 审核整改与大规模模块拆分。
 
-[Unreleased]: https://github.com/Malxi/wishmachine/compare/v0.4.1...HEAD
+[Unreleased]: https://github.com/Malxi/wishmachine/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/Malxi/wishmachine/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/Malxi/wishmachine/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/Malxi/wishmachine/compare/v0.3.3...v0.4.0
 [0.3.3]: https://github.com/Malxi/wishmachine/compare/v0.3.2...v0.3.3

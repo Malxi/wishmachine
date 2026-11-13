@@ -4,11 +4,12 @@ import fs from 'node:fs';
 import { readJson, readText, safeSegment } from './util.js';
 import {
   chapterFile, craftFile, ideaFile, listFilesWithSizes, outlineFile,
-  projectPath, readOptionalJson, recapFile, researchFile, setupFile,
+  projectPath, readOptionalJson, recapFile, researchFile, setupFile, styleVoiceFile,
 } from './paths.js';
 import { projectStatus } from './state.js';
 import { outlineIndex } from './schema.js';
 import { buildProjectGraph } from './graph.js';
+import { voiceCardSummary } from './style-card.js';
 
 function readSetup(project) {
   const file = setupFile(project.dir);
@@ -127,9 +128,25 @@ function readGraph(project) {
   return { ok: true, section: 'graph', graph: buildProjectGraph(project) };
 }
 
+function readStyle(project) {
+  const file = styleVoiceFile(project.dir);
+  if (!fs.existsSync(file)) {
+    return { ok: true, section: 'style', present: false, hint: 'Write one with book write style --apply < voice.json.' };
+  }
+  const card = readJson(file);
+  return { ok: true, section: 'style', present: true, voice: card, summary: voiceCardSummary(card) };
+}
+
 function readContext(project) {
   const outline = readOptionalJson(outlineFile(project.dir));
-  return { ok: true, section: 'context', status: projectStatus(project), outline: outline ? outlineIndex(outline) : null };
+  const voice = readOptionalJson(styleVoiceFile(project.dir));
+  return {
+    ok: true,
+    section: 'context',
+    status: projectStatus(project),
+    outline: outline ? outlineIndex(outline) : null,
+    style: voiceCardSummary(voice),
+  };
 }
 
 function readLogs(project) {
@@ -149,6 +166,7 @@ const READERS = {
   graph: readGraph,
   craft: readCraft,
   context: readContext,
+  style: readStyle,
   logs: readLogs,
 };
 

@@ -8,10 +8,13 @@
 quality   结构、引用、ID、章节数量、谜题/线程一致性
 schema    setup/outline/craft/recap 的 JSON 形状
 custom    references/builtin-rules.json + 项目 .wishmachine/rules/*.json
-all       quality + schema + custom（默认）
+style     风格/AI 味统计指标（advisory，low/medium，永不 blocking）
+all       quality + schema + custom（默认，不含 style）
 ```
 
 `--profile rpg` 等未知值会被枚举校验拒绝（退出码 1），不会静默跳检查。
+`style` 只支持 `--target setup` 与 `--target chapter --id`；指标与阈值见
+`references/style-checklist.md`，改稿流程见 `references/workflow-deai.md`。
 
 ## 常用命令
 
@@ -22,7 +25,10 @@ node scripts/wishmachine.js check --dir my-book --profile all --target chapter -
 node scripts/wishmachine.js check --dir my-book --profile all --target craft --id character
 node scripts/wishmachine.js check --dir my-book --profile all --target recap --id P1-V1-C1
 node scripts/wishmachine.js check --dir my-book --profile custom --target chapter --id P1-V1-C1
+node scripts/wishmachine.js check --dir my-book --profile style --target chapter --id P1-V1-C1
+node scripts/wishmachine.js check --dir my-book --profile style --target setup
 node scripts/wishmachine.js audit --dir my-book --view brief
+node scripts/wishmachine.js audit --dir my-book --profile style --view summary
 node scripts/wishmachine.js doctor --dir my-book --fix
 ```
 

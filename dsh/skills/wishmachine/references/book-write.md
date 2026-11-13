@@ -12,6 +12,7 @@
 | craft | replace、patch | craft JSON，配 `--target character\|item\|location\|organization` |
 | chapter | replace、append | 完整 chapter markdown，配 `--id P1-V1-C1` |
 | recap | replace、patch | recap JSON，配 `--id P1-V1-C1` |
+| style | replace | voice card JSON（`story/style/voice.json`，schema 见 workflow-deai） |
 | research | 仅 `--apply` 落盘 | 考究报告 JSON，配 `--id <pack-id>` |
 
 ```bash
@@ -36,6 +37,14 @@ node scripts/wishmachine.js book write research --dir my-book --id <pack-id> --a
 
 dry-run 若发现需要修复，会返回 `"registry_repair": { "needed": ["..."] }`，不写盘。
 因此正常流程不需要手工补 registry；只有手工改了 JSON 才需要 `doctor --fix`。
+
+## voice card（style）
+
+`book write style --dir my-book --mode replace --apply < voice.json` 写
+`story/style/voice.json`；默认 dry-run，只做 schema 校验。读取用
+`book read style`，`book read context` 会带 `style` summary。voice card 是
+去 AI 味工作流的项目级声音契约（samples/principles/avoid），见
+`references/workflow-deai.md`。
 
 ## 章节长度
 

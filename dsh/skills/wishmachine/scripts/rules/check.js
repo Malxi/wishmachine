@@ -19,6 +19,7 @@ import {
 import { validateCraft, validateRecap, validateSetup } from './shape.js';
 import { validateOutline } from './outline-shape.js';
 import { qualityFindings } from './quality/index.js';
+import { styleFindings } from './style/index.js';
 import { customFindings } from './custom.js';
 import { threadConsistencyFindings } from './thread.js';
 
@@ -93,6 +94,10 @@ function unexpectedCheckFinding(target, id, error) {
 
 function collectProjectFindings(project, context) {
   const { profile, target, id, artifact, collected } = context;
+  if (profile === 'style') {
+    collected.push(...styleFindings(project, target, id));
+    return;
+  }
   if (target === 'setup') {
     if (profile === 'schema' || profile === 'all') collected.push(...validateSetup(artifact.value));
     if (profile === 'quality' || profile === 'all') {
@@ -199,6 +204,9 @@ function checkProject(project, options = {}) {
   }
   if (profile === 'schema' && target === 'chapter') {
     throw new Error('schema profile supports setup or outline (not chapter)');
+  }
+  if (profile === 'style' && !['setup', 'chapter'].includes(target)) {
+    throw new Error('style profile supports setup or chapter targets');
   }
   const collected = [];
   const artifact = readTargetArtifact(project, target, id);

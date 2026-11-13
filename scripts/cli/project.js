@@ -14,11 +14,12 @@ function runState(flags) {
 
 function runAudit(flags) {
   const view = enumFlag(flags, 'view', ['brief', 'full', 'summary'], 'brief');
+  const profile = enumFlag(flags, 'profile', PROFILE_VALUES, 'all');
   const minSeverity = enumFlag(flags, 'min-severity', SEVERITY_VALUES, '');
   const maxFindings = maxFindingsFlag(flags);
   const ignoreRules = ignoreRulesFlag(flags);
   const project = loadProject(stringFlag(flags, 'dir', ''));
-  const result = auditProject(project, { view, minSeverity, maxFindings, ignoreRules });
+  const result = auditProject(project, { view, profile, minSeverity, maxFindings, ignoreRules });
   print(result);
   return boolFlag(flags, 'no-strict') ? EXIT_OK : checkExit(result);
 }
