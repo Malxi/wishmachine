@@ -6,7 +6,7 @@ import { readJson } from './util.js';
 import { drawIdeas, ideasTypes, validateIdeaDraw } from './ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference, listSkills, readSkill } from './guides.js';
 
-const VERSION = '0.2.71';
+const VERSION = '0.2.72';
 const BOOLEAN_FLAGS = new Set(['apply', 'json', 'help', 'h', 'dry-run', 'force', 'ingest']);
 const COMMANDS = new Set(['book', 'check', 'ideas', 'gen', 'state', 'audit', 'refresh', 'export', 'doctor', 'version', 'help']);
 
@@ -405,7 +405,8 @@ async function runIdeas(args, flags) {
         };
       });
       const ok = results.every((item) => item.ok);
-      return emit({ schema_version: 1, ok, section: 'ideas', action: 'validate-all', count: results.length, results }, boolFlag(flags, 'strict') && !ok ? 1 : 0);
+      const ignoredFindings = results.reduce((sum, item) => sum + (item.ignored_findings || 0), 0);
+      return emit({ schema_version: 1, ok, section: 'ideas', action: 'validate-all', count: results.length, ignored_findings: ignoredFindings, results }, boolFlag(flags, 'strict') && !ok ? 1 : 0);
     }
     const id = stringFlag(flags, 'id', '');
     if (!id) fail('ideas validate requires --id or --all');
