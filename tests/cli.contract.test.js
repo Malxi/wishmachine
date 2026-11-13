@@ -222,7 +222,7 @@ test('ideas draw --output writes the full draw and keeps stdout small', (t) => {
   assert.equal(written.query.seed, 42);
 });
 
-test('book write reports a post-write warning although the artifact was applied', (t) => {
+test('book write auto-repairs derived registries after applying setup/outline', (t) => {
   const dir = tempDir(t);
   initProject({ name: 'contract', dir, parts: 1, volumes: 1, chapter: 10 });
   const pack = outlinepack();
@@ -234,10 +234,12 @@ test('book write reports a post-write warning although the artifact was applied'
   const setupWrite = run(['book', 'write', 'setup', '--dir', dir, '--mode', 'replace', '--apply'], {
     input: JSON.stringify(sampleSetup()),
   });
-  assert.equal(setupWrite.status, 2, setupWrite.stderr);
-  assert.equal(setupWrite.json.ok, false);
+  assert.equal(setupWrite.status, 0, setupWrite.stderr);
+  assert.equal(setupWrite.json.ok, true);
   assert.equal(setupWrite.json.applied, true);
-  assert.match(String(setupWrite.json.warning), /post-write check/);
-  assert.ok(setupWrite.json.check.findings.some((finding) => finding.rule_id === 'quality.thread.registry_missing_setup'));
-  assert.ok(fs.existsSync(path.join(dir, 'story', 'setup', 'story_setup.json')));
+  assert.equal(setupWrite.json.registry_repair.repaired, true);
+  const setup = JSON.parse(fs.readFileSync(path.join(dir, 'story', 'setup', 'story_setup.json'), 'utf8'));
+  const outline = JSON.parse(fs.readFileSync(path.join(dir, 'story', 'compose', 'outline.json'), 'utf8'));
+  assert.deepEqual(setup.thread_registry, outline.thread_registry);
+  assert.deepEqual(setup.mystery_registry, outline.mystery_registry);
 });

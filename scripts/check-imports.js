@@ -28,7 +28,7 @@ const DELETED = new Set(['artifacts.js']);
 const LAYERS = [
   { layer: 0, match: (rel) => rel === 'util.js' },
   { layer: 1, match: (rel) => rel === 'paths.js' || rel === 'registry.js' || rel === 'contracts.js' || rel === 'rules/finding.js' || rel.startsWith('decks/') },
-  { layer: 2, match: (rel) => /^(rules|ideas|decks|sources)\//.test(rel) || /^(graph|store|state|write|read|export|sources|doctor|guides|schema|ideas)\.js$|^registry-[a-z-]+\.js$/.test(rel) },
+  { layer: 2, match: (rel) => /^(rules|ideas|decks|sources)\//.test(rel) || /^(graph|store|state|write|read|export|sources|doctor|guides|schema|ideas)\.js$|^export-[a-z-]+\.js$|^registry-[a-z-]+\.js$/.test(rel) },
   { layer: 3, match: (rel) => /^(project-core|project)\.js$/.test(rel) },
   { layer: 4, match: (rel) => rel === 'cli.js' || rel.startsWith('cli/') || /^(wishmachine|pack|check-imports|check-structure|skill-manifest|release|build-dsh-bundle)\.js$/.test(rel) },
 ];

@@ -147,6 +147,37 @@ test('export renders book and plain formats inside the project', (t) => {
   assert.ok(!plainText.includes('## 目录'));
 });
 
+test('export renders a self-contained html reader page', (t) => {
+  const dir = projectWithChapter(t);
+  const html = exportManuscript(loadProject(dir), { format: 'html' });
+  assert.equal(html.ok, true);
+  assert.equal(html.format, 'html');
+  assert.equal(html.chapters, 1);
+  assert.equal(html.output, path.join(dir, 'drafts', 'manuscript.html'));
+  const text = fs.readFileSync(html.output, 'utf8');
+  assert.match(text, /^<!doctype html>/);
+  assert.ok(text.includes('<h1>导出测试</h1>'));
+  assert.ok(text.includes('目录'));
+  assert.ok(text.includes('id="chapter-1"'));
+  assert.ok(text.includes('孟启明'));
+  assert.ok(text.includes('宋夜航'));
+  assert.ok(!text.includes('<script'));
+  assert.ok(!/https?:\/\//.test(text));
+  const custom = exportManuscript(loadProject(dir), { format: 'html', output: 'drafts/reader.html' });
+  assert.equal(custom.output, path.join(dir, 'drafts', 'reader.html'));
+  assert.ok(fs.existsSync(custom.output));
+});
+
+test('html export escapes chapter markup instead of injecting it', (t) => {
+  const dir = projectWithChapter(t);
+  const content = `# 第一章\n\n${'正文'.repeat(1000)}<script>alert(1)</script>`;
+  writeArtifact(loadProject(dir), { section: 'chapter', id: 'P1-V1-C1', mode: 'replace', apply: true, content });
+  const html = exportManuscript(loadProject(dir), { format: 'html', output: 'drafts/escaped.html' });
+  const text = fs.readFileSync(html.output, 'utf8');
+  assert.ok(!text.includes('<script>'));
+  assert.ok(text.includes('&lt;script&gt;'));
+});
+
 test('export output defaults to per-format paths and supports a custom inside path', (t) => {
   const dir = projectWithChapter(t);
   exportManuscript(loadProject(dir));

@@ -141,8 +141,26 @@ node scripts/wishmachine.js book write setup --dir my-book --from-idea <outlinep
 - `importance` 是数字；`long_form_plan.target_chapters` / `target_volumes` 是数字。
 - `replace` 覆盖整个 setup；`patch` 只传改动字段。
 
-## Optional thread_registry
+## Derived registries: thread_registry / mystery_registry
 
-setup 可以带顶层 `thread_registry` 数组，条目含 `id`、`name`、`type`、`importance`、
-`status`、`resolved_in`。`storylines[*].thread_id` 必须引用其中的 id；`check --target setup`
-校验这些引用。
+setup 与 outline 都可以带顶层 `thread_registry`、`mystery_registry` 数组。它们是
+**派生字段**：由 setup 的 storylines/世界资源与 outline 的章节 mysteries 推导出来，
+不要手写或手工增删。条目形状：
+
+```json
+{
+  "id": "m01",
+  "status": "open|resolved|dropped",
+  "chapter_id": "P1-V1-C2",
+  "description": "string",
+  "source": "chapter.resolved"
+}
+```
+
+- `thread_registry` 条目含 `id`、`name`、`type`、`importance`、`status`、`resolved_in`；
+  `storylines[*].thread_id` 必须引用其中的 id。
+- 缺失或漂移时：`check --target outline` 报 `quality.registry.drift`（medium，不 blocking），
+  `doctor` 报 `registry.drift_needs_repair`；`doctor --fix` 或 `book write setup/outline --apply`
+  会重建 setup+outline 两份 registry（写入自动修复）。
+- 想确认当前状态：`book registry log`、`book registry status`；破坏性操作前先
+  `book registry backup`。

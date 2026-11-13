@@ -40,7 +40,9 @@ export function initProject(options) {
     created_at: now,
     updated_at: now,
     language: options.language || 'zh',
-    genres: options.genre ? String(options.genre).split(',').map((item) => item.trim()).filter(Boolean) : ['未分类'],
+    genres: options.genre
+      ? String(options.genre).split(/[,，、/]/).map((item) => item.trim()).filter(Boolean)
+      : ['未分类'],
     structure: {
       target_parts: parts,
       target_volumes: volumes,
@@ -179,26 +181,35 @@ function summarizeAudit(project, targets, view) {
     }
   }
   const blocking = targets.some((target) => target.blocking);
-  const allFindings = targets.flatMap((target) => target.findings.map((item) => ({
-    ...item,
-    audit_target: target.target,
-  })));
-  return {
+  const result = {
     ok: !blocking,
     blocking,
     view,
     root: project.dir,
     name: project.config.name,
     summary,
-    top_findings: allFindings.slice(0, 10),
-    targets: view === 'full'
-      ? targets
-      : targets.map(({ findings, ...target }) => target),
   };
+  if (view === 'summary') {
+    result.failing_targets = targets
+      .filter((target) => target.summary.total > 0)
+      .map(({ target, id, ok, blocking: targetBlocking, score, summary: targetSummary }) => ({
+        target, id, ok, blocking: targetBlocking, score, total: targetSummary.total,
+      }));
+    return result;
+  }
+  const allFindings = targets.flatMap((target) => target.findings.map((item) => ({
+    ...item,
+    audit_target: target.target,
+  })));
+  result.top_findings = allFindings.slice(0, 10);
+  result.targets = view === 'full'
+    ? targets
+    : targets.map(({ findings, ...target }) => target);
+  return result;
 }
 
 export function auditProject(project, options = {}) {
-  const view = options.view === 'full' ? 'full' : 'brief';
+  const view = ['full', 'summary'].includes(options.view) ? options.view : 'brief';
   const targets = collectAuditTargets(project, {
     maxFindings: options.maxFindings || 0,
     minSeverity: options.minSeverity,

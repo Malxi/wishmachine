@@ -224,7 +224,7 @@ test('checkpoint history keeps only the last ten writes per section', async (t) 
   assert.deepEqual(sorted, checkpoints.sort());
 });
 
-test('post-write check can warn after the artifact was applied', (t) => {
+test('setup write auto-repairs derived registries instead of warning', (t) => {
   const { dir } = tempProject(t, { name: 'post-write', init: { chapter: 10 } });
   const pack = outlinepack();
   const outlineWrite = writeArtifact(loadProject(dir), {
@@ -236,10 +236,58 @@ test('post-write check can warn after the artifact was applied', (t) => {
     section: 'setup', mode: 'replace', apply: true, content: JSON.stringify(sampleSetup()),
   });
   assert.equal(setupWrite.applied, true);
-  assert.equal(setupWrite.ok, false);
-  assert.match(String(setupWrite.warning), /post-write check/);
-  assert.ok(setupWrite.check.findings.some((item) => item.rule_id === 'quality.thread.registry_missing_setup'));
-  assert.ok(fs.existsSync(path.join(dir, 'story', 'setup', 'story_setup.json')));
+  assert.equal(setupWrite.ok, true);
+  assert.equal(setupWrite.warning, undefined);
+  assert.equal(setupWrite.registry_repair.repaired, true);
+  assert.ok(setupWrite.registry_repair.reasons.length > 0);
+  const setup = JSON.parse(fs.readFileSync(path.join(dir, 'story', 'setup', 'story_setup.json'), 'utf8'));
+  const outline = JSON.parse(fs.readFileSync(path.join(dir, 'story', 'compose', 'outline.json'), 'utf8'));
+  assert.deepEqual(setup.thread_registry, outline.thread_registry);
+  assert.deepEqual(setup.mystery_registry, outline.mystery_registry);
+  assert.ok(setup.thread_registry.length > 0);
+  assert.ok(setup.mystery_registry.length > 0);
+  assert.ok(!setupWrite.check.findings.some((item) => item.rule_id === 'quality.thread.registry_missing_setup'));
+});
+
+test('outline write reports and repairs derived registries', (t) => {
+  const { dir } = tempProject(t, { name: 'registry write', init: { chapter: 10 } });
+  writeArtifact(loadProject(dir), { section: 'setup', mode: 'replace', apply: true, content: JSON.stringify(sampleSetup()) });
+  const pack = outlinepack();
+  const draft = structuredClone(pack.draft_outline);
+  delete draft.thread_registry;
+  delete draft.mystery_registry;
+  const dry = writeArtifact(loadProject(dir), { section: 'outline', mode: 'replace', apply: false, content: JSON.stringify(draft) });
+  assert.equal(dry.applied, false);
+  assert.ok(dry.registry_repair.needed.length > 0);
+  assert.ok(dry.check.findings.some((item) => item.rule_id === 'quality.registry.drift'));
+  const applied = writeArtifact(loadProject(dir), { section: 'outline', mode: 'replace', apply: true, content: JSON.stringify(draft) });
+  assert.equal(applied.applied, true);
+  assert.equal(applied.registry_repair.repaired, true);
+  const setup = JSON.parse(fs.readFileSync(path.join(dir, 'story', 'setup', 'story_setup.json'), 'utf8'));
+  const outline = JSON.parse(fs.readFileSync(path.join(dir, 'story', 'compose', 'outline.json'), 'utf8'));
+  assert.deepEqual(setup.thread_registry, outline.thread_registry);
+  assert.deepEqual(setup.mystery_registry, outline.mystery_registry);
+  assert.ok(setup.mystery_registry.length > 0);
+});
+
+test('chapter dry-run returns stats and omits the recap advisory', (t) => {
+  const { dir } = tempProject(t, { name: 'chapter stats' });
+  const dry = writeArtifact(loadProject(dir), {
+    section: 'chapter', mode: 'replace', apply: false, id: 'P1-V1-C1', content: longChapter(),
+  });
+  assert.equal(dry.applied, false);
+  assert.ok(dry.stats.cjk > 0);
+  assert.ok(dry.stats.paragraphs > 0);
+  assert.ok(!dry.check.findings.some((item) => item.rule_id === 'quality.chapter.no_recap'));
+});
+
+test('chapters far above target get an informational over-target finding', (t) => {
+  const { dir } = tempProject(t, { name: 'over target' });
+  const dry = writeArtifact(loadProject(dir), {
+    section: 'chapter', mode: 'replace', apply: false, id: 'P1-V1-C1', content: `# 第一章\n\n${'字'.repeat(4000)}`,
+  });
+  assert.ok(dry.check.findings.some((item) => item.rule_id === 'quality.chapter.length_over_target'));
+  assert.equal(dry.check.blocking, false);
 });
 
 test('write modes and targets are validated per section', (t) => {

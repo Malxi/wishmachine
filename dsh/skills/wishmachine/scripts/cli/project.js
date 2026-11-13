@@ -13,7 +13,7 @@ function runState(flags) {
 }
 
 function runAudit(flags) {
-  const view = enumFlag(flags, 'view', ['brief', 'full'], 'brief');
+  const view = enumFlag(flags, 'view', ['brief', 'full', 'summary'], 'brief');
   const minSeverity = enumFlag(flags, 'min-severity', SEVERITY_VALUES, '');
   const maxFindings = maxFindingsFlag(flags);
   const ignoreRules = ignoreRulesFlag(flags);

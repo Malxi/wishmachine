@@ -143,7 +143,17 @@ node scripts/wishmachine.js book write outline --dir my-book --mode patch --targ
 
 patch 后仍会对整份 outline 校验；会改变章节集合的 patch 同样会被拦下。
 
-## Optional thread_registry
+## Derived registries: thread_registry / mystery_registry
 
-`outline.json` 可以带顶层 `thread_registry` 数组，章节 `thread_id` 必须引用其中的 id。
-`check --target outline` 报告未知 id 与 setup/outline registry 漂移。
+`outline.json` 与 `story_setup.json` 的顶层 `thread_registry` / `mystery_registry` 是
+**派生字段**：由 outline 的章节 mysteries（含 scenes）与 setup 的 storylines 推导，不要手写。
+`mystery_registry` 条目形状：
+
+```json
+{ "id": "m01", "status": "open|resolved|dropped", "chapter_id": "P1-V1-C2", "description": "string", "source": "chapter.resolved" }
+```
+
+- 缺失或漂移时：`check --target outline` 报 `quality.registry.drift`（medium）；
+  `doctor` 报 `registry.drift_needs_repair`。
+- 修复：`doctor --fix`，或直接 `book write setup/outline --apply`（写入后自动重建两份 registry，
+  结果里带 `registry_repair`）。破坏性操作前先 `book registry backup`。

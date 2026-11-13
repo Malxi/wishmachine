@@ -106,8 +106,15 @@ findings 带内容哈希稳定 `id`，已去重并按 severity 降序、rule_id 
 
 `audit` 对 setup、outline、全部 craft/recap/已写章节跑同一套检查并汇总，支持
 `--min-severity`、`--max-findings all|<n>`、`--ignore`/`--ignore-file`、
-`--view brief|full`、`--no-strict`。审计过程中单个 artifact 缺失/损坏/意外错误会降级为
+`--view brief|summary|full`、`--no-strict`。`--view summary` 只返回 totals 与
+`failing_targets`（输出很小，适合脚本/模型快速判断）；brief 额外给 `top_findings`；
+full 还带每个 target 的 findings。审计过程中单个 artifact 缺失/损坏/意外错误会降级为
 `artifact.*` / `quality.audit.error` finding（带稳定 id），不会让整个 audit 崩溃。
 
+registry 漂移属于 quality 检查：`check --target outline` / `audit` 会报
+`quality.registry.drift`（medium），`suggestion` 指向 `doctor --fix`；因此不会再出现
+“audit 100 分、doctor 却说 registry 不一致”的假绿灯。
+
 `doctor` 检查项目目录、`novel.json`、artifact JSON 有效性与 orphan 文件；`--fix` 会创建
-缺失目录、修复可自动修复的问题。`doctor` 有 blocking 时同样退出 2，`--no-strict` 强制 0。
+缺失目录、修复可自动修复的问题（含重建 setup/outline registry）。`doctor` 有 blocking 时
+同样退出 2，`--no-strict` 强制 0。

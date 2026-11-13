@@ -58,7 +58,7 @@ my-book/
 | 阅读/写入 | `book read`、`book write` | 读 artifact；dry-run → `--apply` 写 |
 | 检查 | `check`、`audit`、`doctor` | 确定性检查、全项目审计、目录/配置修复 |
 | 抽卡 | `ideas draw/import/search/discover/validate/types` | 确定性参考卡 |
-| 导出 | `export`、`refresh` | 导出正文、刷新 md 伴生文件 |
+| 导出 | `export`、`refresh` | 导出 Markdown/自包含 HTML 阅读页、刷新 md 伴生文件 |
 | 指导 | `gen <workflow\|reference\|skill> <list\|read>` | 读 references 与 SKILL.md |
 | 维护 | `book registry …` | registry 状态/清理/日志/备份/undo/redo |
 
@@ -73,6 +73,10 @@ my-book/
   dry-run，`--apply` 才落盘。
 - `check`/`audit` 支持 `--ignore rule_id,...` / `--ignore-file <json>`；目标 artifact
   缺失或损坏时返回结构化 `artifact.*` finding，而不是文件系统异常。
+- `audit --view summary` 只输出 totals 与 `failing_targets`（适合脚本/模型）；
+  `export --format html` 生成无外链、无脚本的单文件阅读页。
+- setup/outline 写入会自动重建派生的 `thread_registry`/`mystery_registry`；`check` 也会报
+  `quality.registry.drift`，不再出现“audit 100 分、doctor 报漂移”的假绿灯。
 
 ## 边界
 

@@ -9,6 +9,7 @@ import {
 } from './paths.js';
 import { projectStatus } from './state.js';
 import { outlineChapters } from './registry.js';
+import { renderHtml } from './export-html.js';
 
 function chapterPath(project, id) {
   try {
@@ -138,19 +139,20 @@ function renderPlain(project, plan) {
 }
 
 function resolveOutput(project, options, format) {
-  // Keep the two formats apart by default so consecutive exports do not overwrite each other.
-  const defaultName = format === 'plain' ? 'manuscript-plain.md' : 'manuscript.md';
+  // Keep the formats apart by default so consecutive exports do not overwrite each other.
+  const defaultName = format === 'plain' ? 'manuscript-plain.md' : format === 'html' ? 'manuscript.html' : 'manuscript.md';
   const requested = options.output || path.join('drafts', defaultName);
   if (options.force) return path.resolve(project.dir, requested);
   return assertInside(project.dir, requested, 'export output');
 }
 
 export function exportManuscript(project, options = {}) {
-  const format = options.format === 'plain' ? 'plain' : 'book';
+  const format = ['book', 'plain', 'html'].includes(options.format) ? options.format : 'book';
   const plan = collectExportPlan(project);
-  const rendered = format === 'book' && plan.setup && plan.outline
-    ? renderBook(project, plan)
-    : renderPlain(project, plan);
+  let rendered;
+  if (format === 'html') rendered = renderHtml(project, plan);
+  else if (format === 'book' && plan.setup && plan.outline) rendered = renderBook(project, plan);
+  else rendered = renderPlain(project, plan);
   const content = `${rendered.chunks.join('\n').trimEnd()}\n`;
   const output = resolveOutput(project, options, format);
   ensureDir(path.dirname(output));

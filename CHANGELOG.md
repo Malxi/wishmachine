@@ -7,6 +7,27 @@
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-11-13
+
+### Added
+
+- `export --format html`：无外链、无脚本的单文件阅读页（目录/人物/规则/全文、深浅色、
+  移动端与打印样式），替代“自己写脚本生成阅读页”的重复劳动。
+- `audit --view summary`：只返回 totals 与 `failing_targets`，适合脚本/模型快速判断；
+  `book write chapter` 返回 `stats: {cjk, chars, paragraphs}`，dry-run 即可核对字数。
+- `quality.registry.drift`（medium）：`check`/`audit` 现在能发现 setup/outline 派生
+  registry 不一致，不再出现“audit 100 分、doctor 报 registry 漂移”的假绿灯。
+
+### Changed
+
+- `book write setup/outline --apply` 写盘后自动重建 `thread_registry`/`mystery_registry`
+  （两份一起，结果带 `registry_repair`；dry-run 提前给 `needed`），并新增对应测试。
+- `book init --genre` 支持 `,`、`，`、`、`、`/` 分隔的多题材列表。
+- `chapter` 超过 `target_chars × 1.25` 时新增 low 提示；`book write chapter` 的 dry-run
+  不再提示“缺少 recap”（recap 是下一步；`check`/`audit` 仍会提示）。
+- `references/setup-schema.md`、`outline-schema.md`、`book-write.md`、`check-profiles.md`
+  补充派生 registry 的 canonical 形状、自动修复与 `doctor --fix` 流程。
+
 ## [0.4.0] - 2026-11-13
 
 ### Added
@@ -98,7 +119,8 @@
 
 - 完成 P0-P2 审核整改与大规模模块拆分。
 
-[Unreleased]: https://github.com/Malxi/wishmachine/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/Malxi/wishmachine/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/Malxi/wishmachine/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/Malxi/wishmachine/compare/v0.3.3...v0.4.0
 [0.3.3]: https://github.com/Malxi/wishmachine/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/Malxi/wishmachine/compare/v0.3.1...v0.3.2

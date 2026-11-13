@@ -13,7 +13,7 @@ examples_en:
   - "Create a 3-volume × 5-chapter science-fiction project"
   - "Check the outline for blocking findings"
   - "Draw 12 science-fiction name cards"
-version: 0.4.0
+version: 0.4.1
 author: Malxi
 ---
 
@@ -36,13 +36,13 @@ artifact 写入。它**不调用模型、不生成 setup/outline/正文**；创�
 
 ## 0. 三条最小路径
 
-创作流：`init → ideas draw（可选）→ setup → outline → 逐章（正文→check→recap）→ audit → refresh → export`。
+创作流：`init → ideas draw（可选）→ setup → outline → 逐章（正文→check→recap）→ audit → doctor（有 registry 漂移时 --fix）→ refresh → export`。
 
 ### 路径 A：快路（推荐，空目录 → 合法 setup + outline）
 
 ```bash
 WM="node scripts/wishmachine.js"
-$WM book init "我的书" --dir my-book --parts 1 --volumes 1 --chapter 3 --genre 科幻
+$WM book init "我的书" --dir my-book --parts 1 --volumes 1 --chapter 3 --genre "科幻,悬疑"
 $WM ideas draw --type outlinepack --genre 科幻 --volumes 1 --chapters-per-volume 3 --count 1 --seed 7 --dir my-book --save
 # → saved.id（如 outlinepack-7-20261113_122909），替换下文 <saved.id>
 $WM book write setup   --dir my-book --from-idea <saved.id> --mode replace --apply
@@ -78,6 +78,9 @@ $WM book write recap --dir my-book --id P1-V1-C1 --mode replace --apply < recap.
 ## 写入与风险
 
 - 默认 dry-run 并返回 `check`；`--apply` 才写盘，写前把旧文件复制到同目录 `checkpoints/`。
+- setup/outline 的 `--apply` 会重建派生的 `thread_registry`/`mystery_registry`（两份一起），
+  结果带 `registry_repair`；dry-run 会提前返回 `registry_repair.needed`。不要手写这两个字段。
+- chapter 的写入结果带 `stats: {cjk, chars, paragraphs}`，dry-run 即可核对字数，不必自己数。
 - `--mode replace` 整块覆盖，`patch` 只合并改动字段；setup/outline/craft/recap 支持
   `replace|patch`，chapter 支持 `replace|append`。`--target` 只用于 outline 的 patch
   （`volume|chapter`）和 craft（`character|item|location|organization`）。
@@ -97,9 +100,12 @@ $WM book write recap --dir my-book --id P1-V1-C1 --mode replace --apply < recap.
 ```bash
 $WM check --dir my-book --profile all --target outline --max-findings 20
 $WM audit --dir my-book --view brief                 # 全项目审计
-$WM doctor --dir my-book                             # 目录/配置/JSON 完整性；加 --fix 修复
+$WM audit --dir my-book --view summary               # 只看 totals + failing_targets
+$WM doctor --dir my-book                             # 目录/配置/JSON/registry 完整性；加 --fix 修复
 ```
 
+- `quality.registry.drift`（medium）：setup/outline 的派生 registry 不一致；`doctor --fix`
+  或重新 `book write setup/outline --apply` 自动重建，不会阻塞。
 - blocking = `severity` 为 `high` 或 `critical`；check/audit/doctor/write 此时退出码 2；
   `--no-strict` 让 check/audit/doctor 强制退出 0（脚本容错用）。
 - `--min-severity low|medium|high|critical` 只过滤展示，`summary` 仍统计全量；
@@ -137,6 +143,18 @@ $WM ideas validate --dir my-book --all
 `book read ideas` 会列出可用的保存 id。
 
 抽卡是参考不是 canon；写进 setup/outline 前要改写并过 `check`。
+
+## 导出
+
+```bash
+$WM export --dir my-book                          # 成书 Markdown：drafts/manuscript.md
+$WM export --dir my-book --format plain           # 纯正文：drafts/manuscript-plain.md
+$WM export --dir my-book --format html            # 自包含阅读页：drafts/manuscript.html
+$WM export --dir my-book --format html --output drafts/我的书-阅读版.html
+```
+
+`html` 是一个无外链、无脚本的单文件阅读页（目录/人物/规则/全文、深浅色、打印样式），
+适合直接发给读者或放进静态站；`--force` 才允许写到项目目录外。
 
 ## 文档路由
 

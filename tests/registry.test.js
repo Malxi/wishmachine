@@ -7,7 +7,7 @@ import path from 'node:path';
 import {
   loadProject, doctorProject, projectRegistryStatus, cleanRegistry, abandonMystery,
   undoRegistryOperation, redoRegistryOperation, registryBackups, createRegistrySnapshot,
-  restoreRegistryBackup, checkRegistryBackups, registryOperations, readSection,
+  restoreRegistryBackup, checkRegistryBackups, registryOperations, readSection, auditProject,
 } from '../scripts/project.js';
 import { checkProject } from '../scripts/schema.js';
 import { registryRepairReasons, registryConsistencyFindings } from '../scripts/registry-rules.js';
@@ -69,6 +69,29 @@ test('registry check findings and doctor repair agree', (t) => {
   assert.deepEqual(registryRepairReasons(docs.setup, docs.outline), []);
   assert.deepEqual(registryConsistencyFindings(docs.setup, docs.outline), []);
   assert.equal(checkProject(loadProject(dir), { profile: 'schema', target: 'outline' }).findings.length, 0);
+});
+
+test('quality check reports canonical registry drift instead of staying green', (t) => {
+  const { dir } = projectWithOutlinepack(t);
+  const paths = docPaths(dir);
+  for (const file of [paths.setup, paths.outline]) {
+    const doc = JSON.parse(fs.readFileSync(file, 'utf8'));
+    delete doc.mystery_registry;
+    fs.writeFileSync(file, JSON.stringify(doc, null, 2));
+  }
+  const project = loadProject(dir);
+  const check = checkProject(project, { profile: 'quality', target: 'outline' });
+  const drift = check.findings.find((finding) => finding.rule_id === 'quality.registry.drift');
+  assert.ok(drift, JSON.stringify(check.findings));
+  assert.equal(drift.severity, 'medium');
+  assert.equal(check.blocking, false);
+  const audit = auditProject(project);
+  assert.equal(audit.ok, true);
+  assert.ok(audit.summary.medium >= 1);
+  assert.ok(audit.top_findings.some((finding) => finding.rule_id === 'quality.registry.drift'));
+  doctorProject(project, { fix: true });
+  const fixed = checkProject(loadProject(dir), { profile: 'quality', target: 'outline' });
+  assert.ok(!fixed.findings.some((finding) => finding.rule_id === 'quality.registry.drift'));
 });
 
 test('doctor --fix repairs setup/outline registry drift', (t) => {

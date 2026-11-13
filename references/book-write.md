@@ -25,11 +25,25 @@ node scripts/wishmachine.js book write research --dir my-book --id <pack-id> < r
 node scripts/wishmachine.js book write research --dir my-book --id <pack-id> --apply < report.json
 ```
 
+## setup/outline 自动修复 registry
+
+`setup` / `outline` 的 `--apply` 在写盘后会重建派生的 `thread_registry` /
+`mystery_registry`（setup+outline 两份一起），结果里带：
+
+```json
+"registry_repair": { "repaired": true, "reasons": ["mystery_registry (setup)"], "actions": ["repaired registry: ..."] }
+```
+
+dry-run 若发现需要修复，会返回 `"registry_repair": { "needed": ["..."] }`，不写盘。
+因此正常流程不需要手工补 registry；只有手工改了 JSON 才需要 `doctor --fix`。
+
 ## 章节长度
 
 `check` 用 CJK 字符数对照 `novel.json` 的 `chapter_config.target_chars` / `min_chars`：
-低于 `min_chars` 是 high finding，阻止 `--apply`；低于 `target_chars` 是 medium 警告。
+低于 `min_chars` 是 high finding，阻止 `--apply`；低于 `target_chars` 是 medium 警告；
+超过 `target_chars * 1.25` 是 low 提示（只提醒，不阻止）。
 `chapter` 只支持 `replace`（整章覆盖）和 `append`（追加到已有正文）。
+写入结果带 `stats: { cjk, chars, paragraphs }`，dry-run 也能直接看到字数，不必自己数。
 
 ## recap 形状
 

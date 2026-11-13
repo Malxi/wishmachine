@@ -17,7 +17,7 @@ function qualityChapterFindings(project, id, override) {
   }
   const findings = validateChapterLength(project, safeId, text);
   const found = validateChapterOutlineMatch(project, safeId, text, findings);
-  validateChapterRecapMatch(project, safeId, found, findings);
+  validateChapterRecapMatch(project, safeId, found, { findings, fromCandidate: override.chapterText !== undefined });
   return findings;
 }
 
@@ -27,10 +27,13 @@ function validateChapterLength(project, id, text) {
   const targetChars = Number(chapterConfig.target_chars) || 3000;
   const minChars = Number(chapterConfig.min_chars) || 1800;
   const cjkChars = (text.match(/[\u3400-\u9fff]/g) || []).length;
+  const softCap = Math.round(targetChars * 1.25);
   if (cjkChars < minChars) {
     findings.push(finding('quality.chapter.length', 'high', `${id} has ${cjkChars} CJK characters; minimum is ${minChars}`, id, 'Expand the chapter into scenes before applying it.'));
   } else if (cjkChars < targetChars) {
     findings.push(finding('quality.chapter.length_target', 'medium', `${id} has ${cjkChars} CJK characters; target is ${targetChars}`, id, 'Add scene detail, dialogue, or a stronger turn.'));
+  } else if (cjkChars > softCap) {
+    findings.push(finding('quality.chapter.length_over_target', 'low', `${id} has ${cjkChars} CJK characters; target is ${targetChars} (soft cap ${softCap})`, id, 'Trim filler or split the chapter; the target is a guide, so this is informational.'));
   }
   return findings;
 }
@@ -63,10 +66,12 @@ function validateChapterOutlineMatch(project, id, text, findings) {
   return found;
 }
 
-function validateChapterRecapMatch(project, id, found, findings) {
+function validateChapterRecapMatch(project, id, found, { findings, fromCandidate = false }) {
   const recapPath = path.join(project.dir, 'story', 'recaps', `${safeSegment(id, 'recap id')}.json`);
   if (!fs.existsSync(recapPath)) {
-    findings.push(finding('quality.chapter.no_recap', 'low', `${id} has no recap`, id));
+    // While validating a chapter candidate the recap is the next step; audit and
+    // explicit chapter checks still report the missing recap.
+    if (!fromCandidate) findings.push(finding('quality.chapter.no_recap', 'low', `${id} has no recap`, id));
     return;
   }
   const recap = readJson(recapPath);

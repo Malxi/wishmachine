@@ -14,6 +14,9 @@ import {
   setupMarkdownFile,
 } from './paths.js';
 import { checkCandidate, checkProject } from './schema.js';
+import { loadRegistryDocs } from './registry-docs.js';
+import { registryRepairReasons } from './registry-rules.js';
+import { repairRegistry } from './registry-repair.js';
 
 const WRITE_MODES = {
   setup: ['replace', 'patch'],
@@ -195,6 +198,53 @@ function persistCandidate(project, section, prepared) {
   return touchProjectConfig(project);
 }
 
+function readIfPresent(file) {
+  if (!fs.existsSync(file)) return null;
+  try {
+    return readJson(file);
+  } catch {
+    return null;
+  }
+}
+
+// Registries are derived, never hand-edited: tell the caller up front which
+// fields an --apply would rebuild, so a dry-run never hides a pending repair.
+function plannedRegistryRepair(project, section, candidate) {
+  if (section !== 'setup' && section !== 'outline') return null;
+  const setup = section === 'setup' ? candidate : readIfPresent(setupFile(project.dir));
+  const outline = section === 'outline' ? candidate : readIfPresent(outlineFile(project.dir));
+  if (!setup || !outline) return null;
+  const reasons = registryRepairReasons(setup, outline);
+  return reasons.length > 0 ? reasons : null;
+}
+
+// `book write setup/outline` used to accept artifacts without canonical
+// registries and leave doctor --fix to a later step; rebuild them here instead.
+function autoRepairRegistries(project, section) {
+  if (section !== 'setup' && section !== 'outline') return null;
+  try {
+    const docs = loadRegistryDocs(project);
+    if (!docs) return null;
+    const reasons = registryRepairReasons(docs.setup, docs.outline);
+    if (reasons.length === 0) return null;
+    checkpoint(section === 'setup' ? docs.outlineFile : docs.setupFile, section === 'setup' ? 'outline' : 'setup');
+    const repaired = repairRegistry(project);
+    return { repaired: true, reasons: repaired?.reasons || reasons, actions: repaired?.actions || [] };
+  } catch (error) {
+    return { repaired: false, error: error.message };
+  }
+}
+
+function candidateStats(section, candidate) {
+  if (section !== 'chapter') return null;
+  const text = String(candidate);
+  return {
+    cjk: (text.match(/[\u3400-\u9fff]/g) || []).length,
+    chars: [...text].length,
+    paragraphs: text.split(/\n\s*\n/).filter(Boolean).length,
+  };
+}
+
 function runCandidateCheck(project, section, candidate, options) {
   return checkCandidate(project, {
     section,
@@ -223,16 +273,38 @@ export function writeArtifact(project, options) {
   assertWriteRequest(section, mode, target);
   const request = { raw: options.content ?? '', mode, target, id };
   const prepared = PREPARERS[section](project, request);
+  const plannedRepair = plannedRegistryRepair(project, section, prepared.candidate);
+  const stats = candidateStats(section, prepared.candidate);
   const check = runCandidateCheck(project, section, prepared.candidate, { ...options, id });
   if (check?.blocking && apply) {
-    return { ok: false, applied: false, dry_run: false, section, check };
+    return { ok: false, applied: false, dry_run: false, section, check, stats, registry_repair: plannedRepair ? { needed: plannedRepair } : undefined };
   }
   if (!apply) {
-    return { ok: check?.ok ?? true, applied: false, dry_run: true, section, id, check };
+    return {
+      ok: check?.ok ?? true,
+      applied: false,
+      dry_run: true,
+      section,
+      id,
+      check,
+      stats,
+      registry_repair: plannedRepair ? { needed: plannedRepair } : undefined,
+    };
   }
   const config = persistCandidate(project, section, prepared);
+  const registryRepair = autoRepairRegistries(project, section);
   const after = runPostWriteCheck(project, section, config, { ...options, id });
-  const result = { ok: after ? after.ok : true, applied: true, dry_run: false, section, id, changed: true, check: after || check };
+  const result = {
+    ok: after ? after.ok : true,
+    applied: true,
+    dry_run: false,
+    section,
+    id,
+    changed: true,
+    check: after || check,
+    stats,
+    registry_repair: registryRepair || (plannedRepair ? { repaired: false, reasons: plannedRepair } : undefined),
+  };
   if (result.ok === false) {
     result.warning = 'post-write check reports blocking findings; the artifact was written, run check and repair';
   }

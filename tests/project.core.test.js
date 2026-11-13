@@ -46,6 +46,25 @@ test('init, status, write setup/outline and check', (t) => {
   assert.equal(check.summary.high, 0);
 });
 
+test('book init accepts a comma/、-separated genre list', (t) => {
+  const dir = tempDir(t);
+  const { config } = initProject({ name: 'genres', dir, genre: '科幻, 奇幻、悬疑/都市' });
+  assert.deepEqual(config.genres, ['科幻', '奇幻', '悬疑', '都市']);
+});
+
+test('audit summary view returns totals and failing targets only', (t) => {
+  const { dir } = tempProject(t, { name: 'audit summary' });
+  writeArtifact(loadProject(dir), { section: 'setup', mode: 'replace', apply: true, content: JSON.stringify(sampleSetup()) });
+  const summary = auditProject(loadProject(dir), { view: 'summary' });
+  assert.equal(summary.view, 'summary');
+  assert.equal(summary.targets, undefined);
+  assert.equal(summary.top_findings, undefined);
+  assert.ok(Array.isArray(summary.failing_targets));
+  assert.ok(summary.summary);
+  const full = auditProject(loadProject(dir), { view: 'full' });
+  assert.ok(Array.isArray(full.targets));
+});
+
 test('book init creates the full layout and rejects invalid structure flags', (t) => {
   const dir = tempDir(t);
   initProject({ name: 'layout', dir, parts: 1, volumes: 1, chapter: 2 });
