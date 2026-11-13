@@ -1,0 +1,12 @@
+# Keep text files LF on every platform. Windows checkouts default to CRLF
+# (core.autocrlf=true), which makes prettier's end-of-line=lf check fail in CI;
+# forcing eol=lf here keeps `npm run format:check` identical on Linux/Windows.
+* text=auto eol=lf
+
+# Binary artifacts are never normalized.
+*.zip binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
