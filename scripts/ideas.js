@@ -1610,7 +1610,10 @@ export function drawIdeas(options = {}) {
     const explicitRoles = (Array.isArray(options.castRoles) ? options.castRoles : String(options.castRoles || '').split(','))
       .map((role) => String(role || '').trim())
       .filter((role) => allowedRoles.has(role));
-    const castCount = Math.max(1, Math.min(12, explicitRoles.length || Number(options.castCount) || 4));
+    const poolSize = GENRE_ARCHETYPE_COUNTS[deck.name] || ARCHETYPES.length;
+    const requestedCastCount = Number(options.castCount);
+    const autoCast = explicitRoles.length === 0 && requestedCastCount === 0;
+    const castCount = Math.max(1, Math.min(12, explicitRoles.length || (autoCast ? poolSize : requestedCastCount) || 4));
     const castRoles = explicitRoles.length
       ? explicitRoles.slice(0, castCount)
       : Array.from({ length: castCount }, (_, index) => (index === 0 ? 'protagonist' : index === 1 ? 'antagonist' : 'support'));
@@ -1620,7 +1623,6 @@ export function drawIdeas(options = {}) {
       warnings.push(message);
       warningDetails.push({ code: 'cast.protagonist_autofix', severity: 'warning', message });
     }
-    const poolSize = GENRE_ARCHETYPE_COUNTS[deck.name] || ARCHETYPES.length;
     if (castCount > poolSize) {
       const message = `cast count ${castCount} exceeds the ${deck.name} archetype pool (${poolSize}); some archetypes will repeat`;
       warnings.push(message);
