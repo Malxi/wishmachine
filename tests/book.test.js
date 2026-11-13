@@ -695,6 +695,8 @@ test('romance plot and outline packs use the romance deck', () => {
   assert.equal(new Set(largerCast.results[0].cast.map((character) => character.archetype)).size, 8);
   const noLead = drawIdeas({ type: 'worldpack', genre: '言情', count: 1, seed: 42, castRoles: 'antagonist,support' });
   assert.deepEqual(noLead.results[0].cast.map((character) => character.role_tags[0]), ['protagonist', 'support']);
+  const shortPrompt = drawIdeas({ type: 'worldpack', genre: '言情', count: 1, seed: 42, castCount: 12, promptChars: 120 });
+  assert.ok(shortPrompt.results[0].prompt_pack.positive.length <= 120);
 });
 
 test('checkProject reports setup/outline thread registry drift', () => {

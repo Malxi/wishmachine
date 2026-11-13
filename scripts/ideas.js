@@ -383,7 +383,7 @@ const XIANXIA_PACKS = [
 
 XIANXIA.packs = XIANXIA_PACKS;
 
-function buildWorldpack(def, packIndex, seed, cast, sources) {
+function buildWorldpack(def, packIndex, seed, cast, sources, options = {}) {
   const find = (list, key, value) => list.find((item) => item[key] === value);
   const premise = find(sources.premises, 'title', def.premise);
   const engine = find(sources.engines, 'title', def.engine);
@@ -499,7 +499,7 @@ function buildWorldpack(def, packIndex, seed, cast, sources) {
     romance: 'spaceships, fantasy races, magic systems, battle scenes, genre mismatch',
   };
   const style = styleByDeck[sources.name] || styleByDeck.default;
-  const prompt = [
+  const rawPrompt = [
     style,
     `${def.theme} 主题`,
     premise?.title,
@@ -510,6 +510,8 @@ function buildWorldpack(def, packIndex, seed, cast, sources) {
     equipment?.name,
     [...new Set(castRelations.map((relation) => relation.type))].join(' / '),
   ].filter(Boolean).join('，');
+  const promptChars = Math.max(80, Math.min(2000, Number(options.promptChars) || 800));
+  const prompt = rawPrompt.length > promptChars ? `${rawPrompt.slice(0, promptChars - 1)}…` : rawPrompt;
   const promptPack = {
     positive: prompt,
     negative: negativeByDeck[sources.name] || negativeByDeck.default,
@@ -1587,7 +1589,7 @@ export function drawIdeas(options = {}) {
     if (!castRoles.includes('protagonist')) castRoles[0] = 'protagonist';
     results = selected.map((def, packIndex) => {
       const cast = namecards(rng, seed + packIndex, castCount, castRoles, deck.name);
-      return buildWorldpack(def, packIndex, seed, cast, deck);
+      return buildWorldpack(def, packIndex, seed, cast, deck, options);
     });
   } else if (type === 'plotpack') {
     const plots = [];

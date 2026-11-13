@@ -137,6 +137,7 @@ logs/
 - `book write outline --from-idea <id>` 把 outlinepack 的 draft_outline 送入正常候选检查
 - `book write setup --from-idea <id>` 把 outlinepack 的 setup_draft 送入正常候选检查
 - `ideas` 题材牌堆：科幻默认 / 修仙 / 悬疑 / 都市 / 历史 / 言情（4 packs）
+- `--prompt-chars` 控制 worldpack positive prompt 长度（80–2000）
 - graph character entity 记录 role / archetype / prompt / negative_prompt
 - 角色 prompt 带题材视觉风格与 negative_prompt
 - 每个 cast 角色带 `prompt`，可用于角色立绘/场景生成
