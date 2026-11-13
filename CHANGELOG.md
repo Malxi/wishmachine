@@ -7,6 +7,15 @@
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-11-14
+
+### Added
+
+- `references/human-style-samples.md` 增加郁达夫《春風沉醉的晚上》、老舍《老張的哲學》、
+  廢名《長日》等 1920 年代公版小说样本（逐字拷贝，带来源与许可）。
+- 明确说明：这些是**现代文学**而非当代作家；当代小说在版权保护期内，不能内置，
+  只能由用户本地提供 `source: "human"` / `"licensed"` 的样本。
+
 ## [0.6.0] - 2026-11-14
 
 ### Added
@@ -220,7 +229,8 @@
 
 - 完成 P0-P2 审核整改与大规模模块拆分。
 
-[Unreleased]: https://github.com/Malxi/wishmachine/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/Malxi/wishmachine/compare/v0.6.1...HEAD
+[0.6.1]: https://github.com/Malxi/wishmachine/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/Malxi/wishmachine/compare/v0.5.4...v0.6.0
 [0.5.4]: https://github.com/Malxi/wishmachine/compare/v0.5.3...v0.5.4
 [0.5.3]: https://github.com/Malxi/wishmachine/compare/v0.5.2...v0.5.3

@@ -10,8 +10,10 @@
   （`book read writing-style` / `book write writing-style`）。`writing_style` 不再放 setup。
 
 参考样本不允许 AI 自己写。内置样本见 `references/human-style-samples.md`
-（鲁迅《孔乙己》《故乡》《药》、朱自清《背影》，公版，逐字拷贝）。写作时只取与本书语感
-相近的 1–3 段，写进 `references[]`，并保留 `source: "public-domain"`、`author`、`work`、`url`。
+（鲁迅《孔乙己》《故乡》《药》、郁达夫《春風沉醉的晚上》、老舍《老張的哲學》、
+廢名《長日》、朱自清《背影》；均为 1920 年代公版文本，不是当代作家）。
+写作时只取与本书语感相近的 1–3 段，写进 `references[]`，并保留
+`source: "public-domain"`、`author`、`work`、`url`。
 
 `writing-style.json` 最小形状：
 
