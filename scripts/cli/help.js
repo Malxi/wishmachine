@@ -10,7 +10,7 @@ Commands:
   state [--dir <dir>] [--view brief|full]
   audit [--dir <dir>] [--view brief|full] [--min-severity low|medium|high|critical] [--max-findings all|<n>] [--no-strict]
   refresh [setup|outline|all] [--dir <dir>]
-  export [--dir <dir>] [--output drafts/manuscript.md] [--format book|plain] [--force]
+  export [--dir <dir>] [--output <file>] [--format book|plain] [--force]   (default: drafts/manuscript[-plain].md)
   doctor [--dir <dir>] [--fix] [--no-strict]
   book read <setup|outline|craft|chapter|recap|context|logs|ideas|idea|research|graph> [--id <id>] [--view summary|index|full]
   book registry [--dir <project>]

@@ -5,6 +5,15 @@ import assert from 'node:assert/strict';
 import { validateIdeaDraw } from '../scripts/ideas.js';
 import { drawCached, outlinepack, plotpack } from './fixtures.js';
 
+test('unknown genres report a fallback warning instead of silently using the default deck', () => {
+  const draw = drawCached({ type: 'premise', genre: '赛博朋克', count: 1, seed: 1 });
+  assert.equal(draw.meta.deck, 'default');
+  assert.ok(draw.meta.warnings.some((message) => message.includes('unknown genre')));
+  assert.ok(draw.meta.warning_details.some((detail) => detail.code === 'genre.fallback'));
+  const known = drawCached({ type: 'premise', genre: '悬疑', count: 1, seed: 1 });
+  assert.equal(known.meta.warnings.some((message) => message.includes('unknown genre')), false);
+});
+
 test('worldpack bundles premise, resources and scenarios', () => {
   const pack = drawCached({ type: 'worldpack', genre: '科幻', count: 1, seed: 42 });
   assert.equal(pack.count, 1);

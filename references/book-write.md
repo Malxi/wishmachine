@@ -82,5 +82,6 @@ node scripts/wishmachine.js export --dir my-book --format plain
 ```
 
 `book` 输出带简介、目录、人物与规则的阅读版；`plain` 是纯章节拼接。默认写到
-`drafts/manuscript.md`，用 `--output <file>` 指定目标。输出路径默认必须位于项目内；
+`drafts/manuscript.md`（`book`）或 `drafts/manuscript-plain.md`（`plain`），用 `--output <file>`
+指定目标；两种格式默认不再互相覆盖。输出路径默认必须位于项目内；
 写到项目外需要显式加 `--force`（否则 JSON 报错退出 1）。

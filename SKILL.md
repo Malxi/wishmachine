@@ -109,12 +109,17 @@ $WM ideas validate --dir my-book --all
 | 参数 | 说明 |
 |---|---|
 | `--type` | 默认 namecard，共 21 种；`ideas types` 列出 |
+| `--genre` | 科幻（默认）/修仙/悬疑/都市/历史/言情；未收录的题材回退默认科幻盘并在 `meta.warnings` 里给出 `genre.fallback` 提示 |
 | `--count` | composite（worldpack/plotpack/outlinepack）默认 1、上限 10；其他默认 5、上限 50；超限降级并 warning |
 | `--seed` | 确定性复现；省略则随机 |
 | `--save` | 写入 `story/ideas/`，只回 `{query,count,result_ids,saved}`，不回完整结果 |
 | `--output <file>` | 完整 draw 写文件（大结果用这个，别打到 stdout） |
 | `--cast-count` | `4`（默认）或 `auto`（按题材 archetype 配比） |
 | `--volumes` / `--chapters-per-volume` | outlinepack 多卷装配 |
+
+`--from-idea` 与 `book read idea` 用的是**带时间戳的保存 id**（`saved.id`，如
+`outlinepack-42-20261113_133642`），不是结果里的卡片 id（如 `outlinepack-42-01`）；
+`book read ideas` 会列出可用的保存 id。
 
 抽卡是参考不是 canon；写进 setup/outline 前要改写并过 `check`。
 

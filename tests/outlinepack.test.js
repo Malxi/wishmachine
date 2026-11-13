@@ -2,8 +2,25 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { validateIdeaDraw } from '../scripts/ideas.js';
-import { validateOutline, validateSetup } from '../scripts/schema.js';
-import { drawCached, outlinepack } from './fixtures.js';
+import { checkProject, validateOutline, validateSetup } from '../scripts/schema.js';
+import { loadProject } from '../scripts/project.js';
+import { drawCached, fixtureSet, outlinepack } from './fixtures.js';
+
+const { projectWithOutlinepack } = fixtureSet('wishmachine-outlinepack-');
+
+test('multi-volume outlinepack can be written and passes checks', (t) => {
+  const { dir } = projectWithOutlinepack(t, {
+    name: '多卷校验',
+    chapters: 10,
+    init: { volumes: 3 },
+    pack: { genre: '科幻', seed: 42, volumes: 3, chaptersPerVolume: 10 },
+  });
+  const check = checkProject(loadProject(dir), { profile: 'all', target: 'outline' });
+  assert.equal(check.ok, true);
+  assert.equal(check.blocking, false);
+  assert.equal(check.summary.high + check.summary.critical, 0);
+  assert.equal(check.summary.medium, 0, `unexpected medium findings: ${JSON.stringify(check.findings)}`);
+});
 
 test('outlinepack expands plot beats into chapters and a draft outline', () => {
   const pack = outlinepack({ chapters: 10, scenes: 3, targetChars: 2000 });
@@ -147,7 +164,12 @@ test('outline validation checks thread resolution and abandoned threads', () => 
   const resolved = bad.thread_registry.find((thread) => thread.status === 'resolved');
   assert.ok(resolved);
   const resolvedChapter = bad.parts[0].volumes[0].chapters.find((chapter) => chapter.id === resolved.resolved_in);
+  // Quality checks count chapter-level and scene-level resolutions; remove both
+  // so the thread really has no matching resolution evidence.
   resolvedChapter.mysteries.resolved = [];
+  for (const scene of resolvedChapter.scenes || []) {
+    if (scene.mysteries) scene.mysteries.resolved = [];
+  }
   assert.ok(validateOutline(bad, { structure: {} }).some((finding) => finding.rule_id === 'quality.outline.thread_resolution_missing'));
   const abandoned = JSON.parse(JSON.stringify(outline.draft_outline));
   abandoned.thread_registry[0].status = 'abandoned';

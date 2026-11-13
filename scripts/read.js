@@ -53,18 +53,35 @@ function readRecap(project, { id }) {
   return { ok: true, section: 'recap', id, recap: readJson(file) };
 }
 
+function describeIdeaId(name) {
+  // Saved ids are `<type>-<seed>-<YYYYMMDD_HHMMSS>`; imported cards may use other shapes.
+  const match = /^(.*)-(\d+)-(\d{8}_\d{6})$/.exec(name);
+  if (!match) return { type: '', seed: null, saved_at: '' };
+  return { type: match[1], seed: Number(match[2]), saved_at: match[3] };
+}
+
 function readIdeas(project) {
   return {
     ok: true,
     section: 'ideas',
-    results: listFilesWithSizes(projectPath(project.dir, 'ideas')).map((item) => ({ id: item.name, size: item.size })),
+    hint: 'Pass one of these ids to --from-idea or book read idea; the timestamped file id is required.',
+    results: listFilesWithSizes(projectPath(project.dir, 'ideas')).map((item) => ({
+      id: item.name,
+      ...describeIdeaId(item.name),
+      size: item.size,
+    })),
   };
 }
 
 function readIdea(project, { id, view }) {
   if (!id) throw new Error('book read idea requires --id');
   const file = ideaFile(project.dir, id);
-  if (!fs.existsSync(file)) throw new Error(`saved idea draw not found: ${id}`);
+  if (!fs.existsSync(file)) {
+    const error = new Error(`saved idea draw not found: ${id}`);
+    error.code = 'idea.not_found';
+    error.hint = 'use the timestamped saved id listed by "book read ideas --dir <project>" (e.g. outlinepack-42-20261113_133642), not the card result id such as outlinepack-42-01';
+    throw error;
+  }
   if (view !== 'summary') return { ok: true, section: 'idea', id, draw: readJson(file) };
   const draw = readJson(file);
   return {

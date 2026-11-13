@@ -5,6 +5,14 @@ import { readJson, readText, safeSegment } from '../util.js';
 import { finding } from './finding.js';
 import { findOutlineChapter } from './outline-shape.js';
 
+function asArray(value) {
+  return Array.isArray(value) ? value : [];
+}
+
+function isPlainObject(value) {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
 function qualityFindings(project, target, id, override = {}) {
   if (target === 'setup') return qualitySetupFindings(project, override);
   if (target === 'craft') return qualityCraftFindings(project, id, override);
@@ -17,7 +25,10 @@ function qualityFindings(project, target, id, override = {}) {
 function qualitySetupFindings(project, override) {
   const findings = [];
   const setup = override.setup || readJson(path.join(project.dir, 'story', 'setup', 'story_setup.json'));
-  if (!(setup.core_cast || []).some((character) => character.role === 'protagonist')) {
+  // Schema validation reports the shape; quality rules must not crash on
+  // explicitly mistyped fields (e.g. core_cast: "oops").
+  if (!isPlainObject(setup)) return findings;
+  if (!asArray(setup.core_cast).some((character) => character?.role === 'protagonist')) {
     findings.push(finding('quality.setup.protagonist', 'medium', 'setup has no protagonist in core_cast', 'setup'));
   }
   if (!setup.premise || setup.premise.length < 20) {
@@ -30,6 +41,7 @@ function qualityCraftFindings(project, id, override) {
   const findings = [];
   const kind = safeSegment(id || 'character', 'craft kind');
   const craft = override.craft || readJson(path.join(project.dir, 'story', 'craft', `${kind}.json`));
+  if (!isPlainObject(craft)) return findings;
   if (kind !== 'character') return findings;
   if (String(craft.background || '').trim().length < 20) {
     findings.push(finding('quality.craft.background', 'medium', 'character background is too thin', craft.name || kind));
@@ -44,7 +56,8 @@ function qualityRecapFindings(project, id, override) {
   if (!id) throw new Error('recap check requires --id');
   const findings = [];
   const recap = override.recap || readJson(path.join(project.dir, 'story', 'recaps', `${safeSegment(id, 'recap id')}.json`));
-  if (!(recap.plot_beats || []).length) {
+  if (!isPlainObject(recap)) return findings;
+  if (!asArray(recap.plot_beats).length) {
     findings.push(finding('quality.recap.plot_beats', 'medium', 'recap has no plot beats', id));
   }
   if (recap.chapter_id && recap.chapter_id !== id) {
@@ -63,15 +76,15 @@ function qualityRecapOutlineFindings(project, id, recap, findings) {
     findings.push(finding('quality.recap.not_in_outline', 'medium', `${id} recap has no matching outline chapter`, id));
     return null;
   }
-  const known = new Set(found.chapter.characters || []);
-  for (const name of recap.present || []) {
+  const known = new Set(asArray(found.chapter.characters));
+  for (const name of asArray(recap.present)) {
     if (known.size > 0 && !known.has(name)) {
       findings.push(finding('quality.recap.presence', 'medium', `${id} recap mentions ${name}, who is not in the outline chapter`, id));
     }
   }
-  const outlineBeats = new Set((found.chapter.events || []).map((event) =>
+  const outlineBeats = new Set(asArray(found.chapter.events).map((event) =>
     `${event.actor || ''}：${event.details || event.result || event.target || ''}`).filter((beat) => beat !== '：'));
-  for (const beat of recap.plot_beats || []) {
+  for (const beat of asArray(recap.plot_beats)) {
     if (outlineBeats.has(beat)) {
       findings.push(finding('quality.recap.outline_copy', 'medium', `${id} recap plot beat is copied from the outline event list`, id, 'Rewrite the recap from what the chapter actually dramatizes.'));
     }
@@ -89,13 +102,13 @@ function qualityRecapTextFindings(project, id, recap, found, findings) {
   if (recap.last_line && !chapterText.includes(recap.last_line)) {
     findings.push(finding('quality.recap.last_line', 'low', `${id} recap last_line does not appear in the chapter text`, id));
   }
-  for (const name of recap.present || []) {
+  for (const name of asArray(recap.present)) {
     if (!chapterText.includes(name)) {
       findings.push(finding('quality.recap.presence_text', 'low', `${id} recap present character ${name} does not appear in the chapter text`, id));
     }
   }
-  const knownNames = [...new Set([...(found?.chapter?.characters || []), ...(recap.present || [])])];
-  for (const beat of recap.plot_beats || []) {
+  const knownNames = [...new Set([...asArray(found?.chapter?.characters), ...asArray(recap.present)])];
+  for (const beat of asArray(recap.plot_beats)) {
     const beatNames = knownNames.filter((name) => String(beat).includes(name));
     const anchored = beatNames.length > 0
       ? beatNames.some((name) => chapterText.includes(name))
@@ -107,12 +120,13 @@ function qualityRecapTextFindings(project, id, recap, found, findings) {
 }
 function qualityOutlineFindings(project, override) {
   const outline = override.outline || readJson(path.join(project.dir, 'story', 'compose', 'outline.json'));
+  if (!isPlainObject(outline)) return [];
   const setupPath = path.join(project.dir, 'story', 'setup', 'story_setup.json');
   const setup = override.setup || (fs.existsSync(setupPath) ? readJson(setupPath) : null);
   const state = createOutlineQualityState(project, setup);
   const protagonistName = validateOutlineQualitySetup(state, setup);
-  for (const part of outline.parts || []) {
-    for (const volume of part.volumes || []) {
+  for (const part of asArray(outline.parts)) {
+    for (const volume of asArray(part.volumes)) {
       validateOutlineVolumeQuality(state, volume);
     }
   }
@@ -127,8 +141,8 @@ function qualityOutlineFindings(project, override) {
 
 function createOutlineQualityState(project, setup) {
   const knownItems = new Set([
-    ...((setup?.world_resources || []).map((item) => item.name)),
-    ...((setup?.premises || []).map((item) => item.name)),
+    ...(asArray(setup?.world_resources).map((item) => item.name)),
+    ...(asArray(setup?.premises).map((item) => item.name)),
   ].filter(Boolean));
   const craftItemPath = path.join(project.dir, 'story', 'craft', 'item.json');
   if (fs.existsSync(craftItemPath)) {
@@ -141,8 +155,8 @@ function createOutlineQualityState(project, setup) {
     itemState: new Map(),
     plantedMysteries: new Set(),
     knownItems,
-    castNames: new Set((setup?.core_cast || []).map((character) => character.name).filter(Boolean)),
-    storylineNames: new Set((setup?.storylines || []).map((storyline) => storyline.name).filter(Boolean)),
+    castNames: new Set(asArray(setup?.core_cast).map((character) => character.name).filter(Boolean)),
+    storylineNames: new Set(asArray(setup?.storylines).map((storyline) => storyline.name).filter(Boolean)),
     lastSeen: new Map(),
     returnedCharacters: new Set(),
     deadCharacters: new Set(),
@@ -154,7 +168,7 @@ function createOutlineQualityState(project, setup) {
 
 function validateOutlineQualitySetup(state, setup) {
   if (!setup) return '';
-  const protagonist = (setup.core_cast || []).find((character) => character.role === 'protagonist');
+  const protagonist = asArray(setup.core_cast).find((character) => character.role === 'protagonist');
   if (!protagonist) {
     state.findings.push(finding('quality.setup.protagonist', 'medium', 'setup has no protagonist in core_cast', 'setup'));
     return '';
@@ -169,12 +183,13 @@ function validateOutlineQualitySetup(state, setup) {
 }
 
 function validateOutlineVolumeQuality(state, volume) {
+  if (!isPlainObject(volume)) return;
   const eventTypes = {};
-  const chapters = volume.chapters || [];
+  const chapters = asArray(volume.chapters);
   chapters.forEach((chapter, index) => {
     state.sequence += 1;
     validateOutlineChapterQuality(state, chapter, { index, chapters });
-    for (const event of chapter.events || []) {
+    for (const event of asArray(chapter.events)) {
       const type = event.type || event.action;
       if (type) eventTypes[type] = (eventTypes[type] || 0) + 1;
     }
@@ -187,6 +202,7 @@ function validateOutlineVolumeQuality(state, volume) {
 }
 
 function validateOutlineChapterQuality(state, chapter, position) {
+  if (!isPlainObject(chapter)) return;
   const { findings } = state;
   if (chapter.id && !/^P\d+-V\d+-C\d+$/.test(chapter.id)) {
     findings.push(finding('quality.outline.chapter_id', 'low', `chapter id ${chapter.id} does not use P1-V1-C1 form`, chapter.id));
@@ -201,22 +217,22 @@ function validateOutlineChapterQuality(state, chapter, position) {
 
 function validateChapterCastQuality(state, chapter) {
   const { findings } = state;
-  const revivedNow = new Set((chapter.events || [])
+  const revivedNow = new Set(asArray(chapter.events)
     .filter((event) => ['revive', 'resurrect'].includes(String(event.action || event.change || '').toLowerCase()))
     .map((event) => String(event.target || event.subject || '').trim())
     .filter(Boolean));
-  const returnedNow = new Set((chapter.events || [])
+  const returnedNow = new Set(asArray(chapter.events)
     .filter((event) => ['return', 'arrive', 'rejoin'].includes(String(event.action || event.change || '').toLowerCase()))
     .map((event) => String(event.target || event.subject || '').trim())
     .filter(Boolean));
-  for (const name of chapter.characters || []) {
+  for (const name of asArray(chapter.characters)) {
     if (state.deadCharacters.has(name) && !revivedNow.has(name)) {
       findings.push(finding('quality.outline.dead_character_present', 'high', `${chapter.id} includes ${name}, who died in an earlier chapter`, chapter.id, 'Add a revival event or remove the character from this chapter.'));
     } else if (state.absentCharacters.has(name) && !returnedNow.has(name)) {
       findings.push(finding('quality.outline.character_absent_return', 'low', `${chapter.id} includes ${name}, who left earlier without a return event`, chapter.id, 'Add a return/arrive event or show how the character rejoined.'));
     }
   }
-  for (const name of chapter.characters || []) {
+  for (const name of asArray(chapter.characters)) {
     state.names.add(name);
     const previous = state.lastSeen.get(name);
     if (previous !== undefined && state.sequence - previous > 2 && !state.returnedCharacters.has(name)) {
@@ -228,17 +244,17 @@ function validateChapterCastQuality(state, chapter) {
       findings.push(finding('quality.outline.unknown_character', 'low', `${chapter.id} uses unknown character ${name}`, chapter.id));
     }
   }
-  if ((chapter.characters || []).length === 0) {
+  if (asArray(chapter.characters).length === 0) {
     findings.push(finding('quality.outline.characters', 'medium', `${chapter.id} has no characters`, chapter.id));
   }
-  if ((chapter.events || []).length === 0) {
+  if (asArray(chapter.events).length === 0) {
     findings.push(finding('quality.outline.events', 'medium', `${chapter.id} has no events`, chapter.id));
   }
 }
 
 function validateChapterAnchorQuality(state, chapter) {
   const { findings } = state;
-  for (const ally of chapter.state_anchor?.allies || []) {
+  for (const ally of asArray(chapter.state_anchor?.allies)) {
     if (state.deadCharacters.has(ally)) {
       findings.push(finding('quality.outline.dead_ally', 'high', `${chapter.id} state_anchor lists ${ally}, who already died`, chapter.id, 'Remove the dead ally or add a revival event.'));
     } else if (state.absentCharacters.has(ally)) {
@@ -247,7 +263,7 @@ function validateChapterAnchorQuality(state, chapter) {
       findings.push(finding('quality.outline.unknown_ally', 'low', `${chapter.id} state_anchor lists unknown ally ${ally}`, chapter.id));
     }
   }
-  for (const item of chapter.state_anchor?.key_items || []) {
+  for (const item of asArray(chapter.state_anchor?.key_items)) {
     if (!state.knownItems.has(item) && !state.itemState.has(item)) {
       findings.push(finding('quality.outline.anchor_item', 'low', `${chapter.id} state_anchor lists unknown key item ${item}`, chapter.id, 'Define it in setup/craft or acquire it in an earlier event.'));
     }
@@ -257,7 +273,7 @@ function validateChapterAnchorQuality(state, chapter) {
 function validateChapterEventQuality(state, chapter) {
   const { findings } = state;
   let previousEventOrder = null;
-  for (const event of chapter.events || []) {
+  for (const event of asArray(chapter.events)) {
     const type = event.type || event.action;
     if (typeof event.order === 'number') {
       if (previousEventOrder !== null && event.order < previousEventOrder) {
@@ -265,7 +281,7 @@ function validateChapterEventQuality(state, chapter) {
       }
       previousEventOrder = event.order;
     }
-    const chapterCharacters = new Set(chapter.characters || []);
+    const chapterCharacters = new Set(asArray(chapter.characters));
     if (event.actor && chapterCharacters.size > 0 && !chapterCharacters.has(event.actor) &&
       (state.castNames.size === 0 || state.castNames.has(event.actor))) {
       findings.push(finding('quality.outline.event_actor', 'medium', `${chapter.id} event actor ${event.actor} is not in chapter.characters`, chapter.id));
@@ -275,8 +291,8 @@ function validateChapterEventQuality(state, chapter) {
     if (targetType === 'character' && target && chapterCharacters.size > 0 && !chapterCharacters.has(target)) {
       findings.push(finding('quality.outline.event_target', 'medium', `${chapter.id} event target ${target} is not in chapter.characters`, chapter.id));
     }
-    for (const name of event.characters || []) {
-      if (!(chapter.characters || []).includes(name)) {
+    for (const name of asArray(event.characters)) {
+      if (!asArray(chapter.characters).includes(name)) {
         findings.push(finding('quality.outline.event_character', 'medium', `${chapter.id} event uses ${name}, who is not in chapter.characters`, chapter.id));
       }
     }
@@ -313,7 +329,7 @@ function applyItemStateChange(state, chapter, action, target, findings) {
 
 function validateChapterStorylineQuality(state, chapter) {
   const { findings } = state;
-  for (const advance of chapter.storyline_advances || []) {
+  for (const advance of asArray(chapter.storyline_advances)) {
     const name = advance.storyline_name;
     if (name && state.storylineNames.size > 0 && !state.storylineNames.has(name)) {
       findings.push(finding('quality.outline.unknown_storyline', 'medium', `${chapter.id} advances unknown storyline ${name}`, chapter.id));
@@ -323,7 +339,7 @@ function validateChapterStorylineQuality(state, chapter) {
 
 function validateChapterResourceQuality(state, chapter, position) {
   const { findings } = state;
-  for (const entry of chapter.resource_ledger || []) {
+  for (const entry of asArray(chapter.resource_ledger)) {
     if (typeof entry?.start !== 'number' || typeof entry?.delta !== 'number' || typeof entry?.end !== 'number') {
       findings.push(finding('quality.outline.resource_ledger', 'medium', `${chapter.id} resource_ledger entry for ${entry?.item || 'item'} needs numeric start/delta/end`, chapter.id));
     } else if (entry.start + entry.delta !== entry.end) {
@@ -334,7 +350,7 @@ function validateChapterResourceQuality(state, chapter, position) {
   if (state.previousSpiritEnd !== null && typeof anchorSpirit === 'number' && anchorSpirit !== state.previousSpiritEnd) {
     findings.push(finding('quality.outline.anchor_continuity', 'medium', `${chapter.id} state_anchor.spirit_stones ${anchorSpirit} does not match the previous ledger end ${state.previousSpiritEnd}`, chapter.id, 'Carry the previous end value into the next state_anchor.'));
   }
-  const spiritEntry = (chapter.resource_ledger || []).find((entry) =>
+  const spiritEntry = asArray(chapter.resource_ledger).find((entry) =>
     /spirit|灵石|灵力|晶石/i.test(String(entry?.item || '')));
   if (spiritEntry && typeof spiritEntry.end === 'number') {
     state.previousSpiritEnd = spiritEntry.end;
@@ -356,14 +372,14 @@ function validateChapterResourceQuality(state, chapter, position) {
 
 function validateChapterMysteryOrderQuality(state, chapter, position) {
   const { findings } = state;
-  for (const planted of chapter.mysteries?.planted || []) {
+  for (const planted of asArray(chapter.mysteries?.planted)) {
     if (!planted.id) continue;
     if (state.plantedMysteries.has(planted.id)) {
       findings.push(finding('quality.outline.mystery_duplicate', 'low', `${chapter.id} re-plants mystery ${planted.id}`, chapter.id));
     }
     state.plantedMysteries.add(planted.id);
   }
-  for (const resolved of chapter.mysteries?.resolved || []) {
+  for (const resolved of asArray(chapter.mysteries?.resolved)) {
     if (resolved.id && !state.plantedMysteries.has(resolved.id)) {
       findings.push(finding('quality.outline.mystery_resolution', 'medium', `${chapter.id} resolves mystery ${resolved.id} before it is planted`, chapter.id));
     }
@@ -416,15 +432,15 @@ function validateChapterOutlineMatch(project, id, text, findings) {
   if (found.chapter.title && !text.includes(found.chapter.title)) {
     findings.push(finding('quality.chapter.title', 'low', `${id} text does not contain the outline title ${found.chapter.title}`, id));
   }
-  for (const name of found.chapter.characters || []) {
+  for (const name of asArray(found.chapter.characters)) {
     if (!text.includes(name)) {
       findings.push(finding('quality.chapter.character_absent', 'low', `${id} outline character ${name} never appears in the text`, id));
     }
   }
-  for (const event of found.chapter.events || []) {
+  for (const event of asArray(found.chapter.events)) {
     const labels = [
       event.actor, event.target, event.subject,
-      ...(event.characters || []),
+      ...asArray(event.characters),
     ].filter((value) => typeof value === 'string' && value.trim());
     if (labels.length > 0 && !labels.some((value) => text.includes(value))) {
       findings.push(finding('quality.chapter.event_absent', 'low', `${id} outline event ${labels.join(' / ')} does not appear in the text`, id));
@@ -443,8 +459,8 @@ function validateChapterRecapMatch(project, id, found, findings) {
   if (recap.chapter_id && recap.chapter_id !== id) {
     findings.push(finding('quality.chapter.recap_id', 'high', `${id} recap declares chapter_id ${recap.chapter_id}`, id));
   }
-  const known = new Set(found?.chapter?.characters || []);
-  for (const name of recap.present || []) {
+  const known = new Set(asArray(found?.chapter?.characters));
+  for (const name of asArray(recap.present)) {
     if (known.size > 0 && !known.has(name)) {
       findings.push(finding('quality.chapter.recap_presence', 'medium', `${id} recap mentions ${name}, who is not in the outline chapter`, id));
     }

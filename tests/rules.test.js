@@ -10,6 +10,27 @@ import { fixtureSet, sampleSetup } from './fixtures.js';
 
 const { tempProject } = fixtureSet('wishmachine-rules-');
 
+test('mistyped setup arrays produce findings instead of throwing', (t) => {
+  const { dir } = tempProject(t, { name: 'dirty setup', init: { chapter: 1 } });
+  const dirty = {
+    ...sampleSetup(),
+    core_cast: 'oops',
+    storylines: 5,
+    premises: {},
+    world_resources: true,
+    world_timeline: 'x',
+  };
+  fs.writeFileSync(path.join(dir, 'story', 'setup', 'story_setup.json'), JSON.stringify(dirty));
+  const check = checkProject(loadProject(dir), { profile: 'all', target: 'setup' });
+  assert.equal(check.blocking, true);
+  for (const key of ['core_cast', 'storylines', 'premises', 'world_resources', 'world_timeline']) {
+    assert.ok(
+      check.findings.some((item) => item.rule_id === `schema.setup.${key}`),
+      `expected schema.setup.${key} for mistyped array`,
+    );
+  }
+});
+
 test('builtin custom rules are loaded', (t) => {
   const { dir } = tempProject(t, { name: 'rule test', init: { chapter: 1 } });
   const text = `他突然醒来，发现一切都是梦。${'他把这个念头按下去，继续检查氧气，记录时辰。'.repeat(120)}`;

@@ -302,7 +302,16 @@ export function drawIdeas(options = {}) {
   }
   const seed = resolveSeed(options);
   const rng = mulberry32(hashSeed(`${seed}:${type}:${options.genre || ''}`));
-  const deck = selectDeck(options.genre) || DEFAULT_DECK;
+  const requestedGenre = String(options.genre || '').trim();
+  const matchedDeck = selectDeck(requestedGenre);
+  if (requestedGenre && !matchedDeck) {
+    addWarning(warningSink, {
+      code: 'genre.fallback',
+      severity: 'warning',
+      message: `unknown genre "${requestedGenre}"; using the default sci-fi deck (known genres: 科幻/修仙/悬疑/都市/历史/言情)`,
+    });
+  }
+  const deck = matchedDeck || DEFAULT_DECK;
   const context = { options, count, seed, rng, deck, warningSink };
   return buildDrawResult(type, context, drawByType(type, context));
 }

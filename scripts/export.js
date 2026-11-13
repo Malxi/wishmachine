@@ -136,8 +136,10 @@ function renderPlain(project, plan) {
   return { chunks, chapters };
 }
 
-function resolveOutput(project, options) {
-  const requested = options.output || path.join('drafts', 'manuscript.md');
+function resolveOutput(project, options, format) {
+  // Keep the two formats apart by default so consecutive exports do not overwrite each other.
+  const defaultName = format === 'plain' ? 'manuscript-plain.md' : 'manuscript.md';
+  const requested = options.output || path.join('drafts', defaultName);
   if (options.force) return path.resolve(project.dir, requested);
   return assertInside(project.dir, requested, 'export output');
 }
@@ -149,7 +151,7 @@ export function exportManuscript(project, options = {}) {
     ? renderBook(project, plan)
     : renderPlain(project, plan);
   const content = `${rendered.chunks.join('\n').trimEnd()}\n`;
-  const output = resolveOutput(project, options);
+  const output = resolveOutput(project, options, format);
   ensureDir(path.dirname(output));
   writeTextAtomic(output, content);
   return {

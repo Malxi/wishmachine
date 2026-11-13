@@ -311,21 +311,28 @@ export async function searchSources(project, options = {}) {
   const query = String(options.query || '').trim();
   if (!query) throw new Error('ideas search requires a query');
   const limit = Math.max(1, Math.min(10, Number(options.limit) || 3));
-  if (provider === 'wikipedia') {
-    const host = /[\u3400-\u9fff]/.test(query) ? 'zh.wikipedia.org' : 'en.wikipedia.org';
-    const endpoint = `https://${host}/w/api.php?action=opensearch&format=json&limit=${limit}&search=${encodeURIComponent(query)}`;
-    const cards = wikipediaCards(await fetchJson(endpoint), query);
-    const saved = await saveSearchCards(project, cards, { ...options, provider });
-    return { ok: true, action: 'search', provider, query, count: cards.length, results: cards, saved };
+  if (!['wikipedia', 'gutenberg'].includes(provider)) {
+    throw new Error(`unsupported source provider: ${provider}; use wikipedia or gutenberg`);
   }
-  if (provider === 'gutenberg') {
+  try {
+    if (provider === 'wikipedia') {
+      const host = /[\u3400-\u9fff]/.test(query) ? 'zh.wikipedia.org' : 'en.wikipedia.org';
+      const endpoint = `https://${host}/w/api.php?action=opensearch&format=json&limit=${limit}&search=${encodeURIComponent(query)}`;
+      const cards = wikipediaCards(await fetchJson(endpoint), query);
+      const saved = await saveSearchCards(project, cards, { ...options, provider });
+      return { ok: true, action: 'search', provider, query, count: cards.length, results: cards, saved };
+    }
     const endpoint = `https://gutendex.com/books/?search=${encodeURIComponent(query)}`;
     const data = await fetchJson(endpoint);
     const cards = (data?.results || []).slice(0, limit).map((book) => gutenbergCard(book, query));
     const saved = await saveSearchCards(project, cards, { ...options, provider });
     return { ok: true, action: 'search', provider, query, count: cards.length, results: cards, saved };
+  } catch (error) {
+    const wrapped = new Error(`source search failed (${provider}): ${error.message}`);
+    wrapped.code = 'source.network';
+    wrapped.hint = 'ideas search/discover need outbound network access; retry later, switch --provider, or save sourced cards locally and use "ideas import"';
+    throw wrapped;
   }
-  throw new Error(`unsupported source provider: ${provider}; use wikipedia or gutenberg`);
 }
 
 export async function discoverSources(project, options = {}) {
@@ -348,12 +355,14 @@ export async function discoverSources(project, options = {}) {
       results.push({ id: source.id, title: source.title, url: source.url, ok: false, error: error.message });
     }
   }
+  const anyOk = results.some((item) => item.ok);
   return {
-    ok: results.some((item) => item.ok),
+    ok: anyOk,
     action: 'discover',
     topic: topic || 'all',
     count: results.length,
     results,
+    ...(anyOk ? {} : { hint: 'all source fetches failed; discover needs outbound network access to the catalog source URLs' }),
   };
 }
 

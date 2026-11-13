@@ -1,5 +1,5 @@
 // Cross-artifact semantics for outline mysteries and threads.
-import { sortMysteryArray } from '../registry.js';
+import { chapterResolvedMysteries, sortMysteryArray } from '../registry.js';
 import { finding } from './finding.js';
 
 function validateMysterySemantics(ctx) {
@@ -90,7 +90,7 @@ function validateActiveThread(ctx, thread) {
     ctx.findings.push(finding('quality.outline.thread.active_with_resolution', 'high', `${thread.id} is active but has resolved_in`, thread.id));
   }
   const resolvedChapter = [...ctx.chaptersById.values()].find((chapter) => (
-    (chapter.mysteries?.resolved || []).some((mystery) => mystery.thread_id === thread.id)
+    chapterResolvedMysteries(chapter).some((mystery) => mystery.thread_id === thread.id)
   ));
   if (resolvedChapter) {
     ctx.findings.push(finding('quality.outline.thread_should_resolve', 'medium', `${thread.id} is active but resolved in ${resolvedChapter.id}`, thread.id));
@@ -106,7 +106,10 @@ function validateResolvedThread(ctx, thread) {
   const chapter = ctx.chaptersById.get(thread.resolved_in);
   if (!chapter) {
     ctx.findings.push(finding('quality.outline.thread.unknown_resolved_chapter', 'high', `${thread.id} resolved_in ${thread.resolved_in} is not a chapter`, thread.id));
-  } else if (!(chapter.mysteries?.resolved || []).some((mystery) => mystery.thread_id === thread.id)) {
+  } else if (!chapterResolvedMysteries(chapter).some((mystery) => mystery.thread_id === thread.id)) {
+    // Scene-level mysteries count as resolutions here: registry derivation
+    // (buildThreadRegistry / repair) uses chapterResolvedMysteries too, so the
+    // checker must share that definition or generated packs get false blockers.
     ctx.findings.push(finding('quality.outline.thread_resolution_missing', 'high', `${thread.id} resolves in ${thread.resolved_in} without a matching resolved mystery`, thread.id));
   }
 }

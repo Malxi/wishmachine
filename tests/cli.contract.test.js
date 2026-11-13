@@ -120,6 +120,12 @@ test('ideas --save returns a small envelope instead of the whole draw', (t) => {
   assert.ok(result.json.saved.bytes > 0);
   assert.equal(result.json.results, undefined);
   assert.ok(result.stdout.length < 4000, `save envelope too large: ${result.stdout.length}`);
+  const listed = run(['book', 'read', 'ideas', '--dir', dir]);
+  assert.equal(listed.status, 0);
+  assert.match(listed.json.hint, /timestamped/);
+  assert.equal(listed.json.results[0].type, 'outlinepack');
+  assert.equal(typeof listed.json.results[0].seed, 'number');
+  assert.match(listed.json.results[0].saved_at, /^\d{8}_\d{6}$/);
   const summary = run(['book', 'read', 'idea', '--dir', dir, '--id', result.json.saved.id]);
   assert.equal(summary.status, 0);
   assert.equal(summary.json.view, 'summary');
@@ -127,6 +133,14 @@ test('ideas --save returns a small envelope instead of the whole draw', (t) => {
   assert.ok(summary.stdout.length < 4000);
   const full = run(['book', 'read', 'idea', '--dir', dir, '--id', result.json.saved.id, '--view', 'full']);
   assert.ok(full.json.draw.results.length >= 1);
+});
+
+test('--from-idea rejects card ids with a hint pointing at the timestamped saved id', (t) => {
+  const dir = project(t);
+  const result = run(['book', 'write', 'setup', '--dir', dir, '--from-idea', 'outlinepack-42-01', '--mode', 'replace']);
+  assert.equal(result.status, 1);
+  assert.equal(result.json.error.code, 'idea.not_found');
+  assert.match(result.json.error.hint, /timestamped/);
 });
 
 test('composite idea draws default to one pack and clamp huge counts', () => {

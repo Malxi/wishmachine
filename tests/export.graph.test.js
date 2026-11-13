@@ -121,13 +121,30 @@ test('export renders book and plain formats inside the project', (t) => {
   assert.ok(!plainText.includes('## 目录'));
 });
 
-test('export output defaults to drafts/manuscript.md and supports a custom inside path', (t) => {
+test('export output defaults to per-format paths and supports a custom inside path', (t) => {
   const dir = projectWithChapter(t);
   exportManuscript(loadProject(dir));
   assert.ok(fs.existsSync(path.join(dir, 'drafts', 'manuscript.md')));
+  const plainDefault = exportManuscript(loadProject(dir), { format: 'plain' });
+  assert.equal(plainDefault.output, path.join(dir, 'drafts', 'manuscript-plain.md'));
+  assert.ok(fs.existsSync(plainDefault.output));
   const custom = exportManuscript(loadProject(dir), { output: 'drafts/run/manuscript-2.md' });
   assert.equal(custom.output, path.join(dir, 'drafts', 'run', 'manuscript-2.md'));
   assert.ok(fs.existsSync(custom.output));
+});
+
+test('search reports network failures as actionable source errors', async (t) => {
+  const { project } = tempProject(t, { name: 'search network', init: { chapter: 1 } });
+  const originalFetch = global.fetch;
+  global.fetch = async () => { throw new Error('fetch failed'); };
+  try {
+    const error = await searchSources(project, { query: 'Mary Celeste', provider: 'wikipedia' }).then(() => null, (caught) => caught);
+    assert.ok(error, 'searchSources should reject when the provider is unreachable');
+    assert.equal(error.code, 'source.network');
+    assert.match(error.hint, /network/);
+  } finally {
+    global.fetch = originalFetch;
+  }
 });
 
 test('search and discover surface actionable errors for bad input', async (t) => {
