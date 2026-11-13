@@ -755,6 +755,7 @@ test('cast validation catches missing protagonist and duplicate archetypes', () 
   const ignored = validateIdeaDraw({ results: [duplicateRelation] }, { ignoreRules: ['idea.cast_relation.duplicate'] });
   assert.ok(!ignored.findings.some((finding) => finding.rule_id === 'idea.cast_relation.duplicate'));
   assert.ok(ignored.ignored_findings > 0);
+  assert.ok(ignored.ignored_rules['idea.cast_relation.duplicate'] > 0);
   const sortedFindings = validateIdeaDraw({ results: [missing] }).findings;
   assert.equal(sortedFindings[0].severity, 'high');
   assert.ok(sortedFindings[0].id.startsWith('finding-'));

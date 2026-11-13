@@ -137,6 +137,7 @@ logs/
 - `book write outline --from-idea <id>` 把 outlinepack 的 draft_outline 送入正常候选检查
 - `book write setup --from-idea <id>` 把 outlinepack 的 setup_draft 送入正常候选检查
 - `ideas` 题材牌堆：科幻默认 / 修仙 / 悬疑 / 都市 / 历史 / 言情（4 packs）
+- 校验结果返回 ignored_rules 按规则计数
 - validate --all 聚合 ignored_findings
 - 校验结果返回 ignored_findings 计数
 - `--ignore-file` 从 JSON 数组或 {rules:[]} 读取忽略规则

@@ -1628,6 +1628,11 @@ export function validateIdeaDraw(draw, options = {}) {
   const severityRank = { low: 1, medium: 2, high: 3, critical: 4 };
   const minSeverity = options.minSeverity || 'low';
   const ignoredRules = new Set(options.ignoreRules || []);
+  const ignoredByRule = {};
+  for (const finding of findings) {
+    if (!ignoredRules.has(finding.rule_id)) continue;
+    ignoredByRule[finding.rule_id] = (ignoredByRule[finding.rule_id] || 0) + 1;
+  }
   const ignoredFindings = findings.filter((finding) => ignoredRules.has(finding.rule_id)).length;
   const filtered = findings
     .filter((finding) => !ignoredRules.has(finding.rule_id))
@@ -1653,6 +1658,7 @@ export function validateIdeaDraw(draw, options = {}) {
     schema_version: 1,
     ok: deduped.length === 0,
     ignored_findings: ignoredFindings,
+    ignored_rules: ignoredByRule,
     findings: deduped,
   };
 }
