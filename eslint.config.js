@@ -25,11 +25,21 @@ const nodeGlobals = {
 
 export default [
   {
-    ignores: ['dist/**', 'node_modules/**', 'references/**', '**/checkpoints/**', '**/.tmp-*', '.tmp-*'],
+    ignores: [
+      'dist/**',
+      'node_modules/**',
+      'references/**',
+      // Generated mirror of scripts/ + SKILL.md; the canonical sources are linted.
+      'dsh/skills/**',
+      'dsh/market/**',
+      '**/checkpoints/**',
+      '**/.tmp-*',
+      '.tmp-*',
+    ],
   },
   js.configs.recommended,
   {
-    files: ['scripts/**/*.js', 'tests/**/*.js', 'eslint.config.js'],
+    files: ['scripts/**/*.js', 'tests/**/*.js', 'dsh/*.js', 'eslint.config.js'],
     languageOptions: {
       ecmaVersion: 2023,
       sourceType: 'module',

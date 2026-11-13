@@ -54,6 +54,7 @@ npm run lint
 npm run lint:modules
 npm run format:check
 npm run pack
+npm run lint:dsh   # dsh/ 生成树与插件索引是否同步
 ```
 
 手工检查打包产物（版本必须与 `package.json` 一致）：
@@ -69,6 +70,17 @@ unzip -l dist/wishmachine-skill-flat-v<version>.zip | grep -E 'SKILL.md|scripts/
 `SKILL.md`、`scripts/wishmachine.js`、`scripts/package.json`，且**不含** `pack.js`、
 `release.js`、`check-imports.js`、`check-structure.js`、`skill-manifest.js` 等开发脚本。
 `SKILL.md` frontmatter 的 `version` 与包名一致（`scripts/pack.js` 会强校验）。
+
+## 3.5 同步 DSH bundle 与插件索引
+
+DSH 的链接安装走 `dsh/` bundle（见 docs/DSH.md）：
+
+1. 提交版本号后得到发布提交 A；
+2. `node scripts/build-dsh-bundle.js --commit <A>` 把 `dsh/skills/**` 同步到新版本并把
+   `dsh/market/index.json` 的 Git source 固定到 A；
+3. 提交 B（`chore(dsh): pin bundle index to v<version>`），tag 打在 B 上——索引位于 B，
+   指向包含 bundle 的 A；
+4. `npm run lint:dsh` 必须通过（CI 也会跑）。
 
 ## 4. 提交
 

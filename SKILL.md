@@ -13,7 +13,7 @@ examples_en:
   - "Create a 3-volume × 5-chapter science-fiction project"
   - "Check the outline for blocking findings"
   - "Draw 12 science-fiction name cards"
-version: 0.3.3
+version: 0.4.0
 author: Malxi
 ---
 
@@ -30,6 +30,9 @@ artifact 写入。它**不调用模型、不生成 setup/outline/正文**；创�
 - 退出码：`0` 成功 / `1` 用法或系统错误 / `2` 有 high|critical blocking findings。
 - 写操作默认 dry-run，只有 `--apply` 才落盘。
 - 每个命令都有独立帮助：`$WM <command> [subcommand] --help`（裸 `--help` 仍是全局帮助）。
+- 运行时需要 Node ≥18；宿主没把 `node` 放进 PATH 时（如 DSH Desktop），用
+  `ELECTRON_RUN_AS_NODE=1 "$DSH_NODE_EXECUTABLE"` 代替 `node`；PowerShell 下用
+  `Get-Content x.json -Raw | node ...` 代替 `< x.json`，相对路径按宿主给出的 skill base directory 解析。
 
 ## 0. 三条最小路径
 

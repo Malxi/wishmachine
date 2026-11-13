@@ -27,6 +27,7 @@ jobs:
       - run: npm test
       - run: npm run lint
       - run: npm run lint:modules
+      - run: npm run lint:dsh
       - run: npm run format:check
 
   pack-smoke:

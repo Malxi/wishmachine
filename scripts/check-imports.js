@@ -30,7 +30,7 @@ const LAYERS = [
   { layer: 1, match: (rel) => rel === 'paths.js' || rel === 'registry.js' || rel === 'contracts.js' || rel === 'rules/finding.js' || rel.startsWith('decks/') },
   { layer: 2, match: (rel) => /^(rules|ideas|decks|sources)\//.test(rel) || /^(graph|store|state|write|read|export|sources|doctor|guides|schema|ideas)\.js$|^registry-[a-z-]+\.js$/.test(rel) },
   { layer: 3, match: (rel) => /^(project-core|project)\.js$/.test(rel) },
-  { layer: 4, match: (rel) => rel === 'cli.js' || rel.startsWith('cli/') || /^(wishmachine|pack|check-imports|check-structure|skill-manifest|release)\.js$/.test(rel) },
+  { layer: 4, match: (rel) => rel === 'cli.js' || rel.startsWith('cli/') || /^(wishmachine|pack|check-imports|check-structure|skill-manifest|release|build-dsh-bundle)\.js$/.test(rel) },
 ];
 
 const CLI_ALLOWED = new Set(['project.js', 'schema.js', 'ideas.js', 'guides.js', 'util.js']);

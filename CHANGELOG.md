@@ -7,6 +7,23 @@
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-13
+
+### Added
+
+- DeepSeek Harness bundle（`dsh/`）：把 `wishmachine` 技能注册为 Host 级 skill provider，
+  可在 DSH **Plugins → Add plugin** 粘贴 Git 链接直接安装，也可通过自定义插件索引在
+  **Discover** 里安装——不需要手工复制 Skill 目录到 `~/.dsh/skills`。
+- `scripts/build-dsh-bundle.js`（`npm run build:dsh` / `npm run lint:dsh`）：从
+  `SKILL.md`、`scripts/`、`references/` 生成自包含的 `dsh/skills/wishmachine/`，同步
+  bundle 版本并重建插件索引；CI 校验生成树与索引是否同步。
+- `docs/DSH.md`：链接安装、更新/卸载、运行时（`ELECTRON_RUN_AS_NODE`）与安全说明。
+
+### Changed
+
+- `scripts/release.js` 同步 `dsh/` 版本文件、bundle 内 `SKILL.md` 与插件索引版本；
+  `RELEASING.md` 增加发布时固定索引 commit 的步骤。
+
 ## [0.3.3] - 2026-11-13
 
 ### Added

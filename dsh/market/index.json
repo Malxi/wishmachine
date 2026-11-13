@@ -1,0 +1,46 @@
+{
+  "format": 1,
+  "title": {
+    "en": "Wishmachine",
+    "zh": "小说许愿机"
+  },
+  "description": {
+    "en": "Official Wishmachine DSH bundle index.",
+    "zh": "小说许愿机 DSH bundle 的官方索引。"
+  },
+  "plugins": [
+    {
+      "name": "wishmachine-dsh",
+      "title": {
+        "en": "Wishmachine",
+        "zh": "小说许愿机"
+      },
+      "description": {
+        "en": "DSH bundle that adds the wishmachine skill: a deterministic novel-project CLI for setup, outline, chapter writes and checks.",
+        "zh": "添加 wishmachine 技能的 DSH bundle：确定性小说项目管理、大纲/正文写入与检查 CLI。"
+      },
+      "icon": "icon.svg",
+      "author": "Malxi",
+      "homepage": "https://github.com/Malxi/wishmachine",
+      "repository": {
+        "url": "https://github.com/Malxi/wishmachine",
+        "directory": "dsh"
+      },
+      "versions": [
+        {
+          "version": "0.4.0",
+          "publishTimestamp": 1794563871,
+          "source": {
+            "type": "git",
+            "url": "https://github.com/Malxi/wishmachine.git",
+            "commit": "4efbd5b64a223aced09200b418367037bcd154b5",
+            "path": "dsh"
+          },
+          "engines": {
+            "dsh": ">=0.2.2-rc.2"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -76,6 +76,7 @@ function collectFiles() {
     'scripts/check-imports.js',
     'scripts/check-structure.js',
     'scripts/release.js',
+    'scripts/build-dsh-bundle.js',
   ]);
   return files.filter((file) => !devOnly.has(file.relative));
 }

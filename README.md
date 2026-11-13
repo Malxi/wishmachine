@@ -24,6 +24,12 @@ setup/outline、写入风险）见 [SKILL.md](SKILL.md)。
 需要 Node.js >= 18：`npm install -g .` 后可直接用 `wishmachine <command>`；或在仓库根目录
 使用 `node scripts/wishmachine.js`。
 
+### DeepSeek Harness（链接安装）
+
+仓库里包含一个 DSH bundle（`dsh/`）：在 DSH 的 **Plugins → Add plugin** 粘贴
+`git+https://github.com/Malxi/wishmachine.git#v0.4.0&path:/dsh` 即可安装 `wishmachine` 技能；
+也可以用自定义插件索引在 Discover 里安装。详见 [docs/DSH.md](docs/DSH.md)。
+
 ## 项目格式
 
 项目是一个目录：`novel.json` 是配置，其余 JSON/Markdown 是 artifact。

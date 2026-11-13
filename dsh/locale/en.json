@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Wishmachine",
+    "description": "Adds the wishmachine skill: a deterministic novel-project CLI for setup, outline, chapter writes and checks."
+  }
+}

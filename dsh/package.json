@@ -1,0 +1,46 @@
+{
+  "name": "wishmachine-dsh",
+  "version": "0.4.0",
+  "description": "DeepSeek Harness bundle for 小说许愿机 Wishmachine: a deterministic novel-project CLI exposed as the wishmachine skill.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Malxi",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Malxi/wishmachine.git"
+  },
+  "homepage": "https://github.com/Malxi/wishmachine",
+  "bugs": {
+    "url": "https://github.com/Malxi/wishmachine/issues"
+  },
+  "keywords": [
+    "dsh",
+    "dsh-bundle",
+    "skill",
+    "novel",
+    "writing"
+  ],
+  "engines": {
+    "dsh": ">=0.2.2-rc.2"
+  },
+  "exports": {
+    ".": "./index.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "index.js",
+    "skill-meta.js",
+    "cordis.patch.yml",
+    "skills",
+    "locale",
+    "icon.svg",
+    "docs",
+    "README.md"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}

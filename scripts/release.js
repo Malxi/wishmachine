@@ -22,6 +22,8 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SEMVER = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-([0-9A-Za-z.-]+))?(?:\+([0-9A-Za-z.-]+))?$/;
 const VERSION_LINE = /^([ \t]*version[ \t]*:[ \t]*)([^\r\n]*?)[ \t]*$/gm;
 const JSON_FILES = ['package.json', 'scripts/package.json'];
+// Generated DSH bundle files: present in this repository, absent from minimal test fixtures.
+const OPTIONAL_JSON_FILES = ['dsh/package.json', 'dsh/skills/wishmachine/scripts/package.json'];
 
 class ReleaseError extends Error {
   constructor(code, message) {
@@ -154,7 +156,8 @@ function jsonContent(doc) {
 
 function buildUpdates(root, version) {
   const updates = [];
-  for (const relative of JSON_FILES) {
+  for (const relative of [...JSON_FILES, ...OPTIONAL_JSON_FILES]) {
+    if (!fs.existsSync(path.join(root, relative))) continue;
     const { file, doc } = readJsonDoc(root, relative);
     doc.version = version;
     updates.push({ label: relative, file, content: jsonContent(doc) });
@@ -164,7 +167,21 @@ function buildUpdates(root, version) {
   lock.doc.packages[''].version = version;
   updates.push({ label: 'package-lock.json', file: lock.file, content: jsonContent(lock.doc) });
   const skill = readSkillFile(root);
-  updates.push({ label: 'SKILL.md', file: skill.file, content: updateSkillVersion(skill.text, version) });
+  const skillContent = updateSkillVersion(skill.text, version);
+  updates.push({ label: 'SKILL.md', file: skill.file, content: skillContent });
+  // Keep the generated bundle's copied SKILL.md version in sync so lint:dsh stays green.
+  const bundledSkill = path.join(root, 'dsh/skills/wishmachine/SKILL.md');
+  if (fs.existsSync(bundledSkill)) {
+    const text = fs.readFileSync(bundledSkill, 'utf8');
+    updates.push({ label: 'dsh/skills/wishmachine/SKILL.md', file: bundledSkill, content: updateSkillVersion(text, version) });
+  }
+  const indexPath = path.join(root, 'dsh/market/index.json');
+  if (fs.existsSync(indexPath)) {
+    const index = readJsonDoc(root, 'dsh/market/index.json');
+    const versions = index.doc?.plugins?.[0]?.versions;
+    if (Array.isArray(versions) && versions[0]) versions[0].version = version;
+    updates.push({ label: 'dsh/market/index.json', file: indexPath, content: jsonContent(index.doc) });
+  }
   return updates;
 }
 

@@ -1,0 +1,98 @@
+[
+  {
+    "id": "mary-celeste",
+    "title": "Mary Celeste",
+    "url": "https://en.wikipedia.org/wiki/Mary_Celeste",
+    "topics": ["history", "mystery", "maritime"],
+    "type": "history",
+    "note": "1872 年大西洋失踪船；原因无定论，适合做‘空船/日志/保险’母题。"
+  },
+  {
+    "id": "roanoke-colony",
+    "title": "Roanoke Colony",
+    "url": "https://en.wikipedia.org/wiki/Roanoke_Colony",
+    "topics": ["history", "mystery", "colonial"],
+    "type": "history",
+    "note": "1587—1590 北美殖民地消失；注意原住民叙事与历史解释的复杂性。"
+  },
+  {
+    "id": "dyatlov-pass",
+    "title": "Dyatlov Pass incident",
+    "url": "https://en.wikipedia.org/wiki/Dyatlov_Pass_incident",
+    "topics": ["history", "mystery", "survival"],
+    "type": "history",
+    "note": "1959 乌拉尔山难；不要把它简化成单一阴谋论。"
+  },
+  {
+    "id": "dunhuang-manuscripts",
+    "title": "Dunhuang manuscripts",
+    "url": "https://en.wikipedia.org/wiki/Dunhuang_manuscripts",
+    "topics": ["history", "archive", "ancient"],
+    "type": "history",
+    "note": "敦煌藏经洞写本；涉及文物流散与多国学术史。"
+  },
+  {
+    "id": "shanhaijing",
+    "title": "Classic of Mountains and Seas",
+    "url": "https://en.wikipedia.org/wiki/Classic_of_Mountains_and_Seas",
+    "topics": ["myth", "ancient", "china"],
+    "type": "myth",
+    "note": "《山海经》；公共领域古籍，注意版本差异。"
+  },
+  {
+    "id": "liaozhai",
+    "title": "Strange Tales from a Chinese Studio",
+    "url": "https://en.wikipedia.org/wiki/Strange_Tales_from_a_Chinese_Studio",
+    "topics": ["novel", "myth", "china"],
+    "type": "public_domain_novel",
+    "note": "《聊斋志异》；公共领域，可改编，不要复制长段原文。"
+  },
+  {
+    "id": "arabian-nights",
+    "title": "One Thousand and One Nights",
+    "url": "https://en.wikipedia.org/wiki/One_Thousand_and_One_Nights",
+    "topics": ["novel", "myth", "middle_east"],
+    "type": "public_domain_novel",
+    "note": "《一千零一夜》；注意不同版本和东方主义叙事。"
+  },
+  {
+    "id": "trojan-horse",
+    "title": "Trojan Horse",
+    "url": "https://en.wikipedia.org/wiki/Trojan_Horse",
+    "topics": ["myth", "war", "ancient"],
+    "type": "myth",
+    "note": "特洛伊木马；希腊神话传统，不是单一史实。"
+  },
+  {
+    "id": "voynich-manuscript",
+    "title": "Voynich manuscript",
+    "url": "https://en.wikipedia.org/wiki/Voynich_manuscript",
+    "topics": ["history", "mystery", "archive"],
+    "type": "history",
+    "note": "未解读手稿；适合做‘无法读懂的记录/伪经’母题。"
+  },
+  {
+    "id": "library-of-alexandria",
+    "title": "Library of Alexandria",
+    "url": "https://en.wikipedia.org/wiki/Library_of_Alexandria",
+    "topics": ["history", "archive", "ancient"],
+    "type": "history",
+    "note": "亚历山大图书馆；毁灭过程不宜简化为单一事件。"
+  },
+  {
+    "id": "great-fire-london",
+    "title": "Great Fire of London",
+    "url": "https://en.wikipedia.org/wiki/Great_Fire_of_London",
+    "topics": ["history", "disaster", "city"],
+    "type": "history",
+    "note": "1666 伦敦大火；适合做‘重建/替罪/记录’母题。"
+  },
+  {
+    "id": "frankenstein",
+    "title": "Frankenstein",
+    "url": "https://www.gutenberg.org/ebooks/84",
+    "topics": ["novel", "science", "gothic"],
+    "type": "public_domain_novel",
+    "note": "玛丽·雪莱《弗兰肯斯坦》；公共领域，可引用母题不要大段复制。"
+  }
+]
