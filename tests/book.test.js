@@ -751,6 +751,7 @@ test('cast validation catches missing protagonist and duplicate archetypes', () 
   assert.ok(!highOnly.findings.some((finding) => finding.rule_id === 'idea.cast_relation.duplicate'));
   const sortedFindings = validateIdeaDraw({ results: [missing] }).findings;
   assert.equal(sortedFindings[0].severity, 'high');
+  assert.ok(sortedFindings[0].id);
 });
 
 test('checkProject reports setup/outline thread registry drift', () => {

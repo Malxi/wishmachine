@@ -1632,7 +1632,8 @@ export function validateIdeaDraw(draw, options = {}) {
       (severityRank[right.severity] || 0) - (severityRank[left.severity] || 0)
       || String(left.rule_id || '').localeCompare(String(right.rule_id || ''))
       || String(left.target_id || '').localeCompare(String(right.target_id || ''))
-    ));
+    ))
+    .map((finding, index) => ({ id: `finding-${index + 1}`, ...finding }));
   return {
     schema_version: 1,
     ok: filtered.length === 0,
