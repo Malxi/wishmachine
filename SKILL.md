@@ -13,7 +13,7 @@ examples_en:
   - "Create a 3-volume × 5-chapter science-fiction project"
   - "Check the outline for blocking findings"
   - "Draw 12 science-fiction name cards"
-version: 0.5.3
+version: 0.5.4
 author: Malxi
 ---
 
@@ -127,7 +127,8 @@ $WM doctor --dir my-book                             # 目录/配置/JSON/regist
 4. 章节 loop：初稿 → `check --profile style --target chapter --id` → 只改命中句/段 →
    复检，最多 2 轮；指标回到健康带即可，不追 0。每场戏先过“目标/阻碍/转折/结果”，
    连续两段没有新信息就合并或删；母题预算见 `references/scene-guide.md`。
-   退出条件与阈值见 `references/workflow-deai.md`。
+   特别注意 `fragments`（电报句）、`enumeration`（清单罗列）、`counting_tic` /
+   `recount_tic`（数数/核对口头禅）。退出条件与阈值见 `references/workflow-deai.md`。
 5. 书级 loop：每 3 章 `audit --profile style --view summary`，指标漂移写回 voice card。
 6. 不要先写 AI 味再 humanize；humanizer 只能做第二遍清理。style 检查是体检，不是裁判。
 

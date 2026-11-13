@@ -98,6 +98,17 @@ test('authored namecard ids do not count as drawn-name coverage', () => {
   assert.equal(metrics.nameSourceCoverage, 0.5);
 });
 
+test('chapter style flags fragments, enumeration and counting tics', (t) => {
+  const { dir } = tempProject(t, { name: 'language tics', init: { chapter: 1 } });
+  writeChapter(dir, 'P1-V1-C1', '# 第一章\n\n没响。没动。没亮。\n\n他把扳手数了一遍，九把。又数一遍，还是九把。点过一遍，又点一遍。\n\n他站着。');
+  const result = checkProject(loadProject(dir), { profile: 'style', target: 'chapter', id: 'P1-V1-C1' });
+  const rules = new Set(result.findings.map((item) => item.rule_id));
+  assert.ok(rules.has('style.chapter.fragments'), JSON.stringify([...rules]));
+  assert.ok(rules.has('style.chapter.enumeration'), JSON.stringify([...rules]));
+  assert.ok(rules.has('style.chapter.counting_tic'), JSON.stringify([...rules]));
+  assert.ok(rules.has('style.chapter.recount_tic'), JSON.stringify([...rules]));
+});
+
 test('chapter style flags padding and configured motif overuse', (t) => {
   const { dir } = tempProject(t, { name: 'padding motif', init: { chapter: 1 } });
   writeChapter(dir, 'P1-V1-C1', `# 第一章\n\n${'她数了一遍。'.repeat(700)}`);

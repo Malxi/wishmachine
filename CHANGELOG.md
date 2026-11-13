@@ -7,6 +7,21 @@
 
 ## [Unreleased]
 
+## [0.5.4] - 2026-11-13
+
+### Added
+
+- `style.chapter.fragments`：叙述句里 ≤5 字碎片句占比（排除对话），抓“没响。”式电报句。
+- `style.chapter.enumeration`：“九把/两捆/三道”式数量清单密度，抓清单式罗列。
+- `style.chapter.counting_tic` / `style.chapter.recount_tic`：数/点/核对/清点动词密度与
+  “点过一遍，又点一遍”式重复动作。
+- `references/scene-guide.md` 增加“电报句/清单式罗列/数数口头禅”三种病与改法。
+
+### Changed
+
+- style 阈值按《上行八级》《第七垄》校准：碎片句 warn 0.04 / risk 0.08，清单 15/22，
+  数数动词 2/3，重复点数 0.5/1.5。
+
 ## [0.5.3] - 2026-11-13
 
 ### Fixed
@@ -183,7 +198,8 @@
 
 - 完成 P0-P2 审核整改与大规模模块拆分。
 
-[Unreleased]: https://github.com/Malxi/wishmachine/compare/v0.5.3...HEAD
+[Unreleased]: https://github.com/Malxi/wishmachine/compare/v0.5.4...HEAD
+[0.5.4]: https://github.com/Malxi/wishmachine/compare/v0.5.3...v0.5.4
 [0.5.3]: https://github.com/Malxi/wishmachine/compare/v0.5.2...v0.5.3
 [0.5.2]: https://github.com/Malxi/wishmachine/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/Malxi/wishmachine/compare/v0.5.0...v0.5.1

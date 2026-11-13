@@ -12,6 +12,9 @@ const ABSTRACT_WORDS = [
   '绝望', '黑暗', '死亡', '生命',
 ];
 const ABSTRACT_PATTERN = ABSTRACT_WORDS.join('|');
+const ENUMERATION = /[0-9零一二三四五六七八九十百千万两]+(?:把|个|件|扇|秒|层|条|根|张|只|双|捆|册|页|行|道|口|间|块|截|颗|粒|支|台|辆|套|副|串|堆|本|份|排|列|队|步|声)/g;
+const COUNTING = /(?:数(?:了|了数|一遍|两遍|到|出|过|一数)|点(?:过|了|一遍|数)|核对|清点|盘(?:点|查)|查验)/g;
+const RECOUNT = /(?:又|再)(?:数|点|核|查|对|验|清点|盘)[^。！？]*(?:一遍|一次|两遍)|(?:数|点|核|查|对|验|清点)[^。！？]*又[^。！？]*(?:一遍|数|点|核)/g;
 const UPLIFT = new RegExp(`(?:这|那|原来|终究|或许|也许|所谓|真正|某种|一切|所有|从来|不过|只是|毕竟|到底)[^。！？]{0,30}(?:${ABSTRACT_PATTERN})[^。！？]*[。！？]`, 'g');
 const TEMPLATE = [
   /不是[^。！？]{0,24}而是/g,
@@ -94,11 +97,41 @@ function abstractHits(text) {
   return ABSTRACT_WORDS.reduce((total, word) => total + (String(text).split(word).length - 1), 0);
 }
 
+function fragmentMetrics(sentences, cjk) {
+  const narration = sentences.filter((sentence) => !sentence.includes('"') && !/[“「」]/.test(sentence) && !/[：:]/.test(sentence));
+  const fragments = narration.filter((sentence) => cjkCount(sentence) <= 5);
+  return {
+    fragmentSentenceRatio: round(fragments.length / (narration.length || 1)),
+    fragmentPer1k: round(per1k(fragments.length, cjk)),
+    fragmentExamples: fragments.slice(0, 6),
+  };
+}
+
+function countingTicMetrics(sentences, cjk) {
+  const text = String(sentences.join(''));
+  const enumeration = text.match(ENUMERATION) || [];
+  const counting = text.match(COUNTING) || [];
+  const recount = text.match(RECOUNT) || [];
+  return {
+    enumerationPer1k: round(per1k(enumeration.length, cjk)),
+    countingPer1k: round(per1k(counting.length, cjk)),
+    recountPer1k: round(per1k(recount.length, cjk)),
+    enumerationExamples: enumeration.slice(0, 8),
+    countingExamples: counting.slice(0, 8),
+    recountExamples: recount.slice(0, 4),
+  };
+}
+
+function narrationTicMetrics(sentences, cjk) {
+  return { ...fragmentMetrics(sentences, cjk), ...countingTicMetrics(sentences, cjk) };
+}
+
 function chapterMetrics(text, options = {}) {
   const cjk = cjkCount(text);
   const sentences = splitSentences(text);
   const paragraphs = splitParagraphs(text);
   const focus = chapterFocusMetrics(text, paragraphs, cjk, options);
+  const tics = narrationTicMetrics(sentences, cjk);
   const sentenceLengths = sentences.map((sentence) => cjkCount(sentence));
   const clauseLengths = sentences.flatMap((sentence) => splitClauses(sentence).map((clause) => cjkCount(clause)));
   const paragraphsLengths = paragraphs.map((paragraph) => cjkCount(paragraph));
@@ -112,7 +145,9 @@ function chapterMetrics(text, options = {}) {
   const names = asArray(options.names).filter((name) => typeof name === 'string' && name);
   const subjectOpenings = sentences.filter((sentence) => names.some((name) => sentence.startsWith(name))).length;
   const repeatedOpeningSentences = sentences.filter((sentence) => (openings.get(openingOf(sentence)) || 0) >= 3).length;
-  const dialogueText = (String(text).match(/“[^”\n]*”|「[^」\n]*」|"[^"\n]*"/g) || []).join('');
+  const straightDialogue = String(text).split('"').filter((_, index) => index % 2 === 1).join('');
+  const curlyDialogue = (String(text).match(/“[^”\n]*”|「[^」\n]*」/g) || []).join('');
+  const dialogueText = straightDialogue + curlyDialogue;
   const uplift = String(text).match(UPLIFT) || [];
   const template = countPatterns(text, TEMPLATE);
   const similes = (String(text).match(SIMILE) || []).length;
@@ -155,6 +190,7 @@ function chapterMetrics(text, options = {}) {
     colonPer1k: round(per1k(colons, cjk)),
     dialogueRatio: round(ratio(cjkCount(dialogueText), cjk)),
     ...focus,
+    ...tics,
     duplicateSentenceCount: duplicateSentences.size,
     compressedExamples: compressed.slice(0, 8).map((item) => item.sentence),
     openingExamples: [...openings.entries()].filter(([, count]) => count >= 3).sort((left, right) => right[1] - left[1]).slice(0, 5).map(([prefix, count]) => ({ prefix, count })),

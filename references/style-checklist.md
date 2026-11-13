@@ -28,6 +28,10 @@
 | `sentenceCv` | 句长标准差/均值 | 0.45–0.9，<0.3 风险（太均匀） |
 | `paragraphCv` | 段长标准差/均值 | ≥0.5，<0.35 风险（太整齐） |
 | `shortClauseRatio` | ≤4 字小句占比 | ≤0.2，>0.35 风险 |
+| `fragmentSentenceRatio` | 叙述句里 ≤5 字碎片句占比（排除对话） | ≤0.04，>0.08 风险 |
+| `enumerationPer1k` | “九把/两捆/三道”式数量短语 / 千字 | ≤15，>22 风险 |
+| `countingPer1k` | 数/点/核对/清点等动词 / 千字 | ≤2，>3 风险 |
+| `recountPer1k` | “又数一遍/再点一次”式重复点数 / 千字 | ≤0.5，>1.5 风险 |
 | `paddingRatio` | 章节 CJK / target_chars | ≤1.1，>1.25 风险（注水） |
 | `motifMaxPer1k` | `style.motifs` 配置的母题词最高密度 | ≤3，>6 风险 |
 | `dialogueParagraphRatio` | 含对话的段落占比 | ≥0.2，<0.1 风险 |
