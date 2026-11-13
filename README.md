@@ -137,6 +137,7 @@ logs/
 - `book write outline --from-idea <id>` 把 outlinepack 的 draft_outline 送入正常候选检查
 - `book write setup --from-idea <id>` 把 outlinepack 的 setup_draft 送入正常候选检查
 - `ideas` 题材牌堆：科幻默认 / 修仙 / 悬疑 / 都市 / 历史 / 言情（4 packs）
+- `ideas validate --ignore` 忽略指定 rule_id
 - findings 按内容哈希 id 去重
 - findings id 使用内容哈希，重复校验保持一致
 - findings 带稳定 id（finding-1 ...）

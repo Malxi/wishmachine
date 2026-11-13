@@ -6,7 +6,7 @@ import { readJson } from './util.js';
 import { drawIdeas, ideasTypes, validateIdeaDraw } from './ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference, listSkills, readSkill } from './guides.js';
 
-const VERSION = '0.2.68';
+const VERSION = '0.2.69';
 const BOOLEAN_FLAGS = new Set(['apply', 'json', 'help', 'h', 'dry-run', 'force', 'ingest']);
 const COMMANDS = new Set(['book', 'check', 'ideas', 'gen', 'state', 'audit', 'refresh', 'export', 'doctor', 'version', 'help']);
 
@@ -117,7 +117,7 @@ Commands:
   ideas import --file <cards.json> [--dir <project>] [--type <type>] [--source <source>]
   ideas discover [--topic history|myth|novel] [--limit 3] [--dir <project>]
   ideas search --query <text> [--provider wikipedia|gutenberg] [--limit 3] [--ingest] [--dir <project>]
-  ideas validate --id <saved-outlinepack-id> | --all [--strict] [--min-severity low|medium|high|critical] [--max-findings 0] [--output <file|->] [--dir <project>]
+  ideas validate --id <saved-outlinepack-id> | --all [--strict] [--min-severity low|medium|high|critical] [--max-findings 0] [--ignore rule_id,...] [--output <file|->] [--dir <project>]
   ideas types
   gen workflow list|read <name>
   gen skill list|read <name>
@@ -362,6 +362,7 @@ async function runIdeas(args, flags) {
       fail(`unknown min-severity: ${minSeverity}`);
     }
     const maxFindings = Math.max(0, intFlag(flags, 'max-findings', 0));
+    const ignoreRules = stringFlag(flags, 'ignore', '').split(',').map((rule) => rule.trim()).filter(Boolean);
     const output = stringFlag(flags, 'output', '');
     const emit = (payload, code) => {
       if (output && output !== '-') {
@@ -385,7 +386,7 @@ async function runIdeas(args, flags) {
       const list = readSection(project, 'ideas').results || [];
       const results = list.map((item) => {
         const draw = readSection(project, 'idea', { id: item.id }).draw;
-        const result = validateIdeaDraw(draw, { minSeverity });
+        const result = validateIdeaDraw(draw, { minSeverity, ignoreRules });
         return {
           id: item.id,
           ok: result.ok,
@@ -399,7 +400,7 @@ async function runIdeas(args, flags) {
     const id = stringFlag(flags, 'id', '');
     if (!id) fail('ideas validate requires --id or --all');
     const draw = readSection(project, 'idea', { id }).draw;
-    const result = validateIdeaDraw(draw, { minSeverity });
+    const result = validateIdeaDraw(draw, { minSeverity, ignoreRules });
     const findings = maxFindings ? result.findings.slice(0, maxFindings) : result.findings;
     return emit(
       { schema_version: 1, ok: result.ok, section: 'ideas', action: 'validate', id, total_findings: result.findings.length, findings },
