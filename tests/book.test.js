@@ -747,6 +747,8 @@ test('cast validation catches missing protagonist and duplicate archetypes', () 
   const unknownType = JSON.parse(JSON.stringify(pack.results[0]));
   unknownType.cast_relations[0].type = 'nonsense_relation';
   assert.ok(validateIdeaDraw({ results: [unknownType] }).findings.some((finding) => finding.rule_id === 'idea.cast_relation.unknown_type'));
+  const highOnly = validateIdeaDraw({ results: [duplicateRelation] }, { minSeverity: 'high' });
+  assert.ok(!highOnly.findings.some((finding) => finding.rule_id === 'idea.cast_relation.duplicate'));
 });
 
 test('checkProject reports setup/outline thread registry drift', () => {
