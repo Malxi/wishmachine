@@ -418,6 +418,7 @@ function buildWorldpack(def, packIndex, seed, cast, sources) {
   }));
   const castRelations = [];
   const relationTypes = {
+    default: { opposes: 'counters', supports: 'supports', guards: 'secures', controls: 'controls', allies_with: 'allies_with', drives: 'drives', blocks: 'blocks' },
     romance: { opposes: 'rivals_with', supports: 'confides_in', guards: 'shares_space_with', controls: 'funds', allies_with: 'grows_close_to', drives: 'chooses', blocks: 'withholds', works_for: 'works_for' },
     suspense: { opposes: 'suspects', supports: 'corroborates', guards: 'secures', controls: 'handles', allies_with: 'backs_up', drives: 'investigates', blocks: 'covers_up' },
     history: { opposes: 'contends_with', supports: 'petitions', guards: 'garrisons', controls: 'holds_seal', allies_with: 'allies_with', drives: 'memorializes', blocks: 'obstructs' },

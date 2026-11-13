@@ -235,6 +235,7 @@ test('worldpack bundles premise, resources and scenarios', () => {
   assert.ok(pack.results[0].cast_relations.some((relation) => relation.type === 'drives'));
   assert.ok(pack.results[0].cast_relations.some((relation) => relation.type === 'blocks'));
   assert.ok(pack.results[0].cast_relations.some((relation) => relation.type === 'supports'));
+  assert.ok(pack.results[0].cast_relations.some((relation) => relation.type === 'counters'));
   assert.ok(pack.results[0].cast_relations.every((relation) => relation.stake));
   assert.ok(pack.results[0].cast.length >= 1);
 });

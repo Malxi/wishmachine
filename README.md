@@ -137,6 +137,7 @@ logs/
 - `book write outline --from-idea <id>` 把 outlinepack 的 draft_outline 送入正常候选检查
 - `book write setup --from-idea <id>` 把 outlinepack 的 setup_draft 送入正常候选检查
 - `ideas` 题材牌堆：科幻默认 / 修仙 / 悬疑 / 都市 / 历史 / 言情（4 packs）
+- 默认科幻关系词：counters / supports / secures / blocks
 - cast 关系词按题材变化：suspects / competes_with / contends_with / rivals_with
 - 言情 cast 关系使用 rivals_with / confides_in；缺少 protagonist 时自动补第一个角色
 - cast_relations 按角色生成，支持多个 antagonist / support
