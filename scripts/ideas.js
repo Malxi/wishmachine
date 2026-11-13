@@ -1527,6 +1527,14 @@ export function validateIdeaDraw(draw) {
         add('high', 'idea.cast.missing_protagonist', result.id || 'worldpack', 'cast has no protagonist', 'Add a protagonist or let cast-roles auto-fix it.');
       }
     }
+    if (Array.isArray(result.cast) && Array.isArray(result.cast_relations) && Array.isArray(result.entities)) {
+      const entityIds = new Set(result.entities.map((entity) => entity.id));
+      for (const relation of result.cast_relations) {
+        if (!relation?.from || !relation?.to || !entityIds.has(relation.from) || !entityIds.has(relation.to)) {
+          add('high', 'idea.cast_relation.unknown_entity', result.id || 'worldpack', `cast relation references an unknown entity: ${relation?.from} -> ${relation?.to}`, 'Point cast relations at ids from the graph entities.');
+        }
+      }
+    }
     const registry = result.thread_registry;
     if (!Array.isArray(registry)) continue;
     const ids = new Set();

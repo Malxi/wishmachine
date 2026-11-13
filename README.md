@@ -137,6 +137,7 @@ logs/
 - `book write outline --from-idea <id>` 把 outlinepack 的 draft_outline 送入正常候选检查
 - `book write setup --from-idea <id>` 把 outlinepack 的 setup_draft 送入正常候选检查
 - `ideas` 题材牌堆：科幻默认 / 修仙 / 悬疑 / 都市 / 历史 / 言情（4 packs）
+- `ideas validate` 检查 cast 关系端点是否指向有效 graph entity
 - `ideas validate` 检查 cast 缺主角 / 重复 archetype
 - meta.cast 记录 archetype_roles 映射
 - meta.cast 记录 auto / count / pool_size / role_counts / archetypes
