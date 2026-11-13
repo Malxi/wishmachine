@@ -18,6 +18,16 @@ const GENRE_ARCHETYPE_COUNTS = {
   romance: ROMANCE_ARCHETYPES.length,
 };
 
+const KNOWN_RELATION_TYPES = new Set([
+  'opposes', 'supports', 'guards', 'controls', 'allies_with', 'drives', 'blocks', 'works_for',
+  'pursues', 'belongs_to', 'starts_at', 'uses', 'governs', 'issues', 'hosts', 'enables',
+  'inspired_by', 'constrains', 'tests', 'dramatizes',
+  'counters', 'secures', 'suspects', 'corroborates', 'covers_up', 'handles', 'backs_up', 'investigates',
+  'contends_with', 'petitions', 'garrisons', 'holds_seal', 'obstructs',
+  'competes_with', 'covers_for', 'keeps_keys', 'owns', 'networks_with', 'pitches', 'stalls',
+  'sworn_enemy', 'sworn_ally', 'wards', 'commands', 'shares_dao', 'seeks', 'curses',
+  'rivals_with', 'confides_in', 'shares_space_with', 'funds', 'grows_close_to', 'chooses', 'withholds',
+]);
 const TYPES = [
   'provocation', 'axiom', 'event', 'law', 'scenario', 'engine',
   'worldpack', 'plotpack', 'outlinepack', 'premise', 'storyline', 'cast', 'namecard',
@@ -1533,6 +1543,9 @@ export function validateIdeaDraw(draw) {
       for (const relation of result.cast_relations) {
         if (!relation?.from || !relation?.to || !entityIds.has(relation.from) || !entityIds.has(relation.to)) {
           add('high', 'idea.cast_relation.unknown_entity', result.id || 'worldpack', `cast relation references an unknown entity: ${relation?.from} -> ${relation?.to}`, 'Point cast relations at ids from the graph entities.');
+        }
+        if (relation?.type && !KNOWN_RELATION_TYPES.has(relation.type)) {
+          add('low', 'idea.cast_relation.unknown_type', result.id || 'worldpack', `unknown cast relation type: ${relation.type}`, 'Use a relation type from the genre vocabulary.');
         }
         const key = `${relation?.from}|${relation?.to}|${relation?.type}`;
         if (relationKeys.has(key)) {
