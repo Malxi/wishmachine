@@ -65,6 +65,8 @@ my-book/
 - 退出码：`0` 成功 · `1` 用法/系统错误 · `2` 有 blocking findings（`check`/`audit`/`doctor`/
   `book write`）。`--no-strict` 可让 `check`/`audit`/`doctor` 强制退出 0。写操作默认
   dry-run，`--apply` 才落盘。
+- `check`/`audit` 支持 `--ignore rule_id,...` / `--ignore-file <json>`；目标 artifact
+  缺失或损坏时返回结构化 `artifact.*` finding，而不是文件系统异常。
 
 ## 边界
 
@@ -84,10 +86,14 @@ my-book/
 ```bash
 npm test           # node:test（node --test）
 npm run lint       # eslint（需先 npm install）
-npm run lint:modules  # 模块分层/循环依赖/门面边界检查
+npm run lint:modules  # 模块分层/循环依赖/门面边界检查 + 文件/函数/参数结构门禁
 npm run pack       # 构建 dist/wishmachine-skill-{,-flat-}v<version>.zip（先校验 SKILL.md 的 YAML frontmatter）
+node scripts/release.js <version> --pack  # 原子更新四处版本源并重新打包
 ```
 
-模块分层、目录所有权与并发编辑规则见 [docs/MODULES.md](docs/MODULES.md)。
+模块分层、目录所有权与并发编辑规则见 [docs/MODULES.md](docs/MODULES.md)；
+发版流程见 [RELEASING.md](RELEASING.md)，变更历史见 [CHANGELOG.md](CHANGELOG.md)。
 
-CI：`.github/workflows/ci.yml`，Node 18/20/22 跑 `npm test` 与 `npm run lint`。
+CI：`.github/workflows/ci.yml`（ubuntu + windows × Node 18/20/22，跑测试、lint、模块/结构门禁，
+并 smoke 打包产物）；推 `v*` tag 时 `.github/workflows/release.yml` 自动创建 GitHub Release
+并上传两份 zip。

@@ -1,4 +1,5 @@
 // Thread registry derivation shared by single- and multi-volume outlinepacks.
+import { CLIMAX_BEAT_FUNCTIONS } from '../contracts.js';
 import { chapterResolvedMysteries, sortMysteryLinks } from '../registry.js';
 
 function buildThreadRegistry(storylines, chapters, droppedMysteries) {
@@ -11,7 +12,7 @@ function buildThreadRegistry(storylines, chapters, droppedMysteries) {
       .map((chapter) => chapter.id);
     const lastChapter = threadChapters[threadChapters.length - 1];
     const resolvedIn = resolvedChapters[resolvedChapters.length - 1]
-      || (lastChapter && ['climax', 'resolution'].includes(lastChapter.beat_function) ? lastChapter.id : null);
+      || (lastChapter && CLIMAX_BEAT_FUNCTIONS.includes(lastChapter.beat_function) ? lastChapter.id : null);
     const abandonedHistory = abandonedIds.has(id);
     const resolvedMysteries = chapters.flatMap((chapter) => (
       chapterResolvedMysteries(chapter)

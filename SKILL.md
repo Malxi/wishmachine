@@ -13,7 +13,7 @@ examples_en:
   - "Create a 3-volume × 5-chapter science-fiction project"
   - "Check the outline for blocking findings"
   - "Draw 12 science-fiction name cards"
-version: 0.3.2
+version: 0.3.3
 author: Malxi
 ---
 
@@ -29,6 +29,7 @@ artifact 写入。它**不调用模型、不生成 setup/outline/正文**；创�
 - stdout 是 JSON；失败时 stdout 也是 `{"ok":false,"error":{...}}`，stderr 一行摘要。
 - 退出码：`0` 成功 / `1` 用法或系统错误 / `2` 有 high|critical blocking findings。
 - 写操作默认 dry-run，只有 `--apply` 才落盘。
+- 每个命令都有独立帮助：`$WM <command> [subcommand] --help`（裸 `--help` 仍是全局帮助）。
 
 ## 0. 三条最小路径
 
@@ -100,6 +101,11 @@ $WM doctor --dir my-book                             # 目录/配置/JSON 完整
   `--no-strict` 让 check/audit/doctor 强制退出 0（脚本容错用）。
 - `--min-severity low|medium|high|critical` 只过滤展示，`summary` 仍统计全量；
   `--max-findings all|<n>`；findings 带稳定 `id`（`finding-xxxxxxxx`），已去重排序。
+- `--ignore quality.outline.cast,quality.recap.title` 或 `--ignore-file ignores.json`
+  （JSON 数组或 `{"rules":[...]}`）按 rule_id 忽略；`summary.ignored_findings` /
+  `ignored_rules` 记录忽略数量，不影响真实 `blocking` 判断以外的统计。
+- 缺失或损坏的 artifact 不再抛原始 ENOENT：返回 `artifact.<target>.missing` /
+  `artifact.<target>.invalid_json` finding（blocking，exit 2），先补写入或跑 `doctor`。
 - 枚举写错或未知 flag/缺值都会 JSON 报错并退出 1，不再静默回退。
 
 ## 抽卡

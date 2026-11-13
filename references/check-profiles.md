@@ -27,7 +27,12 @@ node scripts/wishmachine.js doctor --dir my-book --fix
 ```
 
 `--target` 默认 `outline`；`chapter`/`recap` 必须给 `--id`；`craft` 的 `--id` 是 craft kind，
-默认 `character`。被检查的 artifact 必须已存在（先经 `book write` 写入）。
+默认 `character`。
+
+目标 artifact 不存在或 JSON 损坏时，不再抛原始文件错误，而是返回
+`artifact.<target>.missing` / `artifact.<target>.invalid_json`（`critical`，blocking，
+退出码 2），`suggestion` 会提示先 `book write <section>` 或跑 `doctor`。因此空项目上
+`check --target outline` 也是结构化结果而不是崩溃。
 
 outline quality 还检查物品获取/使用、资源账本算术、状态锚点连续性、事件-角色引用、
 事件顺序、storyline 引用、重复事件类型、节奏、地点切换、谜题解析顺序、离场/死亡角色
@@ -42,6 +47,10 @@ recap quality 检查 `chapter_id`、大纲存在性、cast、地点、last line�
 - `--min-severity low|medium|high|critical` 只过滤**展示的** findings；`summary` 与
   `score` 始终基于全量。
 - `--max-findings all|<n>` 限制展示条数，`all`（默认）不限制；被截断时 `truncated:true`。
+- `--ignore rule_id,...` / `--ignore-file <json>`：按 rule_id 忽略 findings（文件为 JSON
+  数组或 `{"rules":[...]}`，语法与 `ideas validate` 相同）；忽略数量记在
+  `summary.ignored_findings` / `summary.ignored_rules`（顶层同名）。用于接受已知的历史
+  finding 而不关闭整条规则；`check` 与 `audit` 都支持。
 - `--no-strict`：即使有 blocking 也退出 0（JSON 里的 `ok/blocking` 不变）。
 
 退出码：`0` 通过 · `1` 用法/系统错误 · `2` 有 blocking。`audit`/`doctor`/`book write`
@@ -58,7 +67,10 @@ recap quality 检查 `chapter_id`、大纲存在性、cast、地点、last line�
   "target": "outline",
   "id": "P1-V1-C1",
   "score": 68,
-  "summary": {"total": 10, "critical": 0, "high": 1, "medium": 5, "low": 4},
+  "summary": {"total": 10, "critical": 0, "high": 1, "medium": 5, "low": 4,
+               "ignored_findings": 0, "ignored_rules": {}},
+  "ignored_findings": 0,
+  "ignored_rules": {},
   "filtered_out": 0,
   "findings": [
     {
@@ -93,7 +105,9 @@ findings 带内容哈希稳定 `id`，已去重并按 severity 降序、rule_id 
 ## audit / doctor
 
 `audit` 对 setup、outline、全部 craft/recap/已写章节跑同一套检查并汇总，支持
-`--min-severity`、`--max-findings all|<n>`、`--view brief|full`、`--no-strict`。
+`--min-severity`、`--max-findings all|<n>`、`--ignore`/`--ignore-file`、
+`--view brief|full`、`--no-strict`。审计过程中单个 artifact 缺失/损坏/意外错误会降级为
+`artifact.*` / `quality.audit.error` finding（带稳定 id），不会让整个 audit 崩溃。
 
 `doctor` 检查项目目录、`novel.json`、artifact JSON 有效性与 orphan 文件；`--fix` 会创建
 缺失目录、修复可自动修复的问题。`doctor` 有 blocking 时同样退出 2，`--no-strict` 强制 0。

@@ -1,5 +1,6 @@
 // Deck registry: every genre's card data lives in its own module so ideas.js
 // stays logic-only and adding a genre means adding exactly one deck object.
+import { RESOURCE_CATEGORIES } from '../contracts.js';
 import { defaultDeck } from './default.js';
 import { xianxia } from './xianxia.js';
 import { suspense } from './suspense.js';
@@ -94,7 +95,7 @@ function deckShapeErrors(deck) {
 
 function deckResourceErrors(deck) {
   const errors = [];
-  const allowedCategories = new Set(['能源', '消耗品', '材料', '货币']);
+  const allowedCategories = new Set(RESOURCE_CATEGORIES);
   for (const resource of deck.resources || []) {
     if (!resource?.name || !resource?.category) {
       errors.push(`${deck.name}.resources entry needs name and category`);

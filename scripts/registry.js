@@ -1,6 +1,7 @@
 // Shared mystery/thread registry helpers.
 // Both project.js (check/repair) and ideas.js (pack generation) must use these so
 // the generator, the checker and the repair path agree on ordering and merging.
+import { MYSTERY_LIST_KEYS, MYSTERY_STATUS_PRIORITY, SCENE_MYSTERY_LIST_KEYS } from './contracts.js';
 
 function naturalCompare(left, right) {
   return String(left || '').localeCompare(String(right || ''), undefined, { numeric: true });
@@ -33,8 +34,6 @@ export function chapterResolvedMysteries(chapter) {
   ];
 }
 
-const MYSTERY_STATUS_PRIORITY = { open: 0, dropped: 1, resolved: 2 };
-
 export function collectMysteryRegistry(chapters) {
   const registry = new Map();
   const add = (mystery, chapterId, source) => {
@@ -44,11 +43,11 @@ export function collectMysteryRegistry(chapters) {
     registry.set(mystery.id, { ...mystery, chapter_id: chapterId, source });
   };
   for (const chapter of chapters) {
-    for (const key of ['carried', 'planted', 'resolved', 'dropped']) {
+    for (const key of MYSTERY_LIST_KEYS) {
       for (const mystery of chapter.mysteries?.[key] || []) add(mystery, chapter.id, `chapter.${key}`);
     }
     for (const scene of chapter.scenes || []) {
-      for (const key of ['planted', 'resolved']) {
+      for (const key of SCENE_MYSTERY_LIST_KEYS) {
         for (const mystery of scene.mysteries?.[key] || []) add(mystery, chapter.id, `scene.${key}`);
       }
     }

@@ -1,6 +1,6 @@
 {
   "name": "wishmachine",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "小说许愿机：把你的奇思妙想变成小说，包含创作流程、确定性检查和丰富参考。",
   "type": "module",
   "license": "MIT",
@@ -36,8 +36,9 @@
     "lint": "eslint .",
     "lint:modules": "node scripts/check-imports.js && node scripts/check-structure.js",
     "lint:structure": "node scripts/check-structure.js",
-    "format:check": "prettier --check package.json .prettierrc eslint.config.js .github/workflows/ci.yml",
+    "format:check": "prettier --check package.json .prettierrc eslint.config.js .github/workflows/ci.yml .github/workflows/release.yml",
     "pack": "node scripts/pack.js",
+    "release": "node scripts/release.js",
     "prepublishOnly": "npm test"
   },
   "engines": {

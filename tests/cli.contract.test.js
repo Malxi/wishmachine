@@ -171,6 +171,31 @@ test('version and help stay on stdout as plain text', () => {
   const help = run(['help']);
   assert.equal(help.status, 0);
   assert.match(help.stdout, /Output contract:/);
+  const bare = run(['--help']);
+  assert.equal(bare.status, 0);
+  assert.match(bare.stdout, /Commands:/);
+});
+
+test('per-command --help prints scoped usage and unknown commands still error', () => {
+  const check = run(['check', '--help']);
+  assert.equal(check.status, 0, check.stderr);
+  assert.match(check.stdout, /Usage: wishmachine check/);
+  assert.match(check.stdout, /--ignore-file/);
+  assert.ok(!check.stdout.includes('book registry abandon'), 'scoped help must not dump the global list');
+  const write = run(['book', 'write', '--help']);
+  assert.equal(write.status, 0);
+  assert.match(write.stdout, /Usage: wishmachine book write/);
+  assert.match(write.stdout, /--from-idea/);
+  const registry = run(['book', 'registry', 'log', '--help']);
+  assert.equal(registry.status, 0);
+  assert.match(registry.stdout, /book registry/);
+  assert.match(registry.stdout, /--limit/);
+  const ideas = run(['ideas', 'validate', '--help']);
+  assert.equal(ideas.status, 0);
+  assert.match(ideas.stdout, /Usage: wishmachine ideas validate/);
+  const unknown = run(['nope', '--help']);
+  assert.equal(unknown.status, 1);
+  assert.equal(unknown.json.error.code, 'usage.unknown_command');
 });
 
 test('unknown commands return a JSON error with an exhaustive hint', () => {

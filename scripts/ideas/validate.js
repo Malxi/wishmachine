@@ -1,5 +1,6 @@
 // Validator for generated idea draws (worldpack / plotpack / outlinepack).
 import { createHash } from 'node:crypto';
+import { CLIMAX_BEAT_FUNCTIONS, MYSTERY_LIST_KEYS, SCENE_MYSTERY_LIST_KEYS, THREAD_STATUSES } from '../contracts.js';
 import { KNOWN_RELATION_TYPES } from '../decks/index.js';
 
 function validateIdeaCastFindings(result, add) {
@@ -79,10 +80,10 @@ function validateThreadDuplicatesAndStatus(thread, ids, add) {
     });
   }
   ids.add(thread.id);
-  if (!['active', 'resolved', 'abandoned'].includes(thread.status)) {
+  if (!THREAD_STATUSES.includes(thread.status)) {
     add({
       severity: 'high', rule: 'idea.thread.invalid_status', target: thread.id,
-      issue: `unknown thread status ${thread.status}`, suggestion: 'Use active, resolved or abandoned.',
+      issue: `unknown thread status ${thread.status}`, suggestion: `Use ${THREAD_STATUSES.join(', ')}.`,
     });
   }
   if (thread.status === 'active' && thread.resolved_in) {
@@ -119,7 +120,7 @@ function validateThreadResolution(thread, chaptersById, add) {
       });
     }
   }
-  if (!['climax', 'resolution'].includes(chapter.beat_function)) {
+  if (!CLIMAX_BEAT_FUNCTIONS.includes(chapter.beat_function)) {
     add({
       severity: 'high', rule: 'idea.thread.resolved_outside_climax', target: thread.id,
       issue: `resolved_in ${thread.resolved_in} is ${chapter.beat_function}`,
@@ -167,13 +168,13 @@ function validateMysteryThreads(result, ids, add) {
     }
   };
   for (const chapter of result.chapters || []) {
-    for (const key of ['carried', 'planted', 'resolved', 'dropped']) {
+    for (const key of MYSTERY_LIST_KEYS) {
       for (const mystery of chapter.mysteries?.[key] || []) {
         checkMystery(mystery, chapter.id);
       }
     }
     for (const scene of chapter.scenes || []) {
-      for (const key of ['planted', 'resolved']) {
+      for (const key of SCENE_MYSTERY_LIST_KEYS) {
         for (const mystery of scene.mysteries?.[key] || []) {
           checkMystery(mystery, `${chapter.id}-S${scene.order}`);
         }

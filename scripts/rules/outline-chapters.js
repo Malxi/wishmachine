@@ -1,15 +1,14 @@
 // Per-chapter outline shape rules: mystery status collection plus chapter
 // collections, events, timeline, state anchors and extra chapter fields.
+import { MYSTERY_LIST_KEYS, MYSTERY_STATUS_PRIORITY, SCENE_MYSTERY_LIST_KEYS } from '../contracts.js';
 import { finding } from './finding.js';
 
-const MYSTERY_STATUS_PRIORITY = { open: 0, dropped: 1, resolved: 2 };
-
 function collectChapterMysteries(ctx, chapter) {
-  for (const key of ['carried', 'planted', 'resolved', 'dropped']) {
+  for (const key of MYSTERY_LIST_KEYS) {
     for (const mystery of chapter.mysteries?.[key] || []) recordMysteryStatus(ctx, mystery, chapter.id);
   }
   for (const scene of chapter.scenes || []) {
-    for (const key of ['planted', 'resolved']) {
+    for (const key of SCENE_MYSTERY_LIST_KEYS) {
       for (const mystery of scene.mysteries?.[key] || []) recordMysteryStatus(ctx, mystery, chapter.id);
     }
   }

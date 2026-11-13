@@ -1,5 +1,5 @@
 // setup_draft builder used by outlinepacks (--from-idea setup).
-import { SETUP_RESOURCE_CATEGORIES } from './shared.js';
+import { DEFAULT_RESOURCE_CATEGORY, SETUP_RESOURCE_CATEGORIES } from '../contracts.js';
 
 function buildSetupCast(plot, storylineList) {
   return (plot.cast || []).map((character, index) => {
@@ -94,7 +94,7 @@ function buildSetupResources(plot, categoryMap) {
     name: resource.name,
     category: SETUP_RESOURCE_CATEGORIES.has(resource.category)
       ? resource.category
-      : (categoryMap[resource.category] || '材料'),
+      : (categoryMap[resource.category] || DEFAULT_RESOURCE_CATEGORY),
     scarcity: '稀有',
     description: resource.meaning || resource.category || 'world resource',
   }));

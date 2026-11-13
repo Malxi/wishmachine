@@ -1,6 +1,7 @@
 // Project graph, source search/ingestion and manuscript export: the parts of
 // the project facade that read many artifacts and talk to the outside world
-// (network calls are mocked or served from a local fixture server).
+// (source network access is stubbed through the injectable transport, or served
+// from a local fixture server on loopback).
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -10,11 +11,36 @@ import {
   loadProject, writeArtifact, readSection, exportManuscript, saveIdeaDraw, saveImportedIdeas,
   buildProjectGraph, searchSources, ingestSource, discoverSources,
 } from '../scripts/project.js';
+import { setSourceResolver, setSourceTransport } from '../scripts/sources/net.js';
 import {
   fixtureSet, longChapter, drawCached, sampleSetup, sampleOutline,
 } from './fixtures.js';
 
 const { tempDir, tempProject } = fixtureSet('wishmachine-graph-');
+
+const PUBLIC_ADDRESSES = [{ address: '93.184.216.34', family: 4 }];
+
+// Stub the DNS answer and the HTTP transport for one test; the transport hook is
+// the supported seam, so global.fetch is never touched.
+function stubSourceNetwork(transport, addresses = PUBLIC_ADDRESSES) {
+  const restoreResolver = setSourceResolver(async () => addresses);
+  const restoreTransport = setSourceTransport(transport);
+  return () => {
+    restoreTransport();
+    restoreResolver();
+  };
+}
+
+function jsonResponse(payload) {
+  return {
+    status: 200,
+    statusText: 'OK',
+    ok: true,
+    headers: { get: () => null },
+    text: async () => JSON.stringify(payload),
+    json: async () => payload,
+  };
+}
 
 function projectWithChapter(t) {
   const { dir } = tempProject(t, { name: '导出测试', init: { volumes: 2, chapter: 2 } });
@@ -44,12 +70,10 @@ test('project graph merges saved cards and rejects dangling relations', (t) => {
 
 test('source search maps Gutenberg results into source cards', async (t) => {
   const { project } = tempProject(t, { name: 'search test', init: { chapter: 1 } });
-  const original = global.fetch;
-  global.fetch = async () => ({
-    ok: true,
-    status: 200,
-    statusText: 'OK',
-    json: async () => ({
+  let seenUrl = '';
+  const restore = stubSourceNetwork(async (request) => {
+    seenUrl = request.url.href;
+    return jsonResponse({
       results: [{
         id: 84,
         title: 'Frankenstein',
@@ -57,8 +81,9 @@ test('source search maps Gutenberg results into source cards', async (t) => {
         subjects: ['Gothic', 'Science'],
         formats: { 'text/html': 'https://www.gutenberg.org/ebooks/84.html' },
       }],
-    }),
+    });
   });
+  t.after(restore);
   try {
     const result = await searchSources(project, { provider: 'gutenberg', query: 'Frankenstein', limit: 1 });
     assert.equal(result.count, 1);
@@ -67,8 +92,9 @@ test('source search maps Gutenberg results into source cards', async (t) => {
     assert.ok(result.results[0].graph.entities.length >= 2);
     assert.ok(result.results[0].graph.relations.length >= 1);
     assert.ok(result.saved[0].id);
+    assert.match(seenUrl, /^https:\/\/gutendex\.com\/books\/\?search=Frankenstein/);
   } finally {
-    global.fetch = original;
+    restore();
   }
 });
 
@@ -135,15 +161,14 @@ test('export output defaults to per-format paths and supports a custom inside pa
 
 test('search reports network failures as actionable source errors', async (t) => {
   const { project } = tempProject(t, { name: 'search network', init: { chapter: 1 } });
-  const originalFetch = global.fetch;
-  global.fetch = async () => { throw new Error('fetch failed'); };
+  const restore = stubSourceNetwork(async () => { throw new Error('fetch failed'); });
   try {
     const error = await searchSources(project, { query: 'Mary Celeste', provider: 'wikipedia' }).then(() => null, (caught) => caught);
     assert.ok(error, 'searchSources should reject when the provider is unreachable');
     assert.equal(error.code, 'source.network');
     assert.match(error.hint, /network/);
   } finally {
-    global.fetch = originalFetch;
+    restore();
   }
 });
 

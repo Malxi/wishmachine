@@ -1,15 +1,21 @@
 // Outline registry shape rules: mystery/thread registry entries, abandoned
 // threads and the required main/sub-then-id registry ordering.
+import {
+  ABANDONED_THREADS_FIELD,
+  MYSTERY_REGISTRY_FIELD,
+  THREAD_REGISTRY_FIELD,
+  THREAD_REGISTRY_OBJECT_ARRAY_FIELDS,
+} from '../contracts.js';
 import { sortMysteryArray, sortThreadArray } from '../registry.js';
 import { finding } from './finding.js';
 
 function validateOutlineRegistries(ctx) {
   const { outline, findings } = ctx;
-  if (outline.mystery_registry !== undefined) {
-    if (!Array.isArray(outline.mystery_registry)) {
+  if (outline[MYSTERY_REGISTRY_FIELD] !== undefined) {
+    if (!Array.isArray(outline[MYSTERY_REGISTRY_FIELD])) {
       findings.push(finding('schema.outline.mystery_registry', 'high', 'mystery_registry must be an array'));
     } else {
-      for (const mystery of outline.mystery_registry) {
+      for (const mystery of outline[MYSTERY_REGISTRY_FIELD]) {
         if (!mystery?.id) {
           findings.push(finding('schema.outline.mystery_registry.id', 'high', 'mystery registry entry needs an id'));
           continue;
@@ -21,12 +27,12 @@ function validateOutlineRegistries(ctx) {
       }
     }
   }
-  if (outline.thread_registry === undefined) return;
-  if (!Array.isArray(outline.thread_registry)) {
+  if (outline[THREAD_REGISTRY_FIELD] === undefined) return;
+  if (!Array.isArray(outline[THREAD_REGISTRY_FIELD])) {
     findings.push(finding('schema.outline.thread_registry', 'high', 'thread_registry must be an array'));
     return;
   }
-  for (const thread of outline.thread_registry) {
+  for (const thread of outline[THREAD_REGISTRY_FIELD]) {
     if (!thread?.id) {
       findings.push(finding('schema.outline.thread_registry.id', 'high', 'thread registry entry needs an id'));
       continue;
@@ -51,7 +57,7 @@ function validateOutlineThreadShape(thread, findings) {
   if (thread.abandoned_history !== undefined && typeof thread.abandoned_history !== 'boolean') {
     findings.push(finding('schema.outline.thread_registry.abandoned_history', 'medium', `${thread.id}.abandoned_history must be boolean`, thread.id));
   }
-  for (const key of ['resolved_mysteries', 'abandoned_mysteries']) {
+  for (const key of THREAD_REGISTRY_OBJECT_ARRAY_FIELDS) {
     if (thread[key] !== undefined && (!Array.isArray(thread[key]) || thread[key].some((item) => typeof item !== 'object' || Array.isArray(item)))) {
       findings.push(finding(`schema.outline.thread_registry.${key}`, 'medium', `${thread.id}.${key} must be an array of objects`, thread.id));
     }
@@ -60,12 +66,12 @@ function validateOutlineThreadShape(thread, findings) {
 
 function validateOutlineAbandonedThreads(ctx) {
   const { outline, findings } = ctx;
-  if (outline.abandoned_threads === undefined) return;
-  if (!Array.isArray(outline.abandoned_threads)) {
+  if (outline[ABANDONED_THREADS_FIELD] === undefined) return;
+  if (!Array.isArray(outline[ABANDONED_THREADS_FIELD])) {
     findings.push(finding('schema.outline.abandoned_threads', 'high', 'abandoned_threads must be an array'));
     return;
   }
-  for (const thread of outline.abandoned_threads) {
+  for (const thread of outline[ABANDONED_THREADS_FIELD]) {
     if (!thread?.thread_id || !ctx.threadIds.has(thread.thread_id)) {
       findings.push(finding('quality.outline.abandoned_threads.unknown', 'high', `abandoned thread ${thread?.thread_id || '(missing)'} is not in thread_registry`, thread?.thread_id || ''));
     }
@@ -74,15 +80,15 @@ function validateOutlineAbandonedThreads(ctx) {
 
 function validateRegistryOrder(ctx) {
   const { outline, findings } = ctx;
-  if (Array.isArray(outline.thread_registry)) {
-    const sortedThreads = sortThreadArray(outline.thread_registry);
-    if (sortedThreads.some((thread, index) => thread.id !== outline.thread_registry[index]?.id)) {
+  if (Array.isArray(outline[THREAD_REGISTRY_FIELD])) {
+    const sortedThreads = sortThreadArray(outline[THREAD_REGISTRY_FIELD]);
+    if (sortedThreads.some((thread, index) => thread.id !== outline[THREAD_REGISTRY_FIELD][index]?.id)) {
       findings.push(finding('quality.outline.thread.registry_order', 'low', 'thread_registry is not sorted by main/sub then id'));
     }
   }
-  if (Array.isArray(outline.mystery_registry)) {
-    const sorted = sortMysteryArray(outline.mystery_registry);
-    if (sorted.some((mystery, index) => mystery.id !== outline.mystery_registry[index]?.id)) {
+  if (Array.isArray(outline[MYSTERY_REGISTRY_FIELD])) {
+    const sorted = sortMysteryArray(outline[MYSTERY_REGISTRY_FIELD]);
+    if (sorted.some((mystery, index) => mystery.id !== outline[MYSTERY_REGISTRY_FIELD][index]?.id)) {
       findings.push(finding('quality.outline.mystery.registry_order', 'low', 'mystery_registry is not sorted by chapter_id/id', 'Sort the registry or run doctor --fix.'));
     }
   }

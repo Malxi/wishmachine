@@ -1,13 +1,18 @@
 // checkCandidate / checkProject: collect profile findings, finalize (dedupe + sort),
-// summarize, score and apply --min-severity / --max-findings filters.
+// summarize, score and apply --min-severity / --max-findings / --ignore filters.
+// Missing or corrupt artifacts become structured findings (artifact.<target>.*)
+// instead of raw ENOENT/JSON errors, so agents can branch on ok/blocking/rule_id.
+import fs from 'node:fs';
 import path from 'node:path';
 import { readJson, safeSegment } from '../util.js';
+import { chapterFile, craftFile, outlineFile, recapFile, setupFile } from '../paths.js';
 import {
   CHECK_TARGETS,
   PROFILE_VALUES,
   SEVERITIES,
   SEVERITY_RANK,
   finalizeFindings,
+  finding,
   scoreFor,
   summarize,
 } from './finding.js';
@@ -16,6 +21,124 @@ import { validateOutline } from './outline-shape.js';
 import { qualityFindings } from './quality/index.js';
 import { customFindings } from './custom.js';
 import { threadConsistencyFindings } from './thread.js';
+
+const ARTIFACT_WRITE_HINTS = {
+  setup: 'book write setup --mode replace',
+  outline: 'book write outline --mode replace',
+  chapter: 'book write chapter --id <id> --mode replace',
+  craft: 'book write craft --target <kind> --mode replace',
+  recap: 'book write recap --id <id> --mode replace',
+};
+
+function artifactFile(project, target, id) {
+  if (target === 'setup') return setupFile(project.dir);
+  if (target === 'outline') return outlineFile(project.dir);
+  if (target === 'chapter') return chapterFile(project.dir, id);
+  if (target === 'craft') return craftFile(project.dir, id || 'character');
+  return recapFile(project.dir, id);
+}
+
+function relativeArtifact(project, file) {
+  return path.relative(project.dir, file).split(path.sep).join('/');
+}
+
+function artifactMissingFinding(project, target, id) {
+  const file = artifactFile(project, target, id);
+  return finding(
+    `artifact.${target}.missing`,
+    'critical',
+    `${relativeArtifact(project, file)} does not exist`,
+    id || target,
+    `create it with ${ARTIFACT_WRITE_HINTS[target]}, or run doctor to list missing artifacts`,
+  );
+}
+
+function artifactInvalidJsonFinding(project, target, id, error) {
+  const file = artifactFile(project, target, id);
+  return finding(
+    `artifact.${target}.invalid_json`,
+    'critical',
+    `${relativeArtifact(project, file)} is not valid JSON: ${error.message}`,
+    id || target,
+    'repair or replace the JSON file, then rerun check; doctor reports corrupt artifacts',
+  );
+}
+
+// Pre-flight the target artifact so every caller sees a finding instead of an
+// exception. chapter files are markdown, so only their presence is checked here.
+function readTargetArtifact(project, target, id) {
+  const file = artifactFile(project, target, id);
+  if (!fs.existsSync(file)) return { finding: artifactMissingFinding(project, target, id) };
+  if (target === 'chapter') return { file };
+  try {
+    return { file, value: readJson(file) };
+  } catch (error) {
+    return { finding: artifactInvalidJsonFinding(project, target, id, error) };
+  }
+}
+
+// Safety net for failures raised by dependencies the pre-flight cannot cover
+// (e.g. a corrupt craft/item.json while checking the outline).
+function unexpectedCheckFinding(target, id, error) {
+  const message = String(error?.message || error);
+  const invalidJson = /JSON|Unexpected token/i.test(message);
+  return finding(
+    `artifact.${target}.${invalidJson ? 'invalid_json' : 'unreadable'}`,
+    'critical',
+    `cannot check ${target}: ${message}`,
+    id || target,
+    'repair the referenced artifact and rerun check; doctor reports corrupt JSON artifacts',
+  );
+}
+
+function collectProjectFindings(project, context) {
+  const { profile, target, id, artifact, collected } = context;
+  if (target === 'setup') {
+    if (profile === 'schema' || profile === 'all') collected.push(...validateSetup(artifact.value));
+    if (profile === 'quality' || profile === 'all') {
+      collected.push(...qualityFindings(project, target, id, { setup: artifact.value }));
+    }
+  } else if (target === 'outline') {
+    if (profile === 'schema' || profile === 'all') collected.push(...validateOutline(artifact.value, project.config));
+    if (profile === 'quality' || profile === 'all') {
+      collected.push(...qualityFindings(project, target, id, { outline: artifact.value }));
+    }
+  } else if (target === 'chapter') {
+    collected.push(...qualityFindings(project, target, id));
+  } else if (target === 'craft') {
+    const kind = safeSegment(id || 'character', 'craft kind');
+    if (profile === 'schema' || profile === 'all') collected.push(...validateCraft(artifact.value, kind));
+    if (profile === 'quality' || profile === 'all') {
+      collected.push(...qualityFindings(project, target, kind, { craft: artifact.value }));
+    }
+  } else if (target === 'recap') {
+    if (profile === 'schema' || profile === 'all') collected.push(...validateRecap(artifact.value));
+    if (profile === 'quality' || profile === 'all') {
+      collected.push(...qualityFindings(project, target, id, { recap: artifact.value }));
+    }
+  }
+  if (profile === 'custom' || profile === 'all') collected.push(...customFindings(project, target, id));
+  if ((profile === 'schema' || profile === 'all') && ['setup', 'outline'].includes(target)) {
+    collected.push(...threadConsistencyFindings(project));
+  }
+}
+
+// --ignore/--ignore-file rules suppress matching findings from the result *and*
+// from ok/blocking/score, so a known-acceptable rule can no longer fail a run.
+function applyIgnoreFindings(findings, ignoreRules) {
+  const ignored = new Set(ignoreRules || []);
+  if (ignored.size === 0) return { active: findings, ignoredFindings: 0, ignoredRuleCounts: {} };
+  const active = [];
+  const ignoredRuleCounts = {};
+  for (const item of findings) {
+    if (!ignored.has(item.rule_id)) {
+      active.push(item);
+      continue;
+    }
+    ignoredRuleCounts[item.rule_id] = (ignoredRuleCounts[item.rule_id] || 0) + 1;
+  }
+  return { active, ignoredFindings: findings.length - active.length, ignoredRuleCounts };
+}
 
 function checkCandidate(project, options = {}) {
   const section = options.section;
@@ -74,38 +197,27 @@ function checkProject(project, options = {}) {
   if (['chapter', 'recap'].includes(target) && !id) {
     throw new Error(`${target} check requires --id`);
   }
-  const collected = [];
-  if (target === 'setup') {
-    const setup = readJson(path.join(project.dir, 'story', 'setup', 'story_setup.json'));
-    if (profile === 'schema' || profile === 'all') collected.push(...validateSetup(setup));
-    if (profile === 'quality' || profile === 'all') collected.push(...qualityFindings(project, target, id));
-  } else if (target === 'outline') {
-    const outline = readJson(path.join(project.dir, 'story', 'compose', 'outline.json'));
-    if (profile === 'schema' || profile === 'all') collected.push(...validateOutline(outline, project.config));
-    if (profile === 'quality' || profile === 'all') collected.push(...qualityFindings(project, target, id));
-  } else if (target === 'chapter') {
-    if (profile === 'schema') throw new Error('schema profile supports setup or outline (not chapter)');
-    collected.push(...qualityFindings(project, target, id));
-  } else if (target === 'craft') {
-    const kind = safeSegment(id || 'character', 'craft kind');
-    const craft = readJson(path.join(project.dir, 'story', 'craft', `${kind}.json`));
-    if (profile === 'schema' || profile === 'all') collected.push(...validateCraft(craft, kind));
-    if (profile === 'quality' || profile === 'all') collected.push(...qualityFindings(project, target, kind));
-  } else if (target === 'recap') {
-    const recap = readJson(path.join(project.dir, 'story', 'recaps', `${safeSegment(id, 'recap id')}.json`));
-    if (profile === 'schema' || profile === 'all') collected.push(...validateRecap(recap));
-    if (profile === 'quality' || profile === 'all') collected.push(...qualityFindings(project, target, id));
+  if (profile === 'schema' && target === 'chapter') {
+    throw new Error('schema profile supports setup or outline (not chapter)');
   }
-  if (profile === 'custom' || profile === 'all') collected.push(...customFindings(project, target, id));
-  if ((profile === 'schema' || profile === 'all') && ['setup', 'outline'].includes(target)) {
-    collected.push(...threadConsistencyFindings(project));
+  const collected = [];
+  const artifact = readTargetArtifact(project, target, id);
+  if (artifact.finding) {
+    collected.push(artifact.finding);
+  } else {
+    try {
+      collectProjectFindings(project, { profile, target, id, artifact, collected });
+    } catch (error) {
+      collected.push(unexpectedCheckFinding(target, id, error));
+    }
   }
   const all = finalizeFindings(collected);
-  const summary = summarize(all);
+  const { active, ignoredFindings, ignoredRuleCounts } = applyIgnoreFindings(all, options.ignoreRules);
+  const summary = { ...summarize(active), ignored_findings: ignoredFindings, ignored_rules: ignoredRuleCounts };
   const blocking = summary.critical > 0 || summary.high > 0;
   const score = scoreFor(summary);
-  const visible = min ? all.filter((item) => SEVERITY_RANK[item.severity] <= SEVERITY_RANK[min]) : all;
-  const filteredOut = all.length - visible.length;
+  const visible = min ? active.filter((item) => SEVERITY_RANK[item.severity] <= SEVERITY_RANK[min]) : active;
+  const filteredOut = active.length - visible.length;
   const findings = options.maxFindings > 0 && visible.length > options.maxFindings
     ? visible.slice(0, options.maxFindings)
     : visible;
@@ -117,6 +229,8 @@ function checkProject(project, options = {}) {
     id: id || undefined,
     score,
     summary,
+    ignored_findings: ignoredFindings,
+    ignored_rules: ignoredRuleCounts,
     filtered_out: filteredOut,
     findings,
     truncated: options.maxFindings > 0 && visible.length > findings.length,

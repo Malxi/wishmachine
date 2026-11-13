@@ -1,6 +1,7 @@
 // Security regressions: path containment for data-controlled ids/paths, export
 // containment, SSRF guards that must reject before any DNS/HTTP work, and
-// numeric validation of the project config.
+// numeric validation of the project config. Network assertions go through the
+// injectable source transport, never through a monkeypatched global.fetch.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -8,6 +9,7 @@ import path from 'node:path';
 import {
   loadProject, writeArtifact, readSection, exportManuscript, ingestSource,
 } from '../scripts/project.js';
+import { setSourceTransport } from '../scripts/sources/net.js';
 import { assertInside, safeSegment } from '../scripts/util.js';
 import { checkProject } from '../scripts/schema.js';
 import { fixtureSet, longChapter } from './fixtures.js';
@@ -77,9 +79,8 @@ test('export output outside the project is rejected unless forced', (t) => {
 });
 
 test('ingestSource blocks metadata, reserved and malformed URLs before fetching', async () => {
-  const original = global.fetch;
   let calls = 0;
-  global.fetch = () => { calls += 1; throw new Error('network must not be reached'); };
+  const restore = setSourceTransport(() => { calls += 1; throw new Error('network must not be reached'); });
   try {
     await assert.rejects(() => ingestSource(null, 'http://169.254.169.254/latest/meta-data/'), /not allowed \(link-local\)/);
     await assert.rejects(() => ingestSource(null, 'http://metadata.google.internal/computeMetadata/v1/'), /not allowed/);
@@ -89,15 +90,14 @@ test('ingestSource blocks metadata, reserved and malformed URLs before fetching'
     await assert.rejects(() => ingestSource(null, 'not a url'), /invalid source URL/);
     assert.equal(calls, 0);
   } finally {
-    global.fetch = original;
+    restore();
   }
 });
 
 test('ingestSource blocks loopback and private hosts outside the test harness', async () => {
-  const originalFetch = global.fetch;
   const originalContext = process.env.NODE_TEST_CONTEXT;
   let calls = 0;
-  global.fetch = () => { calls += 1; throw new Error('network must not be reached'); };
+  const restore = setSourceTransport(() => { calls += 1; throw new Error('network must not be reached'); });
   try {
     delete process.env.NODE_TEST_CONTEXT;
     for (const url of ['http://127.0.0.1:9/', 'http://10.1.2.3/', 'http://192.168.1.10/', 'http://172.16.0.1/', 'http://[::1]/']) {
@@ -105,22 +105,21 @@ test('ingestSource blocks loopback and private hosts outside the test harness', 
     }
     assert.equal(calls, 0);
   } finally {
-    global.fetch = originalFetch;
+    restore();
     if (originalContext === undefined) delete process.env.NODE_TEST_CONTEXT;
     else process.env.NODE_TEST_CONTEXT = originalContext;
   }
 });
 
 test('loopback is only allowed for the local test fixtures, never silently for products', async () => {
-  const originalFetch = global.fetch;
   let calls = 0;
-  global.fetch = () => { calls += 1; throw new Error('fixture fetch reached'); };
+  const restore = setSourceTransport(() => { calls += 1; throw new Error('fixture fetch reached'); });
   try {
     assert.ok(process.env.NODE_TEST_CONTEXT, 'node --test sets NODE_TEST_CONTEXT for fixture servers');
     await assert.rejects(() => ingestSource(null, 'http://127.0.0.1:9/'), /fixture fetch reached/);
     assert.equal(calls, 1);
   } finally {
-    global.fetch = originalFetch;
+    restore();
   }
 });
 

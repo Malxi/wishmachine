@@ -10,11 +10,12 @@ permissions:
 
 jobs:
   test:
-    name: node ${{ matrix.node-version }}
-    runs-on: ubuntu-latest
+    name: node ${{ matrix.node-version }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
+        os: [ubuntu-latest, windows-latest]
         node-version: [18, 20, 22]
     steps:
       - uses: actions/checkout@v4
@@ -27,3 +28,27 @@ jobs:
       - run: npm run lint
       - run: npm run lint:modules
       - run: npm run format:check
+
+  pack-smoke:
+    name: pack smoke on ubuntu-latest
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run pack
+      - name: Verify packaged layout
+        run: |
+          set -euo pipefail
+          version="$(node -p "require('./package.json').version")"
+          normal="dist/wishmachine-skill-v${version}.zip"
+          flat="dist/wishmachine-skill-flat-v${version}.zip"
+          test -f "$normal"
+          test -f "$flat"
+          unzip -l "$normal" | grep -q 'wishmachine/SKILL.md'
+          unzip -l "$normal" | grep -q 'wishmachine/scripts/package.json'
+          unzip -l "$flat" | grep -q '^ *[0-9].* SKILL.md$'
+          unzip -l "$flat" | grep -q '^ *[0-9].* scripts/package.json$'

@@ -54,6 +54,7 @@ function validateFlags(key, flags) {
 export {
   CHECK_TARGETS,
   COMMANDS,
+  COMMAND_FLAGS,
   FORMAT_VALUES,
   IDEAS_TYPES,
   MODE_VALUES,

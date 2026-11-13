@@ -4,9 +4,17 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {
-  ensureDir, nowIso, safeSegment, stamp, toPosixPath, writeJsonAtomic,
+  ensureDir, nowIso, safeSegment, stamp, toPosixPath, writeJsonAtomic, writeTextAtomic,
 } from './util.js';
 import { projectPath, researchFile } from './paths.js';
+
+// Saved idea draws are read back wholesale by `book read idea --view full`, so
+// their on-disk bytes are pure storage cost: write compact JSON (no indentation)
+// instead of the pretty form used for human-edited artifacts. The parsed value is
+// identical, and every public field is preserved.
+function writeCompactJsonAtomic(file, value) {
+  writeTextAtomic(file, JSON.stringify(value));
+}
 
 export function saveImportedIdeas(project, payload, options = {}) {
   const raw = Array.isArray(payload) ? { results: payload } : payload;
@@ -47,7 +55,7 @@ export function saveImportedIdeas(project, payload, options = {}) {
   const dir = projectPath(project.dir, 'ideas');
   ensureDir(dir);
   const file = path.join(dir, `${id}.json`);
-  writeJsonAtomic(file, draw);
+  writeCompactJsonAtomic(file, draw);
   return { ...draw, saved: { id, path: toPosixPath(path.relative(project.dir, file)) } };
 }
 
@@ -84,7 +92,7 @@ export function saveIdeaDraw(project, draw) {
   const dir = projectPath(project.dir, 'ideas');
   ensureDir(dir);
   const file = path.join(dir, `${id}.json`);
-  writeJsonAtomic(file, draw);
+  writeCompactJsonAtomic(file, draw);
   const bytes = fs.statSync(file).size;
   return {
     ok: true,

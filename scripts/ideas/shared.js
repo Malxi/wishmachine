@@ -10,7 +10,6 @@ const TYPES = [
 
 const COMPOSITE_IDEA_TYPES = new Set(['worldpack', 'plotpack', 'outlinepack']);
 const ALLOWED_CAST_ROLES = new Set(ROLE_NAMES);
-const SETUP_RESOURCE_CATEGORIES = new Set(['能源', '消耗品', '材料', '货币']);
 
 // Narrative event-type palette: varied enough that a volume never repeats one
 // event type more than three times (quality.outline.event_repetition).
@@ -70,7 +69,6 @@ export {
   COMPOSITE_IDEA_TYPES,
   EVENT_TYPE_PALETTE,
   PACE_BY_FUNCTION,
-  SETUP_RESOURCE_CATEGORIES,
   TYPES,
   addWarning,
   buildCastPromptMeta,

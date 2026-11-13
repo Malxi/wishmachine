@@ -75,6 +75,7 @@ function collectFiles() {
     'scripts/skill-manifest.js',
     'scripts/check-imports.js',
     'scripts/check-structure.js',
+    'scripts/release.js',
   ]);
   return files.filter((file) => !devOnly.has(file.relative));
 }

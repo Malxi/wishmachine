@@ -47,7 +47,7 @@ export function projectStatus(project) {
     chapters,
     orphan_chapters: chapterFiles.filter((id) => !knownChapterIds.has(id)),
     orphan_recaps: recapFiles.filter((id) => !knownChapterIds.has(id)),
-    next: nextStep(chapters, setup, outline),
+    next: nextStep(project, chapters, setup, outline),
   };
 }
 
@@ -60,15 +60,23 @@ function isChapterWritten(dir, id) {
   }
 }
 
-function nextStep(chapters, setup, outline) {
+// Commands in state.next are copy-pasteable for the current project: the real
+// root replaces the old `<project>` placeholder, quoted when it contains spaces.
+function shellArg(value) {
+  const text = String(value);
+  return /\s/.test(text) ? `"${text}"` : text;
+}
+
+function nextStep(project, chapters, setup, outline) {
   const cli = 'node scripts/wishmachine.js';
+  const dir = shellArg(project.dir);
   if (!setup) {
     return {
       stage: 'setup',
       targetId: 'setup',
       reason: '故事设定尚未生成。',
-      command: `${cli} book write setup --dir <project> --mode replace`,
-      fast_path: `${cli} ideas draw --type outlinepack --save --dir <project>`,
+      command: `${cli} book write setup --dir ${dir} --mode replace`,
+      fast_path: `${cli} ideas draw --type outlinepack --save --dir ${dir}`,
     };
   }
   if (!outline) {
@@ -76,8 +84,8 @@ function nextStep(chapters, setup, outline) {
       stage: 'outline',
       targetId: 'outline',
       reason: '大纲尚未生成。',
-      command: `${cli} book write outline --dir <project> --mode replace`,
-      fast_path: `${cli} ideas draw --type outlinepack --save --dir <project>`,
+      command: `${cli} book write outline --dir ${dir} --mode replace`,
+      fast_path: `${cli} ideas draw --type outlinepack --save --dir ${dir}`,
     };
   }
   const unwritten = chapters.find((chapter) => !chapter.written);
@@ -86,14 +94,14 @@ function nextStep(chapters, setup, outline) {
       stage: 'write',
       targetId: `chapter:${unwritten.id}`,
       reason: '仍有章节未写正文。',
-      command: `${cli} book write chapter --dir <project> --id ${unwritten.id} --mode replace`,
+      command: `${cli} book write chapter --dir ${dir} --id ${shellArg(unwritten.id)} --mode replace`,
     };
   }
   return {
     stage: 'complete',
     targetId: '',
     reason: '全部章节已写正文。',
-    command: `${cli} export --dir <project> --format book`,
+    command: `${cli} export --dir ${dir} --format book`,
   };
 }
 

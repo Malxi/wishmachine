@@ -1,4 +1,5 @@
 // Single-volume outlinepack building: config, chapter loop, mysteries, records.
+import { CLIMAX_BEAT_FUNCTIONS, MYSTERY_LIST_KEYS } from '../contracts.js';
 import { collectMysteryRegistry } from '../registry.js';
 import { PACE_BY_FUNCTION, clampNumber } from './shared.js';
 import { buildChapterEvents, buildScenes, collectCastInfo, makeMystery, pickBeat, plantChapterMystery } from './scenes.js';
@@ -39,10 +40,8 @@ function planChapterObstacle({ plot, beat, config, entryFromPrevious, entrySumma
 
 function createChapterMysteries(pendingMysteries) {
   return {
+    ...Object.fromEntries(MYSTERY_LIST_KEYS.map((key) => [key, []])),
     carried: pendingMysteries.slice(0, 3).map((item) => ({ ...item, status: 'open' })),
-    planted: [],
-    resolved: [],
-    dropped: [],
   };
 }
 
@@ -79,7 +78,7 @@ function plantChapterMysteries({ plot, config, beat, chapterId, mysteries, pendi
       planted_in: chapterId,
     }), chapterId);
   }
-  if (beat.function === 'climax' || beat.function === 'resolution') {
+  if (CLIMAX_BEAT_FUNCTIONS.includes(beat.function)) {
     // Plant the core mystery in this very chapter before resolving it: the
     // validator requires every resolved mystery to be planted first.
     const core = makeMystery({

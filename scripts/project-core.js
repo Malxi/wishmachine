@@ -8,6 +8,7 @@ import {
   ensureDir, nowIso, positiveInt, readJson, resolveProjectDir, writeJsonAtomic, writeTextAtomic,
 } from './util.js';
 import { checkProject } from './schema.js';
+import { finding } from './rules/finding.js';
 import {
   configFile, outlineFile, outlineMarkdownFile, projectPath, renderOutlineMarkdown,
   renderSetupMarkdown, setupFile, setupMarkdownFile,
@@ -98,6 +99,7 @@ function auditTarget(project, target, id, options) {
       id,
       minSeverity: options.minSeverity,
       maxFindings: options.maxFindings,
+      ignoreRules: options.ignoreRules,
     });
     return {
       target,
@@ -109,20 +111,23 @@ function auditTarget(project, target, id, options) {
       findings: result.findings,
     };
   } catch (error) {
+    // Unexpected check failures still surface as normal findings so audit output
+    // keeps the {id, rule_id, severity, target_id, issue, suggestion} shape.
+    const item = finding(
+      'quality.audit.error',
+      'critical',
+      `${target} audit failed: ${error.message}`,
+      id || target,
+      'run doctor, repair the artifact and rerun audit',
+    );
     return {
       target,
       id: id || undefined,
       ok: false,
       blocking: true,
       score: 0,
-      summary: { total: 1, critical: 1, high: 0, medium: 0, low: 0 },
-      findings: [{
-        rule_id: 'audit.error',
-        severity: 'critical',
-        target_id: id || target,
-        issue: error.message,
-        suggestion: '',
-      }],
+      summary: { total: 1, critical: 1, high: 0, medium: 0, low: 0, ignored_findings: 0, ignored_rules: {} },
+      findings: [item],
     };
   }
 }
@@ -131,6 +136,16 @@ function writtenChapterIds(project) {
   const dir = projectPath(project.dir, 'chapters');
   if (!fs.existsSync(dir)) return [];
   return fs.readdirSync(dir).filter((name) => name.endsWith('.md')).map((name) => name.slice(0, -3)).sort();
+}
+
+function statusChapters(project) {
+  try {
+    return projectStatus(project).chapters;
+  } catch {
+    // A corrupt outline must not abort audit before the artifact finding exists;
+    // fall back to the chapter files that are actually on disk.
+    return [];
+  }
 }
 
 function collectAuditTargets(project, options) {
@@ -144,19 +159,24 @@ function collectAuditTargets(project, options) {
   for (const name of fs.existsSync(projectPath(project.dir, 'recaps')) ? fs.readdirSync(projectPath(project.dir, 'recaps')).filter((item) => item.endsWith('.json')).sort() : []) {
     add('recap', name.slice(0, -5));
   }
-  const status = projectStatus(project);
-  const known = new Set(status.chapters.filter((chapter) => chapter.written).map((chapter) => chapter.id));
+  const chapters = statusChapters(project);
+  const known = new Set(chapters.filter((chapter) => chapter.written).map((chapter) => chapter.id));
   for (const id of writtenChapterIds(project)) {
     if (!known.has(id)) add('chapter', id);
   }
-  for (const chapter of status.chapters.filter((item) => item.written)) add('chapter', chapter.id);
+  for (const chapter of chapters.filter((item) => item.written)) add('chapter', chapter.id);
   return targets;
 }
 
 function summarizeAudit(project, targets, view) {
-  const summary = { total: 0, critical: 0, high: 0, medium: 0, low: 0 };
+  const summary = { total: 0, critical: 0, high: 0, medium: 0, low: 0, ignored_findings: 0, ignored_rules: {} };
   for (const target of targets) {
-    for (const key of Object.keys(summary)) summary[key] += target.summary[key] || 0;
+    for (const key of ['total', 'critical', 'high', 'medium', 'low', 'ignored_findings']) {
+      summary[key] += target.summary[key] || 0;
+    }
+    for (const [rule, count] of Object.entries(target.summary.ignored_rules || {})) {
+      summary.ignored_rules[rule] = (summary.ignored_rules[rule] || 0) + count;
+    }
   }
   const blocking = targets.some((target) => target.blocking);
   const allFindings = targets.flatMap((target) => target.findings.map((item) => ({
@@ -182,6 +202,7 @@ export function auditProject(project, options = {}) {
   const targets = collectAuditTargets(project, {
     maxFindings: options.maxFindings || 0,
     minSeverity: options.minSeverity,
+    ignoreRules: options.ignoreRules,
   });
   return summarizeAudit(project, targets, view);
 }

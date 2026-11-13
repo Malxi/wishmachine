@@ -38,6 +38,9 @@ test('CLI init, status and ideas', (t) => {
   assert.equal(state.state.setup.present, false);
   const bookState = JSON.parse(run(['state', '--dir', dir]));
   assert.equal(bookState.state.project.root, dir);
+  assert.ok(bookState.state.next.command.includes(dir));
+  assert.ok(bookState.state.next.fast_path.includes(dir));
+  assert.ok(!bookState.state.next.command.includes('<project>'));
   const audit = JSON.parse(run(['audit', '--dir', dir, '--max-findings', '5']));
   assert.equal(audit.ok, true);
   assert.equal(Array.isArray(audit.targets), true);

@@ -1,0 +1,71 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Publish GitHub Release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run lint
+      - run: npm run lint:modules
+      - run: npm run format:check
+      - run: npm run pack
+      - name: Verify tag matches package.json version
+        run: |
+          set -euo pipefail
+          expected="v$(node -p "require('./package.json').version")"
+          if [ "${GITHUB_REF_NAME}" != "$expected" ]; then
+            echo "tag ${GITHUB_REF_NAME} does not match package version ${expected}" >&2
+            exit 1
+          fi
+      - name: Create or reuse the GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME}"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "release $tag already exists; reusing it"
+          else
+            gh release create "$tag" --title "wishmachine $tag" --generate-notes
+          fi
+      - name: Upload the two skill zips
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          version="$(node -p "require('./package.json').version")"
+          normal="dist/wishmachine-skill-v${version}.zip"
+          flat="dist/wishmachine-skill-flat-v${version}.zip"
+          test -f "$normal"
+          test -f "$flat"
+          gh release upload "${GITHUB_REF_NAME}" "$normal" "$flat" --clobber
+      - name: Verify release assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          version="$(node -p "require('./package.json').version")"
+          assets="$(gh release view "${GITHUB_REF_NAME}" --json assets --jq '.assets[].name')"
+          grep -q "wishmachine-skill-v${version}.zip" <<< "$assets"
+          grep -q "wishmachine-skill-flat-v${version}.zip" <<< "$assets"
+          echo "$assets"

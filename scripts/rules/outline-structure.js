@@ -1,5 +1,11 @@
 // Per-part/volume/chapter structural rules for the outline tree: required
 // fields, duplicate ids, nesting and the per-chapter checks.
+import {
+  OUTLINE_CHAPTER_REQUIRED_FIELDS,
+  OUTLINE_PART_REQUIRED_FIELDS,
+  OUTLINE_VOLUME_REQUIRED_FIELDS,
+  UNSAFE_ID_PATTERN,
+} from '../contracts.js';
 import { finding } from './finding.js';
 import {
   collectChapterMysteries, validateChapterCollections, validateChapterEvents,
@@ -19,7 +25,7 @@ function validateOutlinePart(ctx, part, partIndex) {
     ctx.findings.push(finding('schema.outline.part', 'critical', `${partId} must be an object`, partId));
     return;
   }
-  for (const key of ['id', 'title', 'summary']) {
+  for (const key of OUTLINE_PART_REQUIRED_FIELDS) {
     if (typeof part[key] !== 'string' || !part[key].trim()) {
       ctx.findings.push(finding(`schema.outline.part.${key}`, 'high', `${partId}.${key} must be a non-empty string`, partId));
     }
@@ -44,7 +50,7 @@ function validateOutlineVolume(ctx, volume, position) {
     ctx.findings.push(finding('schema.outline.volume', 'critical', `${volumeId} must be an object`, volumeId));
     return;
   }
-  for (const key of ['id', 'title', 'summary']) {
+  for (const key of OUTLINE_VOLUME_REQUIRED_FIELDS) {
     if (typeof volume[key] !== 'string' || !volume[key].trim()) {
       ctx.findings.push(finding(`schema.outline.volume.${key}`, 'high', `${volumeId}.${key} must be a non-empty string`, volumeId));
     }
@@ -75,12 +81,12 @@ function validateOutlineChapter(ctx, chapter, position) {
   ctx.chapterIds.push(chapter.id);
   ctx.chaptersById.set(chapter.id, chapter);
   collectChapterMysteries(ctx, chapter);
-  for (const key of ['id', 'title', 'summary', 'conflict', 'pacing']) {
+  for (const key of OUTLINE_CHAPTER_REQUIRED_FIELDS) {
     if (typeof chapter[key] !== 'string' || !chapter[key].trim()) {
       ctx.findings.push(finding(`schema.outline.chapter.${key}`, 'high', `${chapterId}.${key} must be a non-empty string`, chapterId));
     }
   }
-  if (typeof chapter.id === 'string' && /[\\/]|^\.\.?$/.test(chapter.id)) {
+  if (typeof chapter.id === 'string' && UNSAFE_ID_PATTERN.test(chapter.id)) {
     ctx.findings.push(finding('schema.outline.chapter.id_format', 'high', `${chapterId} id must not contain path separators or be . or ..`, chapter.id));
   }
   if (ctx.threadIds.size > 0 && chapter.thread_id !== undefined && !ctx.threadIds.has(chapter.thread_id)) {

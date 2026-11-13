@@ -2,6 +2,7 @@
 import { auditProject, doctorProject, exportManuscript, loadProject, projectState, refreshProject } from '../project.js';
 import { checkProject } from '../schema.js';
 import { EXIT_OK, boolFlag, checkExit, enumFlag, fail, maxFindingsFlag, print, stringFlag } from './args.js';
+import { ignoreRulesFlag } from './ignore.js';
 import { CHECK_TARGETS, FORMAT_VALUES, PROFILE_VALUES, REFRESH_TARGETS, SEVERITY_VALUES } from './spec.js';
 
 function runState(flags) {
@@ -15,8 +16,9 @@ function runAudit(flags) {
   const view = enumFlag(flags, 'view', ['brief', 'full'], 'brief');
   const minSeverity = enumFlag(flags, 'min-severity', SEVERITY_VALUES, '');
   const maxFindings = maxFindingsFlag(flags);
+  const ignoreRules = ignoreRulesFlag(flags);
   const project = loadProject(stringFlag(flags, 'dir', ''));
-  const result = auditProject(project, { view, minSeverity, maxFindings });
+  const result = auditProject(project, { view, minSeverity, maxFindings, ignoreRules });
   print(result);
   return boolFlag(flags, 'no-strict') ? EXIT_OK : checkExit(result);
 }
@@ -52,6 +54,7 @@ function runCheck(flags) {
   const id = stringFlag(flags, 'id', '');
   const minSeverity = enumFlag(flags, 'min-severity', SEVERITY_VALUES, '');
   const maxFindings = maxFindingsFlag(flags);
+  const ignoreRules = ignoreRulesFlag(flags);
   if (['chapter', 'recap'].includes(target) && !id) {
     fail(`check --target ${target} requires --id`, {
       code: 'check.needs_id',
@@ -60,7 +63,7 @@ function runCheck(flags) {
     });
   }
   const project = loadProject(stringFlag(flags, 'dir', ''));
-  const result = checkProject(project, { profile, target, id, minSeverity, maxFindings });
+  const result = checkProject(project, { profile, target, id, minSeverity, maxFindings, ignoreRules });
   print(result);
   return boolFlag(flags, 'no-strict') ? EXIT_OK : checkExit(result);
 }
