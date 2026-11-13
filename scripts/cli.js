@@ -6,7 +6,7 @@ import { readJson } from './util.js';
 import { drawIdeas, ideasTypes, validateIdeaDraw } from './ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference, listSkills, readSkill } from './guides.js';
 
-const VERSION = '0.2.64';
+const VERSION = '0.2.65';
 const BOOLEAN_FLAGS = new Set(['apply', 'json', 'help', 'h', 'dry-run', 'force', 'ingest']);
 const COMMANDS = new Set(['book', 'check', 'ideas', 'gen', 'state', 'audit', 'refresh', 'export', 'doctor', 'version', 'help']);
 
@@ -117,7 +117,7 @@ Commands:
   ideas import --file <cards.json> [--dir <project>] [--type <type>] [--source <source>]
   ideas discover [--topic history|myth|novel] [--limit 3] [--dir <project>]
   ideas search --query <text> [--provider wikipedia|gutenberg] [--limit 3] [--ingest] [--dir <project>]
-  ideas validate --id <saved-outlinepack-id> | --all [--strict] [--min-severity low|medium|high|critical] [--max-findings 0] [--output <file>] [--dir <project>]
+  ideas validate --id <saved-outlinepack-id> | --all [--strict] [--min-severity low|medium|high|critical] [--max-findings 0] [--output <file|->] [--dir <project>]
   ideas types
   gen workflow list|read <name>
   gen skill list|read <name>
@@ -364,12 +364,17 @@ async function runIdeas(args, flags) {
     const maxFindings = Math.max(0, intFlag(flags, 'max-findings', 0));
     const output = stringFlag(flags, 'output', '');
     const emit = (payload, code) => {
-      if (output) {
+      if (output && output !== '-') {
         const file = path.resolve(output);
         fs.mkdirSync(path.dirname(file), { recursive: true });
         const temp = `${file}.tmp-${process.pid}`;
-        fs.writeFileSync(temp, `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
-        fs.renameSync(temp, file);
+        try {
+          fs.writeFileSync(temp, `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
+          fs.renameSync(temp, file);
+        } catch (error) {
+          fs.rmSync(temp, { force: true });
+          throw error;
+        }
         print({ ok: payload.ok, action: payload.action, output: file, count: payload.count, total_findings: payload.total_findings });
       } else {
         print(payload);
