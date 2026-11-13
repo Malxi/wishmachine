@@ -1664,6 +1664,10 @@ export function drawIdeas(options = {}) {
       return buildWorldpack(def, packIndex, seed, cast, deck, options);
     });
     castMeta.archetypes = [...new Set(results.flatMap((item) => item.cast.map((character) => character.archetype)))];
+    castMeta.archetype_roles = results[0]?.cast.reduce((roles, character) => {
+      roles[character.archetype] = character.role_tags?.[0] || 'support';
+      return roles;
+    }, {}) || {};
   } else if (type === 'plotpack') {
     const plots = [];
     for (let index = 0; index < count; index += 1) {
