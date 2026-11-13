@@ -1583,6 +1583,7 @@ export function drawIdeas(options = {}) {
     seed = Math.floor(Math.random() * 2147483646) + 1;
   }
   const rng = mulberry32(hashSeed(`${seed}:${type}:${options.genre || ''}`));
+  const warnings = [];
   const deck = selectDeck(options.genre) || DEFAULT_DECK;
   const premises = deck.premises;
   const resources = deck.resources;
@@ -1604,7 +1605,10 @@ export function drawIdeas(options = {}) {
     const castRoles = explicitRoles.length
       ? explicitRoles.slice(0, castCount)
       : Array.from({ length: castCount }, (_, index) => (index === 0 ? 'protagonist' : index === 1 ? 'antagonist' : 'support'));
-    if (!castRoles.includes('protagonist')) castRoles[0] = 'protagonist';
+    if (!castRoles.includes('protagonist')) {
+      castRoles[0] = 'protagonist';
+      warnings.push('cast-roles had no protagonist; the first role was changed to protagonist');
+    }
     results = selected.map((def, packIndex) => {
       const cast = namecards(rng, seed + packIndex, castCount, castRoles, deck.name, Math.max(40, Math.min(500, Number(options.characterPromptChars) || 160)));
       return buildWorldpack(def, packIndex, seed, cast, deck, options);
@@ -1725,6 +1729,7 @@ export function drawIdeas(options = {}) {
       deck: deck.name,
       mode: type,
       seed,
+      warnings,
       replay_command: `wishmachine ideas draw --type ${type}${options.genre ? ` --genre ${options.genre}` : ''} --seed ${seed} --count ${count}`,
       usage: [
         'Use names and traits as reference, not as fixed canon.',

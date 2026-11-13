@@ -137,6 +137,7 @@ logs/
 - `book write outline --from-idea <id>` 把 outlinepack 的 draft_outline 送入正常候选检查
 - `book write setup --from-idea <id>` 把 outlinepack 的 setup_draft 送入正常候选检查
 - `ideas` 题材牌堆：科幻默认 / 修仙 / 悬疑 / 都市 / 历史 / 言情（4 packs）
+- cast-roles 缺 protagonist 时自动补第一个角色，并写入 meta.warnings
 - 角色 prompt 带 prompt_meta（max_chars / raw_chars / truncated）
 - `--character-prompt-chars` 控制角色 prompt 长度（40–500）
 - prompt 截断优先在逗号/斜杠处断开，避免切碎词组
