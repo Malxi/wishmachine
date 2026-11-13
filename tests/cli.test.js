@@ -4,8 +4,10 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
+import { fixtureSet } from './fixtures.js';
 
 const entry = path.resolve('scripts/wishmachine.js');
+const { tempDir } = fixtureSet('wishmachine-cli-');
 
 function run(args, options = {}) {
   return execFileSync(process.execPath, [entry, ...args], {
@@ -24,8 +26,8 @@ test('CLI version and guides', () => {
   assert.ok(workflow.results[0].content.length > 0);
 });
 
-test('CLI init, status and ideas', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'wishmachine-cli-'));
+test('CLI init, status and ideas', (t) => {
+  const dir = tempDir(t);
   const init = JSON.parse(run(['book', 'init', 'CLI 测试', '--dir', dir, '--parts', '1', '--volumes', '2', '--chapter', '2']));
   assert.equal(init.ok, true);
   const status = JSON.parse(run(['book', 'status', '--dir', dir, '--json']));
@@ -34,7 +36,7 @@ test('CLI init, status and ideas', () => {
   assert.equal(state.ok, true);
   assert.equal(state.state.project.name, 'CLI 测试');
   assert.equal(state.state.setup.present, false);
-  const bookState = JSON.parse(run(['book', 'state', '--dir', dir]));
+  const bookState = JSON.parse(run(['state', '--dir', dir]));
   assert.equal(bookState.state.project.root, dir);
   const audit = JSON.parse(run(['audit', '--dir', dir, '--max-findings', '5']));
   assert.equal(audit.ok, true);
@@ -52,11 +54,14 @@ test('CLI init, status and ideas', () => {
   assert.equal(ideas.results.length, 2);
   const saved = JSON.parse(run(['ideas', 'draw', '--type', 'outlinepack', '--genre', '悬疑', '--chapters', '10', '--seed', '42', '--dir', dir, '--save']));
   assert.equal(saved.ok, true);
+  assert.equal(saved.count, 1);
+  assert.ok(saved.saved.id);
+  assert.equal(JSON.stringify(saved).length < 4000, true);
   const validated = JSON.parse(run(['ideas', 'validate', '--all', '--dir', dir]));
   assert.equal(validated.action, 'validate-all');
   assert.ok(validated.count >= 1);
   assert.ok(validated.results.every((item) => item.ok));
-  assert.throws(() => run(['ideas', 'validate', '--all', '--dir', dir, '--min-severity', 'nope']), /unknown min-severity/);
+  assert.throws(() => run(['ideas', 'validate', '--all', '--dir', dir, '--min-severity', 'nope']), /invalid value for --min-severity/);
   const outputFile = path.join(dir, 'nested', 'validation.json');
   const written = JSON.parse(run(['ideas', 'validate', '--all', '--dir', dir, '--output', outputFile]));
   assert.equal(written.output, outputFile);

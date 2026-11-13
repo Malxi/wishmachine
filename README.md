@@ -1,203 +1,90 @@
 # 小说许愿机 Wishmachine
 
-小说许愿机是一台把你的奇思妙想变成小说的工具，包含完整的小说创作流程、确定性检查、丰富的创作参考和工作流指导。
-
-- 保留：book manage / ideas / check / skills / references / workflows
-- 去掉：所有内置 AI 生成、LLM 调用、RPG 模拟
-- 运行方式：纯 Node.js 源码，无二进制、无运行时下载
+把奇思妙想变成小说：纯 Node.js CLI（>= 18，无运行时依赖）。它不调用模型、不生成正文，只负责
+**项目状态、确定性检查、参考抽卡和原子写入**；正文与创作判断由使用它的 AI 或作者完成。
 
 ## 快速开始
 
-```bash
-node scripts/wishmachine.js version
-node scripts/wishmachine.js book init "我的书" --dir my-book --parts 1 --volumes 3 --chapter 5 --chapter-chars 3000 --min-chars 1800
-node scripts/wishmachine.js state --dir my-book --view brief
-node scripts/wishmachine.js audit --dir my-book --view brief
-node scripts/wishmachine.js book status --dir my-book --json
-node scripts/wishmachine.js ideas draw --type namecard --genre 科幻 --count 12 --seed 42
-node scripts/wishmachine.js check --dir my-book --profile all --target outline
-node scripts/wishmachine.js refresh --dir my-book
-node scripts/wishmachine.js gen workflow read outline
-```
-
-也可以：
+从空目录到一份合法的 setup + outline（把 `<saved.id>` 换成命令返回的 `saved.id`）：
 
 ```bash
-npm install -g .
-wishmachine version
+WM="node scripts/wishmachine.js"
+$WM book init "我的书" --dir my-book --parts 1 --volumes 1 --chapter 3 --genre 科幻
+$WM ideas draw --type outlinepack --genre 科幻 --volumes 1 --chapters-per-volume 3 --count 1 --seed 7 --dir my-book --save
+$WM book write setup   --dir my-book --from-idea <saved.id> --mode replace --apply
+$WM book write outline --dir my-book --from-idea <saved.id> --mode replace --apply
+$WM state --dir my-book --view brief
 ```
 
-## 目录
+之后 `state` 的 `state.next.command` 给出下一步。完整最小路径（含写一章 + recap、手写
+setup/outline、写入风险）见 [SKILL.md](SKILL.md)。
 
-```text
-SKILL.md                    WorkBuddy Skill 入口
-scripts/wishmachine.js      CLI 入口
-scripts/                全部源码
-references/                 schema、检查说明、workflow
-tests/                      node:test
-```
+## 安装
+
+需要 Node.js >= 18：`npm install -g .` 后可直接用 `wishmachine <command>`；或在仓库根目录
+使用 `node scripts/wishmachine.js`。
 
 ## 项目格式
 
-兼容 Novelgen 的基本项目布局：
+项目是一个目录：`novel.json` 是配置，其余 JSON/Markdown 是 artifact。
 
 ```text
-novel.json
-story/setup/
-story/compose/
-story/craft/
-story/reviews/
-chapters/
-drafts/
-logs/
+my-book/
+  novel.json                项目配置（structure、chapter_config）
+  story/setup/story_setup.json
+  story/compose/outline.json
+  story/craft/*.json
+  story/recaps/<chapter-id>.json
+  story/ideas/*.json        抽卡结果（--save）
+  chapters/<chapter-id>.md
+  drafts/                   export 输出
+  logs/                     registry 日志与备份
 ```
 
-`novel.json` 的 `structure` 使用：
+`structure` 形如 `{"target_parts":1,"target_volumes":3,"target_chapters":5}`，其中
+`target_chapters` 是**每卷**章数。
 
-```json
-{"target_parts":1,"target_volumes":3,"target_chapters":5}
+## 命令一览
+
+| 组 | 命令 | 用途 |
+|---|---|---|
+| 项目 | `book init`、`book status`、`state` | 初始化、状态快照与下一步 |
+| 阅读/写入 | `book read`、`book write` | 读 artifact；dry-run → `--apply` 写 |
+| 检查 | `check`、`audit`、`doctor` | 确定性检查、全项目审计、目录/配置修复 |
+| 抽卡 | `ideas draw/import/search/discover/validate/types` | 确定性参考卡 |
+| 导出 | `export`、`refresh` | 导出正文、刷新 md 伴生文件 |
+| 指导 | `gen <workflow\|reference\|skill> <list\|read>` | 读 references 与 SKILL.md |
+| 维护 | `book registry …` | registry 状态/清理/日志/备份/undo/redo |
+
+完整参数与输出契约：`node scripts/wishmachine.js help`。
+
+## 输出与退出码
+
+- 成功：stdout 是 JSON；`version`、`help`、不带 `--json` 的 `book status` 是纯文本。
+- 失败：stdout 是 `{"ok":false,"error":{"code","message","hint?","fix_command?"}}`，stderr 一行摘要。
+- 退出码：`0` 成功 · `1` 用法/系统错误 · `2` 有 blocking findings（`check`/`audit`/`doctor`/
+  `book write`）。`--no-strict` 可让 `check`/`audit`/`doctor` 强制退出 0。写操作默认
+  dry-run，`--apply` 才落盘。
+
+## 边界
+
+- 不生成 setup/outline/正文，不调用 LLM，不做 RPG 模拟、MCP server、二进制下载器。
+- 只移植确定性的项目管理、检查与参考抽卡；编辑质量由人或主 AI 判断，`ideas search/discover` 需要外网。
+
+## 文档
+
+[SKILL.md](SKILL.md) 是 AI 入口（三条最小路径、写入风险、检查、抽卡约定）。
+[references/stage-contracts.md](references/stage-contracts.md) 是 artifact 与输出契约总览；
+`setup-schema.md`、`outline-schema.md` 是字段形状；`book-write.md` 是 write 细节；
+`check-profiles.md` 是 profile/findings；`workflow-*.md` 是流程；
+[references/review-checklist.md](references/review-checklist.md) 是编辑性审查。
+
+## 开发
+
+```bash
+npm test        # node:test（node --test）
+npm run lint    # eslint（需先 npm install）
+npm run pack    # 构建 dist/wishmachine-skill-{,-flat-}v<version>.zip
 ```
 
-旧项目的顶层 `target_parts` / `target_volumes` / `target_chapters` 也会被读取并规范化。
-
-## 范围
-
-这不是完整 Novelgen。当前只移植确定性的项目管理和检查：
-
-- `book init/status/state/read/write/refresh/audit`
-- `check quality/schema/custom`
-- `state` / `status` 会报告不在 outline 中的 orphan chapters 和 orphan recaps
-- `audit` 全项目审计，包括不在 outline 中的章节文件
-- `refresh` 重建 setup/outline markdown
-- `export` 将已写章节导出为带目录、人物和规则的阅读版（`--format plain` 输出纯章节拼接）
-- `doctor` 检查项目目录、配置、setup/outline/craft/recap JSON 有效性、缺失 JSON 和 orphan 文件；`--fix` 会创建缺失目录并写入规范化 structure
-- `ideas namecard/premise/resource/equipment/scenario/provocation/law/event/engine/storyline/location/faction/motif/worldpack/plotpack/outlinepack`
-- `worldpack` cast 按题材和 protagonist / antagonist / support 选择原型
-- `worldpack` cast 关系图：protagonist / antagonist / support 之间带 `opposes`、`supports`、`drives`、`blocks` 等边
-- `worldpack` 输出 `prompt_pack`（positive/negative/style/keywords）和可选 `motif`
-- `plotpack` 把 worldpack、cast 关系、六个章节 beat（setup/inciting/midpoint/crisis/climax/resolution）打包
-- `outlinepack --chapters --scenes --target-chars` 展开为带 scenes、字数目标和 draft_outline 的章节骨架
-- `outlinepack --volumes --chapters-per-volume` 全局分布 6 个 beat，并生成多卷 opening/closing、mysteries、timeline
-- thread resolved_mysteries / abandoned_mysteries 去重后按 chapter/id 排序
-- thread resolved_mysteries / abandoned_mysteries 也按 chapter/id 排序
-- `doctor --fix` 重排 setup/outline 的 thread/mystery registry
-- setup mystery_registry 与 thread_registry 也有排序校验
-- mystery_registry 使用自然章序排序（C2 在 C10 前）
-- check 校验 mystery_registry 排序，doctor 重建后保持稳定顺序
-- registry log 返回 operation state：applied / undone
-- `book registry redo` 重放 undo 的 after snapshot
-- prune 保护被 undo 引用的 backup；restore --dry-run 返回 changed keys
-- `book registry check-backups` 批量校验所有 snapshot checksum
-- snapshot manifest 校验和；tampered backup 拒绝 restore
-- `book registry restore --dry-run` 预览恢复，不写入
-- `book registry backup` / `restore --backup` 手动快照与恢复
-- `book registry undo --operation <id>` 按操作 id 回滚
-- `book registry backups [--keep 10] [--prune]` 查看/清理 registry backup
-- `book registry undo` 从最近 backup 恢复，abandon/clean 自动备份
-- `book registry log --action --since` 过滤 registry 操作日志
-- `book registry log --limit 20` 查看 registry 操作日志
-- registry 操作写入 `logs/registry-operations.jsonl`，`book registry` 返回最近 5 条
-- `book registry abandon --mystery <id> --dry-run` 预览目标章节/线程，不写入
-- `book registry abandon --mystery <id>` 手工标记 mystery 为 dropped 并记录 reason
-- `book registry clean` 重建 registry 后同步 thread status
-- `book registry clean --dry-run` 预览 removed ids / removedLinks，不写入
-- `book registry clean --dry-run` 预览清理前后数量，不写入
-- `book registry clean` 从章节重建 mystery_registry 并清理 stale 条目
-- `book registry` 查看 registry 版本、数量、状态与 drift
-- registry version 升级到 v2，doctor 自动迁移旧版本
-- mystery_registry/thread_registry 带版本号，并按 chapter/id 稳定排序
-- `doctor --fix` 清理 stale mystery_registry；check 报 resolved/dropped 未挂到 thread
-- check 报 stale mystery、final status 不一致、resolved mystery 未挂到 thread
-- mystery_registry status 必须出现在章节 status 集合中；dropped 带 reason
-- `doctor --fix` 重建缺失/过期的 mystery_registry
-- mystery_registry 去重保存 mystery 对象，并进入 setup/outline
-- check 校验 thread.resolved_mysteries / abandoned_mysteries 是否指向有效 mystery
-- thread_registry 带 resolved_chapters、resolved_mysteries、abandoned_history、abandoned_mysteries
-- thread_registry 带 resolved_in、resolved_chapters、abandoned_history
-- `doctor --fix` 双向修复 thread status：active->resolved，resolved 无回收->active
-- `doctor --fix` 根据 resolved mystery 修复 thread status，并补齐 abandoned_threads
-- check 校验 resolved thread 是否有对应 resolved mystery，以及 abandoned thread 是否登记
-- `doctor --fix` 按章节文本匹配 thread_id，并保留 outline 的 resolved 状态
-- `doctor --fix` 补齐 thread_registry、chapter thread_id，并修复 setup/outline drift
-- `doctor --fix` 为旧项目补齐 thread_registry 与 storyline thread_id
-- `check` 检查 setup/outline thread registry 漂移与 unknown chapter thread id
-- thread_registry 持久化到 setup/outline
-- `ideas validate --id` 检查 thread 状态、resolved_in 章节与 beat 一致性
-- `outlinepack.thread_registry` 与 setup_draft.storylines.thread_id 对齐
-- `outlinepack` mysteries 带 thread_id/related_cast_ids，被裁剪的进入 abandoned_threads
-- `outlinepack` scene mystery 可以进入 chapter pending
-- `outlinepack` pending mysteries 跨章/跨卷传递，在 climax/resolution 回收
-- `outlinepack` entry_from_previous 会进入 chapter.obstacle/conflict/mysteries.carried
-- `outlinepack` entry_from_previous 会进入 chapter.conflict、chapter_payoff.pressure 和上一章 hook
-- `outlinepack` 章间通过 entry_from_previous / exit_consequence 传递，跨卷继续
-- `outlinepack` scene 之间通过 consequence -> goal 传递，章节带 `scene_chain`
-- `outlinepack` 每个 scene 带 scene mysteries 与 consequence/result
-- `outlinepack` 每章带 obstacle、mysteries.planted/resolved 与 volume.beat_map
-- `outlinepack` 同时带 `setup_draft` 和 `draft_outline`
-- `book write outline --from-idea <id>` 把 outlinepack 的 draft_outline 送入正常候选检查
-- `book write setup --from-idea <id>` 把 outlinepack 的 setup_draft 送入正常候选检查
-- `ideas` 题材牌堆：科幻默认 / 修仙 / 悬疑 / 都市 / 历史 / 言情（4 packs）
-- 校验结果返回 ignored_rules 按规则计数
-- validate --all 聚合 ignored_findings
-- 校验结果返回 ignored_findings 计数
-- `--ignore-file` 从 JSON 数组或 {rules:[]} 读取忽略规则
-- `ideas validate --ignore` 忽略指定 rule_id
-- findings 按内容哈希 id 去重
-- findings id 使用内容哈希，重复校验保持一致
-- findings 带稳定 id（finding-1 ...）
-- `--output -` 输出到 stdout；写入失败会清理 temp 文件
-- 校验输出带 schema_version: 1
-- findings 按 severity 降序、rule_id 升序排序
-- `--output` 自动创建父目录并原子写入
-- `ideas validate --output <file>` 将校验结果写入文件
-- `--min-severity` 非法值会直接报错
-- `ideas validate --all` 批量校验已保存的 ideas
-- `ideas validate --max-findings` 限制输出条数，保留 total_findings
-- `ideas validate --min-severity` 按严重级别过滤 findings
-- `ideas validate --strict` 有 findings 时返回非零退出码
-- `ideas validate` 检查 cast_relation type 是否属于关系词表
-- `ideas validate` 检查 cast 关系重复
-- `ideas validate` 检查 cast 关系端点是否指向有效 graph entity
-- `ideas validate` 检查 cast 缺主角 / 重复 archetype
-- meta.cast 记录 archetype_roles 映射
-- meta.cast 记录 auto / count / pool_size / role_counts / archetypes
-- `--cast-count 0` 按题材 archetype 的 role 分布自动配比
-- `--cast-count 0` 自动使用当前题材 archetype 池容量
-- cast.pool_exhausted 带 pool_size / cast_count / recommended_cast_count
-- 超过 archetype 池容量时返回 cast.pool_exhausted 警告
-- meta.warning_details 提供 code / severity / message
-- cast-roles 缺 protagonist 时自动补第一个角色，并写入 meta.warnings
-- 角色 prompt 带 prompt_meta（max_chars / raw_chars / truncated）
-- `--character-prompt-chars` 控制角色 prompt 长度（40–500）
-- prompt 截断优先在逗号/斜杠处断开，避免切碎词组
-- prompt_pack 标记 max_chars / raw_chars / truncated
-- `--prompt-chars` 控制 worldpack positive prompt 长度（80–2000）
-- graph character entity 记录 role / archetype / prompt / negative_prompt
-- 角色 prompt 带题材视觉风格与 negative_prompt
-- 每个 cast 角色带 `prompt`，可用于角色立绘/场景生成
-- prompt_pack.positive 包含 cast 关系词，便于生成关系明确的场景
-- 默认科幻关系词：counters / supports / secures / blocks
-- cast 关系词按题材变化：suspects / competes_with / contends_with / rivals_with
-- 言情 cast 关系使用 rivals_with / confides_in；缺少 protagonist 时自动补第一个角色
-- cast_relations 按角色生成，支持多个 antagonist / support
-- `ideas draw --cast-roles` 按 protagonist/antagonist/support 序列分配角色
-- `ideas draw --cast-count` 可配置 worldpack/plotpack 的 cast 数量（1–12）
-- worldpack cast 去重 archetype，避免同组角色原型重复
-- 言情支持 古言 / 现言 / 古装 / 现代言情 别名，12 个 archetypes
-- `ideas draw --save` 持久化到 `story/ideas/`，可用 `book read ideas` / `book read idea` 读取
-- `ideas import` 将联网考究/人工整理的卡片写入同一卡池
-- `ideas search --provider wikipedia|gutenberg` 联网搜索来源并保存 source cards
-- `ideas discover --topic` 从内置历史/神话/小说来源目录批量抓取 source cards
-- `book read graph` 聚合所有已保存卡片的 entity / relation / keyword 图
-- `book write research` / `book read research` 持久化考究报告
-- 主 skill 内置 `research` workflow：联网搜索、来源卡、实体图与考究报告
-- `gen workflow/reference/skill`
-
-没有：
-
-- setup/compose/craft/write/recap 的 AI pipeline
-- RPG 模拟
-- MCP server
-- 任意二进制/下载器
-
-这样整个工具就是可审阅的 Node 源码，可以直接放进 Skill 的 `scripts/`。
+CI：`.github/workflows/ci.yml`，Node 18/20/22 跑 `npm test` 与 `npm run lint`。

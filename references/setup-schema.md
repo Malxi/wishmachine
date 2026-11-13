@@ -1,7 +1,20 @@
 # Setup schema
 
-`book_write(section="setup", mode="replace", artifact=<object>)` expects one
-`StorySetup` object. Do not wrap it in another object.
+setup artifact 是 `story/setup/story_setup.json`，命令为：
+
+```bash
+node scripts/wishmachine.js book write setup --dir <project> --mode replace < setup.json
+node scripts/wishmachine.js book write setup --dir <project> --mode replace --apply < setup.json
+```
+
+stdin 必须是一个 `StorySetup` 对象，不要再包一层。快路也可以不手写：
+
+```bash
+node scripts/wishmachine.js book write setup --dir my-book --from-idea <outlinepack-id> --mode replace --apply
+```
+
+其中 `<outlinepack-id>` 是 `ideas draw --type outlinepack --dir my-book --save` 返回的
+`saved.id`。
 
 ## Canonical shape
 
@@ -121,17 +134,15 @@
 
 ## Common mistakes
 
-- `premise` is a **string**; `premises` is an **array of objects**. Never put
-  strings in `premises`.
-- `writing_style` is an **object**, not a string. Omit it or use the object
-  shape above.
-- `world_resources`, `core_cast`, `storylines`, and `world_timeline` are arrays
-  of objects, not arrays of strings.
-- `genres`, `rules`, `storyline_refs`, and `principles` are arrays of strings.
-- `importance` is a number; `long_form_plan.target_chapters` /
-  `target_volumes` are numbers.
-- A replace replaces the whole setup. A patch should send only changed fields.
+- `premise` 是**字符串**；`premises` 是**对象数组**。不要把字符串放进 `premises`。
+- `writing_style` 是**对象**，不是字符串。可省略，或用上面的对象形状。
+- `world_resources`、`core_cast`、`storylines`、`world_timeline` 是对象数组，不是字符串数组。
+- `genres`、`rules`、`storyline_refs`、`principles` 是字符串数组。
+- `importance` 是数字；`long_form_plan.target_chapters` / `target_volumes` 是数字。
+- `replace` 覆盖整个 setup；`patch` 只传改动字段。
 
 ## Optional thread_registry
 
-New projects may carry a top-level `thread_registry` array. Each entry has `id`, `name`, `type`, `importance`, `status` and `resolved_in`. `storylines[*].thread_id` must reference one of these ids. Old projects without it are migrated by `doctor --fix`.
+setup 可以带顶层 `thread_registry` 数组，条目含 `id`、`name`、`type`、`importance`、
+`status`、`resolved_in`。`storylines[*].thread_id` 必须引用其中的 id；`check --target setup`
+校验这些引用。

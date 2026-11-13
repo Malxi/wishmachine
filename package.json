@@ -4,6 +4,25 @@
   "description": "小说许愿机：把你的奇思妙想变成小说，包含创作流程、确定性检查和丰富参考。",
   "type": "module",
   "license": "MIT",
+  "author": "Malxi",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Malxi/wishmachine.git"
+  },
+  "homepage": "https://github.com/Malxi/wishmachine",
+  "bugs": {
+    "url": "https://github.com/Malxi/wishmachine/issues"
+  },
+  "keywords": [
+    "novel",
+    "writing",
+    "cli",
+    "skill",
+    "story",
+    "outline",
+    "deterministic",
+    "node"
+  ],
   "bin": {
     "wishmachine": "scripts/wishmachine.js"
   },
@@ -13,9 +32,17 @@
     "SKILL.md"
   ],
   "scripts": {
-    "test": "node --test"
+    "test": "node --test",
+    "lint": "eslint .",
+    "format:check": "prettier --check package.json .prettierrc eslint.config.js .github/workflows/ci.yml",
+    "pack": "node scripts/pack.js",
+    "prepublishOnly": "npm test"
   },
   "engines": {
     "node": ">=18"
+  },
+  "devDependencies": {
+    "eslint": "^9.39.5",
+    "prettier": "^3.10.1"
   }
 }

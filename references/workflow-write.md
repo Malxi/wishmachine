@@ -1,60 +1,52 @@
 # Write workflow
 
-Use this for chapter prose and chapter-level repairs.
+写章节正文或做章节级修复时使用。所有命令都带 `--dir` 指向项目根。
 
-1. Load the chapter contract:
+1. 读章节契约（先读上一章 recap，再写下一章）：
 
    ```bash
-   node scripts/wishmachine.js state
-   node scripts/wishmachine.js book read outline --id P1-V1-C1
-   node scripts/wishmachine.js book read recap --id P1-V1-C0
+   node scripts/wishmachine.js state --dir my-book --view brief
+   node scripts/wishmachine.js book read outline --dir my-book --id P1-V1-C1
+   node scripts/wishmachine.js book read recap --dir my-book --id P1-V1-C0
    ```
 
-   Read the previous chapter's recap before writing the next chapter. Use the
-   current outline chapter for planned events, not as prose to copy.
+   当前大纲章节是**计划**，不是可直接抄的正文。
 
-2. Write a real scene sequence, not an outline summary. A chapter should have:
+2. 写真正的场景序列，而不是大纲摘要。一章应有：
 
    ```text
    3-5 scenes
-   each scene: goal -> obstacle -> turn
-   concrete time, place, action and dialogue
-   at least one cost, reversal, or decision
+   每个 scene：goal -> obstacle -> turn
+   具体的时间、地点、动作与对话
+   至少一个代价、反转或决定
    ```
 
-   Do not compress several outline events into a single paragraph of
-   explanation. Expand the most important event into a scene.
+   不要把多个 outline event 压成一段解释；把最重要的事件展开成场景。
 
-3. Respect the chapter length contract in `novel.json`:
+3. 遵守 `novel.json` 的章节长度契约：
 
    ```json
-   "chapter_config": {
-     "target_chars": 3000,
-     "min_chars": 1800
-   }
+   "chapter_config": {"target_chars": 3000, "min_chars": 1800}
    ```
 
-   The `check` command counts CJK characters. Below `min_chars` is a high
-   finding and blocks `--apply`; below `target_chars` is a medium warning.
+   `check` 统计 CJK 字符数；低于 `min_chars` 是 high finding 并阻止 `--apply`，低于
+   `target_chars` 是 medium 警告。
 
-4. Dry-run one chapter, then apply it:
+4. 先 dry-run，再 apply：
 
    ```bash
-   node scripts/wishmachine.js book write chapter --id P1-V1-C1 --mode replace < chapter.md
-   node scripts/wishmachine.js book write chapter --id P1-V1-C1 --mode replace --apply < chapter.md
+   node scripts/wishmachine.js book write chapter --dir my-book --id P1-V1-C1 --mode replace < chapter.md
+   node scripts/wishmachine.js book write chapter --dir my-book --id P1-V1-C1 --mode replace --apply < chapter.md
    ```
 
-5. Check the chapter and write the recap from the prose, not from the outline:
+5. 检查章节，并从**正文**写 recap（不要从 outline 抄）：
 
    ```bash
-   node scripts/wishmachine.js check --profile all --target chapter --id P1-V1-C1
+   node scripts/wishmachine.js check --dir my-book --profile all --target chapter --id P1-V1-C1
+   node scripts/wishmachine.js book write recap --dir my-book --id P1-V1-C1 --mode replace --apply < recap.json
    ```
 
-   Then write the recap using concrete details that actually appear in the
-   chapter. Do not generate `plot_beats` by copying `actor：details` from the
-   outline; `quality.recap.outline_copy` detects that shortcut.
+   recap 字段形状见 `references/book-write.md`；`quality.recap.outline_copy` 会检出复制
+   outline 文本的取巧做法。
 
-6. Move to the next chapter only after the current chapter passes and its
-   recap is grounded in the prose.
-
-Wishmachine does not call a model and does not generate prose.
+6. 本章通过且 recap 有正文依据后，再进入下一章。Wishmachine 不调用模型、不生成正文。

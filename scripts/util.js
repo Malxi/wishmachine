@@ -35,13 +35,26 @@ export function parseJson(text, what) {
 }
 
 export function resolveProjectDir(explicit) {
-  let current = path.resolve(explicit || process.env.WISHMACHINE_PROJECT_DIR || process.cwd());
+  if (explicit) {
+    // An explicit --dir is authoritative: never walk up, so a typo cannot silently
+    // resolve to an ancestor project and write to the wrong book.
+    const resolved = path.resolve(explicit);
+    try {
+      if (fs.statSync(resolved).isFile()) {
+        return path.dirname(resolved);
+      }
+    } catch {
+      // Missing directory: return it and let loadProject report a clear error.
+    }
+    return resolved;
+  }
+  let current = path.resolve(process.env.WISHMACHINE_PROJECT_DIR || process.cwd());
   try {
     if (fs.statSync(current).isFile()) {
       current = path.dirname(current);
     }
   } catch {
-    // Let the caller create an explicit directory for init.
+    // Fall back to the current directory.
   }
   let cursor = current;
   while (true) {
@@ -83,6 +96,37 @@ export function safeSegment(value, label = 'id') {
     throw new Error(`invalid ${label}: ${value}`);
   }
   return text;
+}
+
+// Resolve `target` and prove it stays inside `root`. Used everywhere a
+// data-controlled string (backup name, export path, artifact id) becomes a
+// filesystem path, so `../sibling/evil` cannot escape the project.
+export function assertInside(root, target, label = 'path') {
+  const resolvedRoot = path.resolve(root);
+  const resolved = path.resolve(resolvedRoot, target);
+  const relative = path.relative(resolvedRoot, resolved);
+  const inside = relative === ''
+    || (relative !== '..' && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative));
+  if (!inside) {
+    throw new Error(`${label} is outside ${resolvedRoot}: ${resolved}`);
+  }
+  return resolved;
+}
+
+export function toPosixPath(value) {
+  return String(value).replace(/\\/g, '/');
+}
+
+export function positiveInt(value, label, fallback) {
+  if (value === undefined || value === null || value === '') {
+    if (fallback === undefined) throw new Error(`${label} is required`);
+    return fallback;
+  }
+  const number = Number(value);
+  if (!Number.isFinite(number) || !Number.isInteger(number) || number <= 0) {
+    throw new Error(`${label} must be a positive integer, got ${JSON.stringify(value)}`);
+  }
+  return number;
 }
 
 export function hashSeed(value) {

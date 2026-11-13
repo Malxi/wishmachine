@@ -2,242 +2,133 @@
 name: wishmachine
 display_name: 小说许愿机
 display_name_en: Novel Wish Machine
-description: 这是一台许愿机，将你的奇思妙想变成小说，包含完整的小说创作流程，创作检查，丰富的创作参考等
-description_zh: 这是一台许愿机，将你的奇思妙想变成小说，包含完整的小说创作流程，创作检查，丰富的创作参考等
-description_en: A wish machine that turns your ideas into a novel, with a complete writing workflow, deterministic checks, and rich creative references.
+description: 这是一台许愿机，将你的奇思妙想变成小说：项目状态、确定性检查、参考抽卡与 artifact 原子写入
+description_zh: 这是一台许愿机，将你的奇思妙想变成小说：项目状态、确定性检查、参考抽卡与 artifact 原子写入
+description_en: A wish machine that turns ideas into a novel: project state, deterministic checks, idea draws and atomic artifact writes.
 examples_zh:
   - "创建一个 3 卷 × 5 章的科幻小说项目"
-  - "检查大纲的阻塞问题"
-  - "抽 12 个科幻角色名卡"
-examples_en:
-  - "Create a 3-volume × 5-chapter science-fiction project"
-  - "Check the outline for blocking findings"
-  - "Draw 12 science-fiction name cards"
 version: 0.2.73
 author: Malxi
 ---
 
 # 小说许愿机
 
-WorkBuddy 是创作者。小说许愿机只负责项目状态、确定性检查和参考抽卡，不调用
-任何模型，也不生成正文。
+Wishmachine 是纯 Node.js CLI（>= 18，无运行时依赖）：负责项目状态、确定性检查、参考抽卡和
+artifact 写入。它**不调用模型、不生成 setup/outline/正文**；创作由你完成。
 
-在 Skill 根目录执行：
+## 约定
 
-```bash
-node scripts/wishmachine.js version
-```
+- `WM="node scripts/wishmachine.js"`；全局安装后可直接用 `wishmachine`。
+- 项目命令一律带 `--dir <project>`，且必须指向含 `novel.json` 的项目根（不会向上查找）。
+- stdout 是 JSON；失败时 stdout 也是 `{"ok":false,"error":{...}}`，stderr 一行摘要。
+- 退出码：`0` 成功 / `1` 用法或系统错误 / `2` 有 high|critical blocking findings。
+- 写操作默认 dry-run，只有 `--apply` 才落盘。
 
-或安装 npm 包后使用 `wishmachine`。
+## 0. 三条最小路径
 
-## 1. 管理小说
+创作流：`init → ideas draw（可选）→ setup → outline → 逐章（正文→check→recap）→ audit → refresh → export`。
 
-```bash
-node scripts/wishmachine.js book init "我的书" --dir my-book --parts 1 --volumes 3 --chapter 5 --chapter-chars 3000 --min-chars 1800 --genre 科幻
-node scripts/wishmachine.js state --dir my-book --view brief
-node scripts/wishmachine.js audit --dir my-book
-node scripts/wishmachine.js refresh --dir my-book
-node scripts/wishmachine.js export --dir my-book
-node scripts/wishmachine.js export --dir my-book --format plain
-node scripts/wishmachine.js doctor --dir my-book
-node scripts/wishmachine.js doctor --dir my-book --fix
-node scripts/wishmachine.js book status --dir my-book --json
-node scripts/wishmachine.js book read outline --dir my-book --view index
-node scripts/wishmachine.js book read setup --dir my-book
-```
-
-`state` is the one-call project snapshot: setup summary, outline index,
-chapters, craft files, recaps and the next step. Use `--view full` only when
-you explicitly need the raw setup and outline JSON.
-
-写入完整 artifact：
+### 路径 A：快路（推荐，空目录 → 合法 setup + outline）
 
 ```bash
-node scripts/wishmachine.js book write setup --dir my-book --mode replace --apply < setup.json
-node scripts/wishmachine.js book write outline --dir my-book --mode replace --apply < outline.json
-node scripts/wishmachine.js book write chapter --dir my-book --id P1-V1-C1 --mode replace --apply < chapter.md
+WM="node scripts/wishmachine.js"
+$WM book init "我的书" --dir my-book --parts 1 --volumes 1 --chapter 3 --genre 科幻
+$WM ideas draw --type outlinepack --genre 科幻 --volumes 1 --chapters-per-volume 3 --count 1 --seed 7 --dir my-book --save
+# → saved.id（如 outlinepack-7-20261113_122909），替换下文 <saved.id>
+$WM book write setup   --dir my-book --from-idea <saved.id> --mode replace --apply
+$WM book write outline --dir my-book --from-idea <saved.id> --mode replace --apply
+$WM state --dir my-book --view brief
 ```
 
-默认 dry-run；只有 `--apply` 写盘。写入前会运行确定性检查。
-
-## 创作流
-
-```text
-book init
-  -> ideas draw / worldpack（可选参考）
-  -> 写 setup -> check setup
-  -> 写 outline -> check outline
-  -> 逐章：读上一章 recap + 本章 outline
-          -> WorkBuddy 写正文
-          -> book write chapter（先 dry-run）
-          -> book write chapter --apply
-          -> check chapter
-          -> 从正文写 recap -> book write recap
-  -> audit
-  -> 设定/大纲编辑性审查（review-checklist）
-  -> 可选：research skill 联网考究抽卡实体
-  -> refresh
-  -> export --format book
-```
-
-Wishmachine 只负责项目状态、确定性检查、参考抽卡和写入；正文始终由
-WorkBuddy 创作。
-
-## 2. 检查
+### 路径 B：手写 setup + outline（需要自行创作时）
 
 ```bash
-node scripts/wishmachine.js check --dir my-book --profile all --target outline --max-findings 20
-node scripts/wishmachine.js check --dir my-book --profile schema --target setup
+$WM gen reference read setup-schema
+$WM book write setup --dir my-book --mode replace < setup.json          # dry-run：看 check
+$WM book write setup --dir my-book --mode replace --apply < setup.json
+$WM gen reference read outline-schema
+$WM book write outline --dir my-book --mode replace < outline.json      # dry-run
+$WM book write outline --dir my-book --mode replace --apply < outline.json
+$WM check --dir my-book --profile all --target outline --max-findings 20
 ```
 
-`custom` includes the built-in rules in `references/builtin-rules.json` plus
-project rules under `.wishmachine/rules` or `.novelgen/rules`.
-
-Profile：
-
-```text
-quality   结构/引用/ID/章节数量等确定性规则
-schema    setup/outline 的 JSON 形状
-custom    .wishmachine/rules/*.json（兼容 .novelgen/rules）
-all       quality + schema
-```
-
-输出 `findings`，每条包含 `rule_id`、`severity`、`target_id`、`issue`、
-`suggestion`。
-
-## 3. 抽卡
+### 路径 C：写一章 + recap
 
 ```bash
-node scripts/wishmachine.js ideas draw --type namecard --genre 科幻 --count 12 --seed 42
-node scripts/wishmachine.js ideas draw --type premise --genre 修仙 --count 3 --seed 7
-node scripts/wishmachine.js ideas draw --type worldpack --genre 悬疑 --cast-count 6 --seed 7
-node scripts/wishmachine.js ideas draw --type worldpack --genre 悬疑 --cast-roles protagonist,antagonist,support,support --seed 7
-node scripts/wishmachine.js ideas draw --type premise --genre 悬疑 --count 3 --seed 7
-node scripts/wishmachine.js ideas draw --type premise --genre 都市 --count 3 --seed 7
-node scripts/wishmachine.js ideas draw --type premise --genre 历史 --count 3 --seed 7
-node scripts/wishmachine.js ideas draw --type premise --genre 言情 --count 3 --seed 7
-node scripts/wishmachine.js ideas draw --type provocation --count 4 --seed 9
-node scripts/wishmachine.js ideas draw --type law --count 4 --seed 9
-node scripts/wishmachine.js ideas draw --type event --count 4 --seed 9
-node scripts/wishmachine.js ideas draw --type engine --count 4 --seed 9
-node scripts/wishmachine.js ideas draw --type storyline --count 4 --seed 9
-node scripts/wishmachine.js ideas draw --type location --count 4 --seed 9
-node scripts/wishmachine.js ideas draw --type faction --count 4 --seed 9
-node scripts/wishmachine.js ideas draw --type equipment --count 4 --seed 9
-node scripts/wishmachine.js ideas draw --type motif --count 4 --seed 9
-node scripts/wishmachine.js ideas draw --type worldpack --genre 科幻 --count 1 --seed 42
-node scripts/wishmachine.js ideas draw --type plotpack --genre 悬疑 --count 1 --seed 42
-node scripts/wishmachine.js ideas draw --type outlinepack --genre 悬疑 --chapters 10 --scenes 3 --target-chars 3000 --count 1 --seed 42
-node scripts/wishmachine.js ideas draw --type outlinepack --genre 修仙 --volumes 3 --chapters-per-volume 10 --count 1 --seed 42 --dir my-book --save
-node scripts/wishmachine.js book write setup --dir my-book --from-idea <saved-outlinepack-id> --apply
-node scripts/wishmachine.js book write outline --dir my-book --from-idea <saved-outlinepack-id> --apply
-node scripts/wishmachine.js ideas draw --type worldpack --genre 修仙 --count 1 --seed 42 --dir my-book --save
-node scripts/wishmachine.js ideas import --dir my-book --type motif --source "web research" --file cards.json
-node scripts/wishmachine.js ideas discover --dir my-book --topic history --limit 3
-node scripts/wishmachine.js ideas search --dir my-book --provider wikipedia --query "Mary Celeste" --limit 3
-node scripts/wishmachine.js book read ideas --dir my-book
-node scripts/wishmachine.js book read idea --id <saved-id> --dir my-book
-node scripts/wishmachine.js book read graph --dir my-book
-node scripts/wishmachine.js book write research --dir my-book --id <pack-id> < report.json
-node scripts/wishmachine.js book read research --dir my-book --id <pack-id>
-node scripts/wishmachine.js ideas types
+$WM state --dir my-book --view brief
+$WM book read outline --dir my-book --id P1-V1-C1
+# 把本章正文写入 chapter.md，CJK 字数需达到 novel.json 的 chapter_config.min_chars
+$WM book write chapter --dir my-book --id P1-V1-C1 --mode replace < chapter.md        # dry-run
+$WM book write chapter --dir my-book --id P1-V1-C1 --mode replace --apply < chapter.md
+$WM check --dir my-book --profile all --target chapter --id P1-V1-C1
+# 从正文（不是大纲）整理 recap.json，字段见 references/book-write.md
+$WM book write recap --dir my-book --id P1-V1-C1 --mode replace --apply < recap.json
 ```
 
-抽卡是确定性的；保留 seed 可复现。
+## 写入与风险
 
-`worldpack` returns one premise, engine, location, faction, equipment, two
-resources, two scenarios, two storylines and four role-tagged cast cards.
-`plotpack` wraps a worldpack with cast relations and six chapter beats
-(setup / inciting / midpoint / crisis / climax / resolution).
-`outlinepack` expands those beats into chapters with 3-5 scenes per chapter,
-target character counts and a draft outline that passes `validateOutline`.
-`--volumes` / `--chapters-per-volume` produce multiple volumes; the six beats
-are distributed across the whole book instead of repeating per volume, and each
-volume uses a different storyline when the pack has one. Volumes carry
-opening/closing beats, mysteries and timeline anchors. Chapters carry an
-obstacle, planted/resolved mysteries and a beat map; scenes carry
-goal/obstacle/turn/stakes. Scenes also carry `turn_event`, `consequence`
-(and its `result` alias) and planted/resolved scene mysteries. A chapter's
-`scene_chain` records each scene's turn and consequence, and the next scene's
-goal begins from the previous consequence. Chapters carry
-`entry_from_previous` / `exit_consequence`, so the chain continues across
-chapters and volumes. The entry consequence also feeds the chapter's
-`obstacle`, `conflict`, `chapter_payoff.pressure`, `mysteries.carried` and
-previous `hook`. Pending mysteries carry across chapters/volumes and are
-resolved at climax/resolution; `pending_mysteries` is capped. Mysteries are
-structured objects with `id`, `question`, `answer`, `payoff`, `importance`,
-`thread`, `thread_id`, `thread_type`, `related_cast`, `related_cast_ids` and
-`status`. `thread_registry` and `setup_draft.storylines[*].thread_id` share the
-same ids; cast `storyline_refs` use those ids. `thread_registry` entries carry
-`resolved_in`, `resolved_chapters`, `resolved_mysteries`, `abandoned_history` and
-`abandoned_mysteries`. `mystery_registry` stores the deduplicated mystery objects sorted by chapter/id;
-both registries carry `*_registry_version: 2`. `check` reports setup/outline
-registry drift (including mystery registry drift), unknown chapter thread ids,
-and thread references to missing or non-registry mystery ids. The mystery
-registry order is checked with natural chapter ordering (C2 before C10), setup
-mystery registries are order-checked, and thread registries must be main/sub
-then id sorted. Doctor rebuild keeps them sorted and `doctor --fix` reorders
-setup/outline registries. Thread `resolved_mysteries` and `abandoned_mysteries`
-are sorted and deduplicated by mystery id.
-`doctor --fix` rebuilds a missing or stale mystery registry from chapter data.
-Checks also flag stale registry entries, final-status mismatches and resolved
-or dropped mysteries that are not linked from their thread. `doctor --fix`
-removes stale registry entries.
-Dropped mysteries carry `reason: pending_capacity`; registry status must be
-present in the chapter status set. `book registry` summarizes registry
-versions/counts and thread/mystery drift; `book registry clean` rebuilds the
-mystery registry and removes stale entries. `book registry clean --dry-run`
-previews before/after counts, removed mystery ids and removed thread links
-without writing. `book registry log --limit 20` reads
-`logs/registry-operations.jsonl` directly; `--action abandon|clean` and
-`--since <ISO>` filter the log. `book registry backups [--keep 10] [--prune]`
-lists or prunes `logs/registry-backups/`. `book registry backup` creates a
-manual snapshot; `book registry restore --backup <name> [--dry-run]` restores it.
-`book registry backups` lists/prunes snapshots, protects backups referenced by
-undo and shows manifest metadata. Restore dry-run reports changed top-level keys
-and verifies manifest checksums before overwriting setup/outline.
-`book registry check-backups` verifies every snapshot manifest and file checksum.
-`book registry undo [--operation <id>]` restores the selected or most recent
-backed-up operation; `book registry redo [--operation <id>]` replays the after
-snapshot. Log entries expose `state: applied|undone`. `book registry abandon --mystery <id>` manually marks a
-mystery dropped with a reason; add `--dry-run` to preview without writing.
-Clean also re-runs thread status repair after rebuilding the
-registry. `doctor --fix`
-migrates old projects, synchronizes thread status from resolved mysteries and
-fills abandoned entries; it also downgrades a resolved thread when no matching
-resolved mystery remains. Pending mysteries are sorted by importance and capped; dropped
-mysteries are recorded in `dropped_mysteries` and `abandoned_threads`.
-The saved pack also contains `setup_draft` with main/subplot
-storylines, premise progression and a world timeline.
-Some packs also include a `motif` and an `inspired_by` graph edge.
-`cast_relations` links the four characters to each other, the faction, the
-location and the first storyline; each relation carries a `stake`.
-`prompt_pack` contains positive, negative, style and keywords; `prompt` is
-kept as the positive prompt for compatibility.
-Genre decks currently cover default sci-fi, xianxia, suspense, urban, history and romance.
+- 默认 dry-run 并返回 `check`；`--apply` 才写盘，写前把旧文件复制到同目录 `checkpoints/`。
+- `--mode replace` 整块覆盖，`patch` 只合并改动字段；setup/outline/craft/recap 支持
+  `replace|patch`，chapter 支持 `replace|append`。`--target` 只用于 outline 的 patch
+  （`volume|chapter`）和 craft（`character|item|location|organization`）。
+- apply 时有 blocking 则**不写盘**（`ok:false, applied:false`，退出 2）；写后检查才出现
+  blocking 则返回 `ok:false, applied:true, warning`：文件已写，先 `check` 修复再继续。
+- 不要手改项目 JSON 绕过 `book write`；`refresh` 会重建并覆盖 md 伴生文件。
 
-## 4. 读取指导
+## 检查
+
+| profile | 内容 |
+|---|---|
+| quality | 结构、引用、ID、章节数量、谜题/线程一致性 |
+| schema | setup/outline/craft/recap 的 JSON 形状 |
+| custom | `references/builtin-rules.json` + 项目 `.wishmachine/rules/*.json` |
+| all | quality + schema + custom（默认） |
 
 ```bash
-node scripts/wishmachine.js gen workflow list
-node scripts/wishmachine.js gen workflow read outline
-node scripts/wishmachine.js gen reference list
-node scripts/wishmachine.js gen reference read outline-schema
-node scripts/wishmachine.js gen reference read review-checklist
-node scripts/wishmachine.js gen workflow read research
+$WM check --dir my-book --profile all --target outline --max-findings 20
+$WM audit --dir my-book --view brief                 # 全项目审计
+$WM doctor --dir my-book                             # 目录/配置/JSON 完整性；加 --fix 修复
 ```
 
-第一次写 setup 前读 `setup-schema`；第一次写 outline 前读 `outline-schema`。
-设定和大纲的编辑性审查使用 `review-checklist`，它不会替代确定性检查。
-历史/文化/科学元素使用 `gen workflow read research`，在主 skill 内完成联网考究后再进入 canon。
+- blocking = `severity` 为 `high` 或 `critical`；check/audit/doctor/write 此时退出码 2；
+  `--no-strict` 让 check/audit/doctor 强制退出 0（脚本容错用）。
+- `--min-severity low|medium|high|critical` 只过滤展示，`summary` 仍统计全量；
+  `--max-findings all|<n>`；findings 带稳定 `id`（`finding-xxxxxxxx`），已去重排序。
+- 枚举写错或未知 flag/缺值都会 JSON 报错并退出 1，不再静默回退。
+
+## 抽卡
+
+```bash
+$WM ideas draw --type namecard --genre 科幻 --count 12 --seed 42
+$WM ideas draw --type worldpack --genre 悬疑 --cast-count auto --seed 7 --output world.json
+$WM ideas draw --type outlinepack --genre 科幻 --count 1 --seed 7 --dir my-book --save
+$WM book read idea --dir my-book --id <saved.id>     # 默认 summary；--view full 才读全量
+$WM ideas validate --dir my-book --all
+```
+
+| 参数 | 说明 |
+|---|---|
+| `--type` | 默认 namecard，共 21 种；`ideas types` 列出 |
+| `--count` | composite（worldpack/plotpack/outlinepack）默认 1、上限 10；其他默认 5、上限 50；超限降级并 warning |
+| `--seed` | 确定性复现；省略则随机 |
+| `--save` | 写入 `story/ideas/`，只回 `{query,count,result_ids,saved}`，不回完整结果 |
+| `--output <file>` | 完整 draw 写文件（大结果用这个，别打到 stdout） |
+| `--cast-count` | `4`（默认）或 `auto`（按题材 archetype 配比） |
+| `--volumes` / `--chapters-per-volume` | outlinepack 多卷装配 |
+
+抽卡是参考不是 canon；写进 setup/outline 前要改写并过 `check`。
+
+## 文档路由
+
+- artifact 格式、写入与输出契约：`references/stage-contracts.md`
+- setup/outline 字段与 `book write` 细节：`setup-schema.md`、`outline-schema.md`、`book-write.md`
+- profile/规则/findings：`references/check-profiles.md`
+- 流程与编辑性审查：`references/workflow-*.md`、`references/review-checklist.md`
+
+读取：`$WM gen reference read <name>`、`$WM gen workflow read <name>`。
 
 ## 边界
 
-- 不生成 setup/outline/正文。
-- 不调用 LLM。
-- 抽卡结果默认只输出；加 `--save` 才写入 `story/ideas/`。
-- `ideas import` 可导入人工/联网考究后的卡片；`book write research` 保存考究报告。
-- 不做自动历史考据；主 skill 的 `research` workflow 负责联网核验，主 skill 只负责保存抽卡结果和确定性检查。
-- 不包含 RPG 模拟；`check --profile rpg` 会明确报未实现。
-- 不做 MCP；只提供 CLI，方便作为 Skill 的 `scripts/` 直接运行。
-- 不直接编辑项目文件；写入走 `book write`。
+- 不生成 setup/outline/正文，不调用 LLM，不做 RPG 模拟或 MCP。
+- `ideas search/discover` 需要外网；联网考究按 `workflow-research` 由人或主 AI 完成。
+- 破坏性 registry 操作前先 `book registry backup`；备份、undo/redo、日志都在 `book registry` 族里。

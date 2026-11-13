@@ -1,7 +1,17 @@
 # Outline schema
 
-`book_write(section="outline", mode="replace", artifact=<object>)` expects one
-`Outline` object whose only top-level field is `parts`.
+outline artifact 是 `story/compose/outline.json`，命令为：
+
+```bash
+node scripts/wishmachine.js book write outline --dir <project> --mode replace < outline.json
+node scripts/wishmachine.js book write outline --dir <project> --mode replace --apply < outline.json
+```
+
+stdin 必须是一个 `Outline` 对象，顶层只有 `parts`。快路也可以不手写：
+
+```bash
+node scripts/wishmachine.js book write outline --dir my-book --from-idea <outlinepack-id> --mode replace --apply
+```
 
 ## Minimal complete shape
 
@@ -104,35 +114,36 @@
 
 ## Required level
 
-- `parts` is an array; each part has `id`, `title`, `summary`, `volumes`.
-- Each volume has `id`, `title`, `summary`, `chapters`.
-- Each chapter has `id`, `title`, `summary`, `characters`, `location`,
-  `events`, `conflict`, `pacing`.
-- IDs are stable: `P1`, `P1-V1`, `P1-V1-C1`.
-- `chapters` is an array of objects, never an array of strings.
+- `parts` 是数组；每个 part 有 `id`、`title`、`summary`、`volumes`。
+- 每个 volume 有 `id`、`title`、`summary`、`chapters`。
+- 每个 chapter 有 `id`、`title`、`summary`、`characters`、`location`、`events`、
+  `conflict`、`pacing`。
+- ID 稳定：`P1`、`P1-V1`、`P1-V1-C1`。
+- `chapters` 是对象数组，不能是字符串数组。
 
 ## Nested object rules
 
-- `events` is an array of objects. `characters` and `subject` are names, not
-  nested character objects. Prefer the `actor` / `action` / `target` /
-  `target_type` fields for new events; `type` / `subject` / `change` remain for
-  compatibility.
-- `timeline`, `state_anchor`, `mysteries`, and `chapter_payoff` are objects.
-  `mysteries.planted` and `mysteries.resolved` are arrays of objects.
-- `scenes` is an array of objects: `order`, `pov`, `goal`, `location`,
-  `characters`, `words`, `tone`, `beats`.
-- `enemies` is an array of objects: `name`, `faction`, `tier`, `count`,
-  `level`, `is_boss`, `boss_id`, `status`, `context`.
-- `resource_ledger` is an array of objects: `item`, `start`, `delta`, `end`,
-  `reason`.
+- `events` 是对象数组。`characters`、`subject` 是名字，不是嵌套角色对象。新事件优先用
+  `actor` / `action` / `target` / `target_type`。
+- `timeline`、`state_anchor`、`mysteries`、`chapter_payoff` 是对象；
+  `mysteries.planted` / `mysteries.resolved` 是对象数组。
+- `scenes` 是对象数组：`order`、`pov`、`goal`、`location`、`characters`、`words`、`tone`、`beats`。
+- `enemies` 是对象数组：`name`、`faction`、`tier`、`count`、`level`、`is_boss`、`boss_id`、
+  `status`、`context`。
+- `resource_ledger` 是对象数组：`item`、`start`、`delta`、`end`、`reason`。
 
-## Patching a volume
+## Patching a volume or chapter
 
-For a local repair, use `book_write` with
-`mode="patch", target="volume", id="P1-V1"` and a patch object. Do not send a
-whole `Outline` object in patch mode. A patch that would change the volume's
-chapter set is still validated against the whole outline before writing.
+局部修复用 patch，不要发整份 Outline：
+
+```bash
+node scripts/wishmachine.js book write outline --dir my-book --mode patch --target volume --id P1-V1 --apply < volume-patch.json
+node scripts/wishmachine.js book write outline --dir my-book --mode patch --target chapter --id P1-V1-C1 --apply < chapter-patch.json
+```
+
+patch 后仍会对整份 outline 校验；会改变章节集合的 patch 同样会被拦下。
 
 ## Optional thread_registry
 
-`draft_outline` may carry a top-level `thread_registry` array. Chapter `thread_id` values must reference registry ids. `check --target outline` reports unknown ids and setup/outline registry drift.
+`outline.json` 可以带顶层 `thread_registry` 数组，章节 `thread_id` 必须引用其中的 id。
+`check --target outline` 报告未知 id 与 setup/outline registry 漂移。
