@@ -4,7 +4,7 @@ import { readJson } from './util.js';
 import { drawIdeas, ideasTypes, validateIdeaDraw } from './ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference, listSkills, readSkill } from './guides.js';
 
-const VERSION = '0.2.59';
+const VERSION = '0.2.60';
 const BOOLEAN_FLAGS = new Set(['apply', 'json', 'help', 'h', 'dry-run', 'force', 'ingest']);
 const COMMANDS = new Set(['book', 'check', 'ideas', 'gen', 'state', 'audit', 'refresh', 'export', 'doctor', 'version', 'help']);
 
@@ -356,6 +356,9 @@ async function runIdeas(args, flags) {
   if (sub === 'validate') {
     const project = loadProject(stringFlag(flags, 'dir', ''));
     const minSeverity = stringFlag(flags, 'min-severity', 'low');
+    if (!['low', 'medium', 'high', 'critical'].includes(minSeverity)) {
+      fail(`unknown min-severity: ${minSeverity}`);
+    }
     const maxFindings = Math.max(0, intFlag(flags, 'max-findings', 0));
     if (boolFlag(flags, 'all')) {
       const list = readSection(project, 'ideas').results || [];

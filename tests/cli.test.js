@@ -56,4 +56,5 @@ test('CLI init, status and ideas', () => {
   assert.equal(validated.action, 'validate-all');
   assert.ok(validated.count >= 1);
   assert.ok(validated.results.every((item) => item.ok));
+  assert.throws(() => run(['ideas', 'validate', '--all', '--dir', dir, '--min-severity', 'nope']), /unknown min-severity/);
 });
