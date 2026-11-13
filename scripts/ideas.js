@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { hashSeed, mulberry32, pickMany, pick } from './util.js';
 import { SUSPENSE, URBAN, HISTORY, ROMANCE } from './ideas-genres.js';
 import { XIANXIA_ARCHETYPES, SUSPENSE_ARCHETYPES, URBAN_ARCHETYPES, HISTORY_ARCHETYPES, ROMANCE_ARCHETYPES } from './ideas-archetypes.js';
@@ -1633,7 +1634,11 @@ export function validateIdeaDraw(draw, options = {}) {
       || String(left.rule_id || '').localeCompare(String(right.rule_id || ''))
       || String(left.target_id || '').localeCompare(String(right.target_id || ''))
     ))
-    .map((finding, index) => ({ id: `finding-${index + 1}`, ...finding }));
+    .map((finding) => {
+      const key = `${finding.rule_id || ''}|${finding.target_id || ''}|${finding.issue || ''}`;
+      const hash = createHash('sha1').update(key).digest('hex').slice(0, 8);
+      return { id: `finding-${hash}`, ...finding };
+    });
   return {
     schema_version: 1,
     ok: filtered.length === 0,
