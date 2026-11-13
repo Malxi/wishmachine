@@ -622,7 +622,7 @@ test('worldpack cast uses genre-aware archetypes', () => {
     悬疑: ['现场刑警', '记忆鉴定师', '承办检察官', '职业证人', '档案员', '辩护律师'],
     都市: ['被合同锁住的主播', '被竞业协议困住的员工', '平台经理', '家族委员会主席', '租客互助会组织者', '财经记者'],
     历史: ['边镇书吏', '海商', '户部主事', '边军主将', '官匠', '史官'],
-    言情: ['联姻继承人', '旧信收件人', '替身演员', '家族董事', '经纪人', '合租室友'],
+    言情: ['联姻继承人', '旧信收件人', '替身演员', '家族董事', '经纪人', '合租室友', '婚约律师', '旧友', '制片人', '房东', '恋综导演', '家族秘书'],
   };
   for (const [genre, names] of Object.entries(expected)) {
     const pack = drawIdeas({ type: 'worldpack', genre, count: 1, seed: 42 });
@@ -664,6 +664,8 @@ test('romance plot and outline packs use the romance deck', () => {
   assert.equal(outline.meta.deck, 'romance');
   assert.equal(outline.results[0].chapters.length, 10);
   assert.ok(outline.results[0].mystery_registry.length > 0);
+  const ancient = drawIdeas({ type: 'premise', genre: '古言', count: 1, seed: 42 });
+  assert.equal(ancient.meta.deck, 'romance');
 });
 
 test('checkProject reports setup/outline thread registry drift', () => {

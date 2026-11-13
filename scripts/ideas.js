@@ -277,7 +277,7 @@ function selectDeck(genre) {
   if (/悬疑|推理|侦探|犯罪|恐怖|thriller|mystery/i.test(value)) return SUSPENSE;
   if (/都市|现代|职场|娱乐|校园|urban/i.test(value)) return URBAN;
   if (/历史|古代|朝代|民国|战争|history/i.test(value)) return HISTORY;
-  if (/言情|爱情|婚恋|romance/i.test(value)) return ROMANCE;
+  if (/言情|爱情|婚恋|古言|现言|古装|现代言情|romance/i.test(value)) return ROMANCE;
   return null;
 }
 
