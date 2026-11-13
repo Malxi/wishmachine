@@ -33,7 +33,7 @@
           "source": {
             "type": "git",
             "url": "https://github.com/Malxi/wishmachine.git",
-            "commit": "a69aa951bfb90638612f0e0aaa5b84c4d7fcd5f8",
+            "commit": "434ddc626683353dc15c8513921749aa1ad822f1",
             "path": "dsh"
           },
           "engines": {
