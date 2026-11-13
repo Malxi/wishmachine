@@ -511,15 +511,21 @@ function buildWorldpack(def, packIndex, seed, cast, sources, options = {}) {
     [...new Set(castRelations.map((relation) => relation.type))].join(' / '),
   ].filter(Boolean).join('，');
   const promptChars = Math.max(80, Math.min(2000, Number(options.promptChars) || 800));
-  const prompt = rawPrompt.length > promptChars ? `${rawPrompt.slice(0, promptChars - 1)}…` : rawPrompt;
+  const rawPromptLength = rawPrompt.length;
+  let prompt = rawPrompt;
+  if (rawPromptLength > promptChars) {
+    const head = rawPrompt.slice(0, promptChars - 1);
+    const breakAt = Math.max(head.lastIndexOf('，'), head.lastIndexOf(','), head.lastIndexOf(' / '));
+    prompt = `${(breakAt > promptChars * 0.5 ? head.slice(0, breakAt) : head).trimEnd()}…`;
+  }
   const promptPack = {
     positive: prompt,
     negative: negativeByDeck[sources.name] || negativeByDeck.default,
     style,
     keywords,
     max_chars: promptChars,
-    raw_chars: rawPrompt.length,
-    truncated: rawPrompt.length > promptChars,
+    raw_chars: rawPromptLength,
+    truncated: rawPromptLength > promptChars,
   };
   return {
     id: packId,
