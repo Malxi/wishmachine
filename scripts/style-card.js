@@ -1,6 +1,61 @@
 // Voice card artifact: the project-level "how this book sounds" contract.
 // Stored at story/style/voice.json; validated on write and summarized on read.
 
+const SOURCE_VALUES = ['human', 'public-domain', 'licensed'];
+const RECIPE_WORDS = ['每章', '每级', '每次', '必须', '报数', '押头', '押掉', '换壳'];
+
+function validateReferenceList(value, label) {
+  if (!Array.isArray(value) || value.length === 0) {
+    throw new Error(`${label} must be a non-empty array of human-written excerpts`);
+  }
+  for (const reference of value) {
+    if (!isPlainObject(reference)) throw new Error(`${label} entries must be objects`);
+    if (typeof reference.text !== 'string' || reference.text.trim().length < 80) {
+      throw new Error(`${label} entries need a verbatim text of at least 80 chars`);
+    }
+    if (!SOURCE_VALUES.includes(reference.source)) {
+      throw new Error(`${label}.source must be one of ${SOURCE_VALUES.join('|')}; AI-generated samples are not accepted`);
+    }
+    if (reference.source === 'licensed' && typeof reference.license !== 'string') {
+      throw new Error(`${label} entries with source=licensed need a license string`);
+    }
+    for (const field of ['author', 'work', 'url', 'license']) {
+      if (reference[field] !== undefined && typeof reference[field] !== 'string') throw new Error(`${label}.${field} must be a string`);
+    }
+  }
+}
+
+function writingStyleSummary(style) {
+  if (!style) return { present: false };
+  return {
+    present: true,
+    version: style.version,
+    name: style.name || '',
+    principles: (style.principles || []).length,
+    avoid: (style.avoid || []).length,
+    references: (style.references || []).map((reference) => ({
+      author: reference.author || '',
+      work: reference.work || '',
+      source: reference.source,
+    })),
+  };
+}
+
+function validateWritingStyle(style) {
+  if (!isPlainObject(style)) throw new Error('writing style must be a JSON object');
+  if (style.version !== 1) throw new Error('writing style version must be 1');
+  if (typeof style.name !== 'string' || !style.name.trim()) throw new Error('writing style needs a name');
+  if (typeof style.description !== 'string' || !style.description.trim()) throw new Error('writing style needs a description');
+  validateStringList(style.principles, 'principles');
+  validateStringList(style.avoid, 'avoid');
+  validateReferenceList(style.references, 'references');
+  for (const principle of style.principles || []) {
+    if (RECIPE_WORDS.some((word) => principle.includes(word))) {
+      throw new Error(`writing style principles must describe voice, not chapter recipes (found “${principle.slice(0, 30)}”); move per-chapter beats to the outline`);
+    }
+  }
+  return style;
+}
 const MAX_SAMPLES = 5;
 const MAX_SAMPLE_CHARS = 4000;
 const MAX_AVOID = 50;
@@ -26,6 +81,9 @@ function validateSamples(value, label) {
     if (typeof sample.text !== 'string' || !sample.text.trim()) throw new Error(`${label} samples need a text string`);
     if (sample.text.length > MAX_SAMPLE_CHARS) throw new Error(`${label} sample text is too long (max ${MAX_SAMPLE_CHARS} chars)`);
     if (sample.label !== undefined && typeof sample.label !== 'string') throw new Error(`${label} sample label must be a string`);
+    if (sample.source !== undefined && ![...SOURCE_VALUES, 'ai'].includes(sample.source)) {
+      throw new Error(`${label} sample source must be human|public-domain|licensed|ai`);
+    }
   }
 }
 
@@ -62,4 +120,11 @@ function voiceCardSummary(card) {
   };
 }
 
-export { MAX_SAMPLES, validateVoiceCard, voiceCardSummary };
+export {
+  MAX_SAMPLES,
+  SOURCE_VALUES,
+  validateVoiceCard,
+  validateWritingStyle,
+  voiceCardSummary,
+  writingStyleSummary,
+};

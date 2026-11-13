@@ -59,6 +59,17 @@
 | `nameStyleDiversity` | 不同 naming_style / 有风格记录的角色数 | ≥0.5，<0.25 风险 |
 | `nameDuplicateCount` | 重复姓名数 | 0 |
 
+## style 文件来源检查
+
+- `style.setup.writing_style_deprecated`：setup 里还有旧 `writing_style`，应移到
+  `story/style/writing-style.json`（medium）。
+- `style.writing_style.missing`：缺少 `story/style/writing-style.json`（low）。
+- `style.writing_style.invalid`：references 为空 / 来源不是 human|public-domain|licensed /
+  principles 写成“每章报数/换壳”节拍表（medium）。
+- `style.voice.sample_source`：voice card 的正样本缺少人类来源（medium）。
+
+内置公版样本：`references/human-style-samples.md`（逐字拷贝，不要改写）。
+
 ## 用法
 
 ```bash

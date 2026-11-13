@@ -27,7 +27,7 @@ setup/outline、写入风险）见 [SKILL.md](SKILL.md)。
 ### DeepSeek Harness（链接安装）
 
 仓库里包含一个 DSH bundle（`dsh/`）：在 DSH 的 **Plugins → Add plugin** 粘贴
-`git+https://github.com/Malxi/wishmachine.git#v0.5.4&path:/dsh` 即可安装 `wishmachine` 技能；
+`git+https://github.com/Malxi/wishmachine.git#v0.6.0&path:/dsh` 即可安装 `wishmachine` 技能；
 也可以用自定义插件索引在 Discover 里安装。详见 [docs/DSH.md](docs/DSH.md)。
 
 ## 项目格式
@@ -42,7 +42,8 @@ my-book/
   story/craft/*.json
   story/recaps/<chapter-id>.json
   story/ideas/*.json        抽卡结果（--save）
-  story/style/voice.json    voice card（风格契约，推荐）
+  story/style/voice.json    voice card（声音卡，推荐）
+  story/style/writing-style.json  写作风格 + 逐字人类/公版参考样本
   chapters/<chapter-id>.md
   drafts/                   export 输出
   logs/                     registry 日志与备份

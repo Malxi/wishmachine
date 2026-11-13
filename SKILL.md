@@ -13,7 +13,7 @@ examples_en:
   - "Create a 3-volume × 5-chapter science-fiction project"
   - "Check the outline for blocking findings"
   - "Draw 12 science-fiction name cards"
-version: 0.5.4
+version: 0.6.0
 author: Malxi
 ---
 
@@ -115,15 +115,20 @@ $WM doctor --dir my-book                             # 目录/配置/JSON/regist
 
 ## 风格与去 AI 味
 
-1. 建 voice card（每本书一次）：`book write style --dir my-book --apply < voice.json`，
-   写 `voice.description/principles/avoid` + 2–3 段 `samples`；写正文前 `book read style`
-   或 `book read context`（含 style summary）。
+1. 建 style 目录（每本书一次）：
+   - `book write style --dir my-book --apply < voice.json` 写 `story/style/voice.json`（声音卡，
+     `voice.description/principles/avoid` + 带 `source` 的 `samples`）；
+   - `book write writing-style --dir my-book --apply < writing-style.json` 写
+     `story/style/writing-style.json`。`references` 必须从 `references/human-style-samples.md`
+     **逐字复制**真人/公版段落，不允许模型自己写示范；`principles` 只写声音，不写“每章报数/换壳”。
+   - 写正文前 `book read context`（含 style / writing_style summary）。
 2. 取名 pass（setup 前）：先定最终题材，再
    `ideas draw --type namecard --genre <实际题材> --count 20 --seed <n> --output names.json`，
    把选中的 `namecard_id/naming_style/naming_logic/name_source` 写进 `core_cast`；
    规则见 `references/name-guide.md`。
 3. 设定 loop：`check --profile style --target setup` → 按 `style.setup.*`（含 `name_*`）
-   具体化/代价化/换名，最多 2 轮。
+   具体化/代价化/换名，最多 2 轮；setup 里出现旧 `writing_style` 会报
+   `style.setup.writing_style_deprecated`，把它移到 style 目录。
 4. 章节 loop：初稿 → `check --profile style --target chapter --id` → 只改命中句/段 →
    复检，最多 2 轮；指标回到健康带即可，不追 0。每场戏先过“目标/阻碍/转折/结果”，
    连续两段没有新信息就合并或删；母题预算见 `references/scene-guide.md`。

@@ -3,11 +3,36 @@
 目标不是“写得更华丽”，而是把**默认选择**改成**这一个叙述者、这一个场景的选择**。
 本工作流配合 `check --profile style` 使用；CLI 只给统计和命中位置，改写由你完成。
 
-## 0. 先建 voice card（每本书一次）
+## 0. 先建 style 目录里的两个文件（每本书一次）
 
-`story/style/voice.json` 是这本书的声音契约，写正文前先 `book read style`（或
-`book read context` 看 summary），把 `voice.description`、`principles`、`avoid` 和
-2–3 段 `samples` 带进上下文。最小形状：
+- `story/style/voice.json`：声音卡（`book read style` / `book write style`）。
+- `story/style/writing-style.json`：写作风格 + **逐字人类参考样本**
+  （`book read writing-style` / `book write writing-style`）。`writing_style` 不再放 setup。
+
+参考样本不允许 AI 自己写。内置样本见 `references/human-style-samples.md`
+（鲁迅《孔乙己》《故乡》《药》、朱自清《背影》，公版，逐字拷贝）。写作时只取与本书语感
+相近的 1–3 段，写进 `references[]`，并保留 `source: "public-domain"`、`author`、`work`、`url`。
+
+`writing-style.json` 最小形状：
+
+```json
+{
+  "version": 1,
+  "name": "贴着周辙的近距离第三人称",
+  "description": "只写周辙此刻能看见、摸到的东西；情绪滞后，经常不写。句子长短不匀，夹半句口语。",
+  "principles": ["只写人物能感知的具体物", "对话短、答非所问", "段落停在动作或物件上"],
+  "avoid": ["段尾升华", "不是…而是…", "每章报数打卡"],
+  "references": [
+    { "source": "public-domain", "author": "鲁迅", "work": "孔乙己",
+      "url": "https://zh.wikisource.org/wiki/孔乙己", "text": "……逐字拷贝……" }
+  ]
+}
+```
+
+`book write writing-style` 会拒绝：没有人类来源的 `references`、`source: "ai"`、
+以及把“每章/每级/必须/报数/押/换壳”写进 principles 的节拍表。
+
+voice card（`story/style/voice.json`）最小形状；正样本必须带来源：
 
 ```json
 {
@@ -18,13 +43,14 @@
     "principles": ["用职业细节代替抽象判断", "每段至少一个可触摸的物"],
     "avoid": ["会躁式单字谓语", "段尾升华", "不是…而是…", "三连排比"]
   },
-  "samples": [{ "label": "开篇", "text": "……你自己写的 200–500 字段落……" }],
-  "negative_samples": [{ "label": "反面", "text": "……一段你觉得 AI 味的文字……" }]
+  "samples": [
+    { "label": "公版样本", "source": "public-domain", "text": "……逐字拷贝……" }
+  ],
+  "negative_samples": [{ "label": "反面", "source": "ai", "text": "……一段你觉得 AI 味的文字……" }]
 }
 ```
 
 写入：`book write style --dir <project> --apply < voice.json`（默认 dry-run）。
-`samples` 用**你自己写的**或公版文本，不要复制受版权保护的当代作家原文。
 
 ## 1. 设定 loop（写正文前，最多 2 轮）
 

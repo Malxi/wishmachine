@@ -4,6 +4,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
   loadProject, writeArtifact, readSection, auditProject, initProject,
 } from '../scripts/project.js';
@@ -12,6 +13,7 @@ import { chapterMetrics, setupMetrics } from '../scripts/rules/style/metrics.js'
 import { fixtureSet, sampleSetup, sampleOutline, longChapter, outlinepack } from './fixtures.js';
 
 const { tempProject, tempDir } = fixtureSet('wishmachine-style-');
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 function writeChapter(dir, id, text) {
   const file = path.join(dir, 'chapters', `${id}.md`);
@@ -129,6 +131,61 @@ test('book style audit detects phrases repeated across chapters', (t) => {
   const result = auditProject(loadProject(dir), { profile: 'style', view: 'full' });
   assert.ok(result.motifs.length > 0, JSON.stringify(result.motifs));
   assert.ok(result.findings.some((item) => item.rule_id === 'style.book.repeated_motif'));
+});
+
+test('writing-style lives in story/style and rejects AI or recipe sources', (t) => {
+  const dir = tempDir(t);
+  initProject({ name: 'writing style', dir });
+  const humanText = '魯鎭的酒店的格局，是和別處不同的：都是當街一個曲尺形的大櫃臺，櫃裏面豫備着熱水，可以隨時温酒。做工的人，傍午傍晚散了工，每每花四文銅錢，買一碗酒——這是二十多年前的事，現在每碗要漲到十文，——靠櫃外站着，熱熱的喝了休息。';
+  const style = {
+    version: 1,
+    name: '贴近人物视角',
+    description: '只写人物能看见和摸到的东西，句子长短不匀。',
+    principles: ['只写人物能感知的具体物', '对话短、答非所问'],
+    avoid: ['段尾升华'],
+    references: [{ source: 'public-domain', author: '鲁迅', work: '孔乙己', url: 'https://zh.wikisource.org/wiki/孔乙己', text: humanText }],
+  };
+  const dry = writeArtifact(loadProject(dir), { section: 'writing-style', mode: 'replace', content: JSON.stringify(style) });
+  assert.equal(dry.applied, false);
+  assert.equal(dry.writing_style.present, true);
+  const applied = writeArtifact(loadProject(dir), { section: 'writing-style', mode: 'replace', apply: true, content: JSON.stringify(style) });
+  assert.equal(applied.applied, true);
+  assert.ok(fs.existsSync(path.join(dir, 'story', 'style', 'writing-style.json')));
+  assert.equal(readSection(loadProject(dir), 'writing-style').present, true);
+  assert.throws(() => writeArtifact(loadProject(dir), {
+    section: 'writing-style', mode: 'replace', content: JSON.stringify({ ...style, references: [{ source: 'ai', text: humanText }] }),
+  }), /AI-generated samples are not accepted/);
+  assert.throws(() => writeArtifact(loadProject(dir), {
+    section: 'writing-style', mode: 'replace', content: JSON.stringify({ ...style, principles: ['每章一次报数，数字要对上'] }),
+  }), /not chapter recipes/);
+});
+
+test('style check flags legacy setup writing_style and AI voice samples', (t) => {
+  const { dir } = tempProject(t, { name: 'style provenance', init: { chapter: 1 } });
+  const setup = sampleSetup();
+  setup.writing_style = { name: '旧位置', description: '应该移走', principles: [], avoid: [] };
+  writeArtifact(loadProject(dir), { section: 'setup', mode: 'replace', apply: true, content: JSON.stringify(setup) });
+  const card = {
+    version: 1,
+    voice: { description: '测试', principles: [], avoid: [] },
+    samples: [{ label: 'AI 自产', text: '这是一段没有人类来源的示例文本，用来验证检查器的行为。' }],
+  };
+  writeArtifact(loadProject(dir), { section: 'style', mode: 'replace', apply: true, content: JSON.stringify(card) });
+  const result = checkProject(loadProject(dir), { profile: 'style', target: 'setup' });
+  const rules = new Set(result.findings.map((item) => item.rule_id));
+  assert.ok(rules.has('style.setup.writing_style_deprecated'), JSON.stringify([...rules]));
+  assert.ok(rules.has('style.writing_style.missing'), JSON.stringify([...rules]));
+  assert.ok(rules.has('style.voice.sample_source'), JSON.stringify([...rules]));
+});
+
+test('built-in human samples are public-domain verbatim excerpts', () => {
+  const file = path.join(root, 'references', 'human-style-samples.md');
+  const text = fs.readFileSync(file, 'utf8');
+  assert.match(text, /source: public-domain/);
+  assert.match(text, /鲁迅/);
+  assert.match(text, /朱自清/);
+  assert.match(text, /zh\.wikisource\.org/);
+  assert.ok(text.length > 2000);
 });
 
 test('style check is advisory: findings are low/medium and never blocking', (t) => {

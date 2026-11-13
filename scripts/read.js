@@ -4,12 +4,13 @@ import fs from 'node:fs';
 import { readJson, readText, safeSegment } from './util.js';
 import {
   chapterFile, craftFile, ideaFile, listFilesWithSizes, outlineFile,
-  projectPath, readOptionalJson, recapFile, researchFile, setupFile, styleVoiceFile,
+  projectPath, readOptionalJson, recapFile, researchFile, setupFile,
+  styleVoiceFile, styleWritingFile,
 } from './paths.js';
 import { projectStatus } from './state.js';
 import { outlineIndex } from './schema.js';
 import { buildProjectGraph } from './graph.js';
-import { voiceCardSummary } from './style-card.js';
+import { voiceCardSummary, writingStyleSummary } from './style-card.js';
 
 function readSetup(project) {
   const file = setupFile(project.dir);
@@ -137,15 +138,36 @@ function readStyle(project) {
   return { ok: true, section: 'style', present: true, voice: card, summary: voiceCardSummary(card) };
 }
 
+function readWritingStyle(project) {
+  const file = styleWritingFile(project.dir);
+  if (!fs.existsSync(file)) {
+    const setup = readOptionalJson(setupFile(project.dir));
+    return {
+      ok: true,
+      section: 'writing-style',
+      present: false,
+      legacy_setup: Boolean(setup?.writing_style),
+      hint: 'Write one with book write writing-style --apply < writing-style.json; do not let the model invent reference samples.',
+    };
+  }
+  const style = readJson(file);
+  return { ok: true, section: 'writing-style', present: true, writing_style: style, summary: writingStyleSummary(style) };
+}
+
 function readContext(project) {
   const outline = readOptionalJson(outlineFile(project.dir));
   const voice = readOptionalJson(styleVoiceFile(project.dir));
+  const writing = readOptionalJson(styleWritingFile(project.dir));
+  const setup = readOptionalJson(setupFile(project.dir));
   return {
     ok: true,
     section: 'context',
     status: projectStatus(project),
     outline: outline ? outlineIndex(outline) : null,
     style: voiceCardSummary(voice),
+    writing_style: writing
+      ? writingStyleSummary(writing)
+      : { present: false, legacy_setup: Boolean(setup?.writing_style) },
   };
 }
 
@@ -167,6 +189,7 @@ const READERS = {
   craft: readCraft,
   context: readContext,
   style: readStyle,
+  'writing-style': readWritingStyle,
   logs: readLogs,
 };
 

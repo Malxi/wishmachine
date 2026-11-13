@@ -23,19 +23,13 @@ node scripts/wishmachine.js book write setup --dir my-book --from-idea <outlinep
   "project_name": "string",
   "genres": ["string"],
   "premise": "string (2-4 sentences)",
+  "premise": "string",
   "theme": "string",
   "rules": ["string"],
   "target_audience": "string",
   "tone": "string",
   "tense": "past",
   "pov_style": "third_person_limited",
-  "writing_style": {
-    "name": "string",
-    "description": "string",
-    "principles": ["string"],
-    "avoid": ["string"],
-    "reference_excerpt": "string"
-  },
   "long_form_plan": {
     "target_chapters": 15,
     "target_volumes": 3,
@@ -140,6 +134,17 @@ node scripts/wishmachine.js book write setup --dir my-book --from-idea <outlinep
 - `genres`、`rules`、`storyline_refs`、`principles` 是字符串数组。
 - `importance` 是数字；`long_form_plan.target_chapters` / `target_volumes` 是数字。
 - `replace` 覆盖整个 setup；`patch` 只传改动字段。
+
+## writing_style 已移出 setup
+
+`writing_style` 不再属于 setup。写作风格（声音、句法、参考样本）放在
+`story/style/writing-style.json`，用 `book write writing-style` 写入；setup 里出现旧字段会报
+`style.setup.writing_style_deprecated`。
+
+- setup 只负责“故事是什么”（premise/theme/rules/cast/plan）。
+- writing-style 只负责“怎么说话”，且 `references` 必须是**逐字拷贝的真人/公版文本**
+  （内置于 `references/human-style-samples.md`），不允许模型自己写示范段落。
+- “每章一次报数/每级换壳/每章押东西”属于 outline 节拍，不是写作风格。
 
 ## 人物命名（namecard pass）
 

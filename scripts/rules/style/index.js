@@ -4,6 +4,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { readJson, readText } from '../../util.js';
 import { chapterFile, setupFile } from '../../paths.js';
+import { styleArtifactFindings } from './artifacts.js';
+import { crossChapterMotifs } from './motifs.js';
 import { finding, SEVERITY_RANK } from '../finding.js';
 import { chapterMetrics, setupMetrics } from './metrics.js';
 
@@ -185,7 +187,10 @@ function styleFindings(project, target, id, override = {}) {
   if (target === 'setup') {
     const setup = override.setup !== undefined ? override.setup : readOptionalJson(setupFile(project.dir));
     if (!setup) return [];
-    return findingsFor(setupMetrics(setup), SETUP_RULES, thresholds.setup, 'setup');
+    return [
+      ...findingsFor(setupMetrics(setup), SETUP_RULES, thresholds.setup, 'setup'),
+      ...styleArtifactFindings(project),
+    ];
   }
   if (target === 'chapter') {
     if (!id) throw new Error('chapter style check requires --id');
@@ -237,30 +242,6 @@ function summarizeStyle(findings, extra = {}) {
   return summary;
 }
 
-function crossChapterMotifs(chapters, names) {
-  const map = new Map();
-  for (const { id, text } of chapters) {
-    const clean = text.replace(/[^\u3400-\u9fff]/g, '');
-    const seen = new Set();
-    for (let size = 4; size <= 6; size += 1) {
-      for (let index = 0; index + size <= clean.length; index += 1) {
-        const phrase = clean.slice(index, index + size);
-        if (seen.has(phrase)) continue;
-        if (names.some((name) => phrase.includes(name))) continue;
-        seen.add(phrase);
-        if (!map.has(phrase)) map.set(phrase, new Set());
-        map.get(phrase).add(id);
-      }
-    }
-  }
-  const minimum = Math.max(3, Math.ceil(chapters.length * 0.4));
-  return [...map.entries()]
-    .filter(([, ids]) => ids.size >= minimum)
-    .sort((left, right) => right[1].size - left[1].size || left[0].localeCompare(right[0]))
-    .slice(0, 8)
-    .map(([phrase, ids]) => ({ phrase, chapters: ids.size, examples: [...ids].slice(0, 6) }));
-}
-
 function styleAudit(project, options = {}) {
   const thresholds = resolveThresholds(project.config);
   const motifsConfig = resolveMotifs(project.config);
@@ -270,6 +251,7 @@ function styleAudit(project, options = {}) {
   const chapters = chapterFiles(project);
   const findings = [];
   if (setup) findings.push(...findingsFor(setupMetrics(setup), SETUP_RULES, thresholds.setup, 'setup'));
+  findings.push(...styleArtifactFindings(project));
   const chapterResults = chapters.map(({ id, text }) => {
     const metrics = chapterMetrics(text, { names, targetChars, motifs: motifsConfig });
     const chapterFindings = findingsFor(metrics, CHAPTER_RULES, thresholds.chapter, id);

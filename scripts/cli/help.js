@@ -16,8 +16,8 @@ const COMMAND_USAGE = {
   book: 'Usage: wishmachine book <init|status|read|write|registry> [options] [--dir <dir>]\n\nCreate and maintain a book project: init a project, read artifacts, write validated artifacts, maintain the registry.',
   'book init': 'Usage: wishmachine book init <name> [--dir <dir>] [--parts 1] [--volumes 1] [--chapter 20] [--chapter-chars 3000] [--min-chars 1800] [--genre "科幻,奇幻"] [--language zh]\n\nCreate a new project (novel.json, artifact directories and a setup placeholder). --genre accepts a comma/、/separated list.',
   'book status': 'Usage: wishmachine book status [--dir <dir>] [--json]\n\nPrint the current step and (with --json) the status payload.',
-  'book read': 'Usage: wishmachine book read <setup|outline|craft|chapter|recap|context|logs|ideas|idea|research|graph|style> [--id <id>] [--view summary|index|full] [--dir <dir>]\n\nRead one artifact (chapter/recap/craft require --id). style returns the project voice card.',
-  'book write': 'Usage: wishmachine book write <setup|outline|craft|chapter|recap|research|style> [--mode replace|patch|append] [--apply] [--id <id>] [--target <kind>] [--from-idea <id>] [--max-issues <n>] [--dir <dir>]\n\nValidate a candidate from stdin and write it unless a blocking finding stops it (--apply required for JSON artifacts). setup/outline writes rebuild the derived thread/mystery registries automatically; style writes the voice card at story/style/voice.json.',
+  'book read': 'Usage: wishmachine book read <setup|outline|craft|chapter|recap|context|logs|ideas|idea|research|graph|style|writing-style> [--id <id>] [--view summary|index|full] [--dir <dir>]\n\nRead one artifact (chapter/recap/craft require --id). style returns the voice card; writing-style returns story/style/writing-style.json.',
+  'book write': 'Usage: wishmachine book write <setup|outline|craft|chapter|recap|research|style|writing-style> [--mode replace|patch|append] [--apply] [--id <id>] [--target <kind>] [--from-idea <id>] [--max-issues <n>] [--dir <dir>]\n\nValidate a candidate from stdin and write it unless a blocking finding stops it (--apply required for JSON artifacts). setup/outline writes rebuild the derived thread/mystery registries automatically; style writes story/style/voice.json; writing-style writes story/style/writing-style.json and rejects AI-made reference samples.',
   'book registry': 'Usage: wishmachine book registry [clean|log|undo|redo|backups|check-backups|backup|restore|abandon] [options] [--dir <dir>]\n\nInspect and maintain the setup/outline registry; subcommands manage operations, backups and abandoned mysteries.',
   ideas: 'Usage: wishmachine ideas <draw|import|discover|search|validate|types> [options] [--dir <dir>]\n\nDraw deterministic idea cards and validate saved draws.',
   'ideas draw': 'Usage: wishmachine ideas draw --type <type> [--count <n>] [--seed <n>] [--genre <genre>] [--output <file>] [--dir <dir> --save]\n\noutlinepack/worldpack/plotpack accept type-specific options (e.g. --chapters, --volumes, --cast-count).',
@@ -43,7 +43,7 @@ Commands:
   refresh [setup|outline|all] [--dir <dir>]
   export [--dir <dir>] [--output <file>] [--format book|plain|html] [--force]   (default: drafts/manuscript[-plain].md or manuscript.html)
   doctor [--dir <dir>] [--fix] [--no-strict]
-  book read <setup|outline|craft|chapter|recap|context|logs|ideas|idea|research|graph|style> [--id <id>] [--view summary|index|full]
+  book read <setup|outline|craft|chapter|recap|context|logs|ideas|idea|research|graph|style|writing-style> [--id <id>] [--view summary|index|full]
   book registry [--dir <project>]
   book registry clean [--dir <project>] [--dry-run]
   book registry log [--limit 20] [--action abandon|clean] [--since ISO] [--dir <project>]
@@ -54,7 +54,7 @@ Commands:
   book registry backup [--dir <project>]
   book registry restore --backup <name> [--dry-run] [--dir <project>]
   book registry abandon --mystery <id> [--reason <text>] [--dry-run] [--dir <project>]
-  book write <setup|outline|craft|chapter|recap|research|style> [--mode replace|patch|append] [--apply] [--id <id>] [--target <kind>] [--from-idea <id>] [--max-issues <n>]
+  book write <setup|outline|craft|chapter|recap|research|style|writing-style> [--mode replace|patch|append] [--apply] [--id <id>] [--target <kind>] [--from-idea <id>] [--max-issues <n>]
   check [--profile quality|schema|custom|all] [--target setup|outline|chapter|craft|recap] [--id <id>] [--min-severity ...] [--max-findings all|<n>] [--ignore rule_id,...] [--ignore-file <json>] [--no-strict]
   ideas draw --type <type> [--count <n>] [--seed <n>] [--genre <genre>] [--dir <project> --save] [--output <file>]
   ideas draw --type outlinepack [--chapters 10] [--scenes 3] [--target-chars 3000] [--volumes 3] [--chapters-per-volume 10]

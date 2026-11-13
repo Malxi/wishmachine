@@ -22,6 +22,7 @@ const PATHS = {
   ideas: ['story', 'ideas'],
   research: ['story', 'research'],
   styleVoice: ['story', 'style', 'voice.json'],
+  styleWriting: ['story', 'style', 'writing-style.json'],
   styleSamples: ['story', 'style', 'samples'],
   registryBackups: ['logs', 'registry-backups'],
   registryOperations: ['logs', 'registry-operations.jsonl'],
@@ -65,6 +66,10 @@ export function craftFile(dir, kind) {
 
 export function styleVoiceFile(dir) {
   return projectPath(dir, 'styleVoice');
+}
+
+export function styleWritingFile(dir) {
+  return projectPath(dir, 'styleWriting');
 }
 
 export function styleSamplesDir(dir) {

@@ -11,10 +11,10 @@ import {
 import {
   chapterFile, configFile, craftFile, outlineFile, outlineMarkdownFile,
   recapFile, renderOutlineMarkdown, renderSetupMarkdown, setupFile,
-  setupMarkdownFile, styleVoiceFile,
+  setupMarkdownFile, styleVoiceFile, styleWritingFile,
 } from './paths.js';
 import { checkCandidate, checkProject } from './schema.js';
-import { validateVoiceCard, voiceCardSummary } from './style-card.js';
+import { validateVoiceCard, validateWritingStyle, voiceCardSummary, writingStyleSummary } from './style-card.js';
 import { loadRegistryDocs } from './registry-docs.js';
 import { registryRepairReasons } from './registry-rules.js';
 import { repairRegistry } from './registry-repair.js';
@@ -26,6 +26,7 @@ const WRITE_MODES = {
   recap: ['replace', 'patch'],
   chapter: ['replace', 'append'],
   style: ['replace'],
+  'writing-style': ['replace'],
 };
 const WRITE_TARGETS = {
   setup: [''],
@@ -34,6 +35,7 @@ const WRITE_TARGETS = {
   recap: [''],
   chapter: [''],
   style: [''],
+  'writing-style': [''],
 };
 const CHECKPOINT_LIMIT = 10;
 
@@ -266,6 +268,21 @@ function runPostWriteCheck(project, section, config, options) {
   });
 }
 
+function writeWritingStyleArtifact(project, options) {
+  const style = parseJson(options.content ?? '', 'writing style');
+  validateWritingStyle(style);
+  const summary = writingStyleSummary(style);
+  if (!options.apply) {
+    return { ok: true, applied: false, dry_run: true, section: 'writing-style', writing_style: summary };
+  }
+  const file = styleWritingFile(project.dir);
+  ensureDir(path.dirname(file));
+  checkpoint(file, 'writing-style');
+  writeJsonAtomic(file, style);
+  touchProjectConfig(project);
+  return { ok: true, applied: true, dry_run: false, section: 'writing-style', changed: true, writing_style: summary };
+}
+
 function writeStyleArtifact(project, options) {
   const card = parseJson(options.content ?? '', 'style voice card');
   validateVoiceCard(card);
@@ -284,6 +301,7 @@ function writeStyleArtifact(project, options) {
 export function writeArtifact(project, options) {
   const section = options.section;
   if (section === 'style') return writeStyleArtifact(project, options);
+  if (section === 'writing-style') return writeWritingStyleArtifact(project, options);
   const mode = options.mode || 'replace';
   const apply = Boolean(options.apply);
   const target = options.target || '';

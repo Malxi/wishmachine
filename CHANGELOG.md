@@ -7,6 +7,28 @@
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-14
+
+### Added
+
+- `story/style/writing-style.json`：写作风格从 setup 移到 style 目录；新增
+  `book read writing-style` / `book write writing-style`，`book read context` 同时返回
+  `style`（voice）与 `writing_style` summary。
+- 内置公版人类参考样本 [`references/human-style-samples.md`](references/human-style-samples.md)：
+  鲁迅《孔乙己》《故乡》《药》、朱自清《背影》，逐字拷贝，带 `source/author/work/url/license`。
+- writing-style 校验：`references` 必须来自 `human|public-domain|licensed`，拒绝
+  `source: "ai"`；principles 出现“每章/每级/必须/报数/押/换壳”会拒绝并提示移到 outline。
+- style 检查新增 `style.setup.writing_style_deprecated`、`style.writing_style.missing`、
+  `style.writing_style.invalid`、`style.voice.sample_source`。
+
+### Changed
+
+- `writing_style` 不再是 setup 字段；旧项目会得到 medium 提示，需要迁移到
+  `story/style/writing-style.json`。
+- voice card 正样本支持 `source` 字段；AI 自产样本不能再当人类声纹基准。
+- SKILL/workflow-deai/style-checklist/stage-contracts/setup-schema 同步：style 只写声音，
+  “每章报数/换壳/押东西”属于 outline 节拍。
+
 ## [0.5.4] - 2026-11-13
 
 ### Added
@@ -198,7 +220,8 @@
 
 - 完成 P0-P2 审核整改与大规模模块拆分。
 
-[Unreleased]: https://github.com/Malxi/wishmachine/compare/v0.5.4...HEAD
+[Unreleased]: https://github.com/Malxi/wishmachine/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/Malxi/wishmachine/compare/v0.5.4...v0.6.0
 [0.5.4]: https://github.com/Malxi/wishmachine/compare/v0.5.3...v0.5.4
 [0.5.3]: https://github.com/Malxi/wishmachine/compare/v0.5.2...v0.5.3
 [0.5.2]: https://github.com/Malxi/wishmachine/compare/v0.5.1...v0.5.2

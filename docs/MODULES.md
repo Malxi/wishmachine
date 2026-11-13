@@ -99,7 +99,7 @@
 - 体验：missing/corrupt artifact 返回 `artifact.*` findings；`check/audit --ignore/--ignore-file`；`state.next.command` 用真实路径；逐命令 `--help`；audit 兜底 finding 统一走 `finding()`。
 - 安全：sources 默认传输改为**连接固定已校验 IP**（`node:http/https` + 自定义 lookup），消除 DNS rebinding；保留逐跳 SSRF 校验、重定向上限与错误契约。
 - 工程化：`scripts/release.js` 原子同步四处版本源；CHANGELOG/RELEASING；CI ubuntu+windows × Node 18/20/22 + pack smoke；tag push 自动 GitHub Release；24 组生成器矩阵回归。
-- 全仓 **102 个模块、0 循环**；`project.js`/`schema.js`/`ideas.js` 门面 19/6/4 行；checker 与 tests 锁住边界/结构。
+- 全仓 **104 个模块、0 循环**；`project.js`/`schema.js`/`ideas.js` 门面 19/6/4 行；checker 与 tests 锁住边界/结构。
 - 风格检查在 `rules/style/`（纯指标计算 + 阈值 findings），voice card 在 `style-card.js`；两者都不依赖 project/state。
 
 依赖中枢（fan-in）现状：`util.js` 30、`rules/finding.js` 20、`paths.js` 13、`contracts.js` 12、`registry.js` 11；它们都是稳定的低层契约，改动时由对应 owner 串行处理即可。
