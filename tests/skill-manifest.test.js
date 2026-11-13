@@ -36,6 +36,13 @@ test('frontmatter version and package version stay in sync', () => {
   assert.equal(data.version, pkg.version);
 });
 
+test('the bundled scripts/package.json version stays in sync with the root package', () => {
+  const bundled = JSON.parse(
+    fs.readFileSync(path.join(root, 'scripts', 'package.json'), 'utf8'),
+  );
+  assert.equal(bundled.version, pkg.version);
+});
+
 test('the validator rejects the YAML mistakes that broke skill uploads', () => {
   const unquotedColon = '---\nname: wishmachine\ndescription: A wish machine: with an unquoted colon\n---\n\n# body\n';
   assert.equal(validateSkillManifest(unquotedColon).ok, false);

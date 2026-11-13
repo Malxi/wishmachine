@@ -1,3 +1,8 @@
 {
-  "type": "module"
+  "name": "wishmachine",
+  "version": "0.3.2",
+  "description": "小说许愿机 CLI：项目状态、确定性检查、参考抽卡与 artifact 原子写入。",
+  "type": "module",
+  "license": "MIT",
+  "author": "Malxi"
 }
