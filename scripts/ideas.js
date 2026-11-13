@@ -1611,6 +1611,7 @@ export function drawIdeas(options = {}) {
   const factions = deck.factions;
   const equipment = deck.equipment;
   let results;
+  let castMeta = null;
   if (type === 'worldpack') {
     const packDefs = deck.packs;
     const selected = pickMany(rng, packDefs, Math.min(count, packDefs.length));
@@ -1637,6 +1638,15 @@ export function drawIdeas(options = {}) {
       warnings.push(message);
       warningDetails.push({ code: 'cast.protagonist_autofix', severity: 'warning', message });
     }
+    castMeta = {
+      auto: autoCast,
+      count: castCount,
+      pool_size: poolSize,
+      role_counts: castRoles.reduce((counts, role) => {
+        counts[role] = (counts[role] || 0) + 1;
+        return counts;
+      }, {}),
+    };
     if (castCount > poolSize) {
       const message = `cast count ${castCount} exceeds the ${deck.name} archetype pool (${poolSize}); some archetypes will repeat`;
       warnings.push(message);
@@ -1771,6 +1781,7 @@ export function drawIdeas(options = {}) {
       seed,
       warnings,
       warning_details: warningDetails,
+      cast: castMeta,
       replay_command: `wishmachine ideas draw --type ${type}${options.genre ? ` --genre ${options.genre}` : ''} --seed ${seed} --count ${count}`,
       usage: [
         'Use names and traits as reference, not as fixed canon.',
