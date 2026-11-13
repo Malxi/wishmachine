@@ -6,7 +6,7 @@ import { readJson } from './util.js';
 import { drawIdeas, ideasTypes, validateIdeaDraw } from './ideas.js';
 import { listWorkflows, readWorkflow, listReferences, readReference, listSkills, readSkill } from './guides.js';
 
-const VERSION = '0.2.61';
+const VERSION = '0.2.62';
 const BOOLEAN_FLAGS = new Set(['apply', 'json', 'help', 'h', 'dry-run', 'force', 'ingest']);
 const COMMANDS = new Set(['book', 'check', 'ideas', 'gen', 'state', 'audit', 'refresh', 'export', 'doctor', 'version', 'help']);
 
@@ -366,7 +366,10 @@ async function runIdeas(args, flags) {
     const emit = (payload, code) => {
       if (output) {
         const file = path.resolve(output);
-        fs.writeFileSync(file, `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
+        fs.mkdirSync(path.dirname(file), { recursive: true });
+        const temp = `${file}.tmp-${process.pid}`;
+        fs.writeFileSync(temp, `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
+        fs.renameSync(temp, file);
         print({ ok: payload.ok, action: payload.action, output: file, count: payload.count, total_findings: payload.total_findings });
       } else {
         print(payload);
