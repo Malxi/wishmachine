@@ -137,6 +137,7 @@ logs/
 - `book write outline --from-idea <id>` 把 outlinepack 的 draft_outline 送入正常候选检查
 - `book write setup --from-idea <id>` 把 outlinepack 的 setup_draft 送入正常候选检查
 - `ideas` 题材牌堆：科幻默认 / 修仙 / 悬疑 / 都市 / 历史 / 言情（4 packs）
+- meta.cast 记录 auto / count / pool_size / role_counts / archetypes
 - meta.cast 记录 auto / count / pool_size / role_counts
 - `--cast-count 0` 按题材 archetype 的 role 分布自动配比
 - `--cast-count 0` 自动使用当前题材 archetype 池容量

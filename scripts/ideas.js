@@ -1663,6 +1663,7 @@ export function drawIdeas(options = {}) {
       const cast = namecards(rng, seed + packIndex, castCount, castRoles, deck.name, Math.max(40, Math.min(500, Number(options.characterPromptChars) || 160)));
       return buildWorldpack(def, packIndex, seed, cast, deck, options);
     });
+    castMeta.archetypes = [...new Set(results.flatMap((item) => item.cast.map((character) => character.archetype)))];
   } else if (type === 'plotpack') {
     const plots = [];
     for (let index = 0; index < count; index += 1) {

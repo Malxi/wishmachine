@@ -717,6 +717,7 @@ test('romance plot and outline packs use the romance deck', () => {
   assert.equal(autoRomance.meta.cast.count, 12);
   assert.equal(autoRomance.meta.cast.pool_size, 12);
   assert.deepEqual(autoRomance.meta.cast.role_counts, { protagonist: 3, antagonist: 4, support: 5 });
+  assert.equal(autoRomance.meta.cast.archetypes.length, 12);
   const shortPrompt = drawIdeas({ type: 'worldpack', genre: '言情', count: 1, seed: 42, castCount: 12, promptChars: 120 });
   assert.ok(shortPrompt.results[0].prompt_pack.positive.length <= 120);
   assert.ok(shortPrompt.results[0].prompt_pack.positive.endsWith('…'));
