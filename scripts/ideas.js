@@ -2,6 +2,14 @@ import { hashSeed, mulberry32, pickMany, pick } from './util.js';
 import { SUSPENSE, URBAN, HISTORY, ROMANCE } from './ideas-genres.js';
 import { XIANXIA_ARCHETYPES, SUSPENSE_ARCHETYPES, URBAN_ARCHETYPES, HISTORY_ARCHETYPES, ROMANCE_ARCHETYPES } from './ideas-archetypes.js';
 
+const GENRE_ARCHETYPE_POOLS = {
+  xianxia: XIANXIA_ARCHETYPES,
+  suspense: SUSPENSE_ARCHETYPES,
+  urban: URBAN_ARCHETYPES,
+  history: HISTORY_ARCHETYPES,
+  romance: ROMANCE_ARCHETYPES,
+};
+
 const GENRE_ARCHETYPE_COUNTS = {
   xianxia: XIANXIA_ARCHETYPES.length,
   suspense: SUSPENSE_ARCHETYPES.length,
@@ -1613,10 +1621,16 @@ export function drawIdeas(options = {}) {
     const poolSize = GENRE_ARCHETYPE_COUNTS[deck.name] || ARCHETYPES.length;
     const requestedCastCount = Number(options.castCount);
     const autoCast = explicitRoles.length === 0 && requestedCastCount === 0;
+    const autoPool = GENRE_ARCHETYPE_POOLS[deck.name] || ARCHETYPES;
+    const autoRoles = ['protagonist', 'antagonist', 'support'].flatMap((role) => (
+      Array.from({ length: autoPool.filter((item) => (item.roles || []).includes(role)).length }, () => role)
+    ));
     const castCount = Math.max(1, Math.min(12, explicitRoles.length || (autoCast ? poolSize : requestedCastCount) || 4));
     const castRoles = explicitRoles.length
       ? explicitRoles.slice(0, castCount)
-      : Array.from({ length: castCount }, (_, index) => (index === 0 ? 'protagonist' : index === 1 ? 'antagonist' : 'support'));
+      : autoCast
+        ? autoRoles.slice(0, castCount)
+        : Array.from({ length: castCount }, (_, index) => (index === 0 ? 'protagonist' : index === 1 ? 'antagonist' : 'support'));
     if (!castRoles.includes('protagonist')) {
       castRoles[0] = 'protagonist';
       const message = 'cast-roles had no protagonist; the first role was changed to protagonist';
