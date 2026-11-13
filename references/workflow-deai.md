@@ -68,6 +68,11 @@ wishmachine check --dir <project> --profile style --target setup
 5. 朗读一遍，人工抽检“像不像人写的”。
 6. 把本章新发现的“用滥词/句式”写回 voice card 的 `voice.avoid`（`book write style`）。
 
+每场戏先过“目标/阻碍/转折/结果”四件事；连续两段没有新信息就合并或删。
+同一母题（数、纸边、账、六、第七垄）全书超过 3 次就要升级代价或认知，
+纯仪式性重复直接删；`style.motifs` 和 `style.book.repeated_motif` 会量化这件事，
+详见 `references/scene-guide.md`。
+
 ### 关键指标与目标
 
 | 指标 | 目标 |

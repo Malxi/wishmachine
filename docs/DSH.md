@@ -14,7 +14,7 @@ Host 级技能目录里，模型可以像加载其他技能一样加载它——
 
    ```text
    # 推荐：跟随发布 tag（无需查 commit）
-   git+https://github.com/Malxi/wishmachine.git#v0.5.1&path:/dsh
+   git+https://github.com/Malxi/wishmachine.git#v0.5.2&path:/dsh
 
    # 可复现：固定 40 位 commit
    git+https://github.com/Malxi/wishmachine.git#<40-hex-commit>&path:/dsh

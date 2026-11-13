@@ -7,6 +7,24 @@
 
 ## [Unreleased]
 
+## [0.5.2] - 2026-11-13
+
+### Added
+
+- `style.chapter.padding`：章节 CJK / target_chars 超过 1.1/1.25 时提示注水。
+- `style.chapter.motif_overuse` + `novel.json.style.motifs`：项目级母题词表（如“数/手指/
+  六/第七垄/纸边”）密度检查；母题每次重复必须升级代价或认知。
+- `style.book.repeated_motif`：跨章检测重复的 4–6 字描写/动作短语（≥40% 章节出现），
+  输出 `motifs` 证据（短语 + 出现的章节）。
+- `references/scene-guide.md`：场景目标/阻碍/转折/结果四件事、段落功能、母题预算、
+  “数数”场景改写示例、删减顺序。
+
+### Changed
+
+- `audit --profile style` 返回 `motifs` 并新增书级 repeated_motif finding；书级汇总不再
+  误用单章 padding 规则。
+- SKILL/workflow-deai/style-checklist 增加场景焦点与母题预算说明。
+
 ## [0.5.1] - 2026-11-13
 
 ### Added
@@ -158,7 +176,8 @@
 
 - 完成 P0-P2 审核整改与大规模模块拆分。
 
-[Unreleased]: https://github.com/Malxi/wishmachine/compare/v0.5.1...HEAD
+[Unreleased]: https://github.com/Malxi/wishmachine/compare/v0.5.2...HEAD
+[0.5.2]: https://github.com/Malxi/wishmachine/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/Malxi/wishmachine/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/Malxi/wishmachine/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/Malxi/wishmachine/compare/v0.4.0...v0.4.1

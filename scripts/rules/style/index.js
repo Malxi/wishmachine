@@ -21,6 +21,8 @@ const DEFAULT_THRESHOLDS = {
     sentenceCv: { min: 0.45, riskMin: 0.3 },
     paragraphCv: { min: 0.5, riskMin: 0.35 },
     shortClauseRatio: { warn: 0.2, risk: 0.35 },
+    paddingRatio: { warn: 1.1, risk: 1.25 },
+    motifMaxPer1k: { warn: 3, risk: 6 },
   },
   setup: {
     genreCount: { warn: 3, risk: 5 },
@@ -49,7 +51,11 @@ const CHAPTER_RULES = [
   ['sentenceCv', 'style.chapter.sentence_rhythm', '句长节奏', '句子长度过于均匀，缺少长短变化', '插入短句、长句或口语停顿，朗读一遍再改。'],
   ['paragraphCv', 'style.chapter.paragraph_rhythm', '段长节奏', '段落长度过于整齐', '允许一段只写一句，也允许一段写长。'],
   ['shortClauseRatio', 'style.chapter.short_clauses', '短句过多', '小句过短、句子被逗号切碎', '合并小句，减少“主语+单字谓语+句号”的连击。'],
+  ['paddingRatio', 'style.chapter.padding', '章节注水', '章节长度明显超过 target，且容易靠细节填充', '删掉不改变状态、不新增信息的段落，回到 target 附近；把笔墨留给转折。'],
+  ['motifMaxPer1k', 'style.chapter.motif_overuse', '母题过密', '配置的母题词在单章里出现密度过高', '同一母题每次出现都要改变代价或认知；删掉纯仪式性的重复。', 'motifCounts'],
 ];
+
+const BOOK_RULES = CHAPTER_RULES.filter(([metric]) => metric !== 'paddingRatio');
 
 const SETUP_RULES = [
   ['genreCount', 'style.setup.genre_salad', '题材堆叠', '题材数量偏多，容易变成元素沙拉', '选一个主类型，其余作为代价机制或氛围，不要并列卖点。'],
@@ -88,6 +94,11 @@ function resolveThresholds(config) {
     chapter: mergeThresholds(DEFAULT_THRESHOLDS.chapter, style?.chapter),
     setup: mergeThresholds(DEFAULT_THRESHOLDS.setup, style?.setup),
   };
+}
+
+function resolveMotifs(config) {
+  const motifs = config?.style?.motifs;
+  return Array.isArray(motifs) ? motifs.filter((term) => typeof term === 'string' && term.trim()) : [];
 }
 
 function bandFor(value, threshold) {
@@ -177,7 +188,11 @@ function styleFindings(project, target, id, override = {}) {
       text = readText(file);
     }
     const setup = override.setup !== undefined ? override.setup : readOptionalJson(setupFile(project.dir));
-    const metrics = chapterMetrics(text, { names: setupNames(setup) });
+    const metrics = chapterMetrics(text, {
+      names: setupNames(setup),
+      targetChars: project.config.chapter_config?.target_chars,
+      motifs: resolveMotifs(project.config),
+    });
     return findingsFor(metrics, CHAPTER_RULES, thresholds.chapter, id);
   }
   throw new Error(`style profile supports setup or chapter targets, got ${target}`);
@@ -214,23 +229,62 @@ function summarizeStyle(findings, extra = {}) {
   return summary;
 }
 
+function crossChapterMotifs(chapters, names) {
+  const map = new Map();
+  for (const { id, text } of chapters) {
+    const clean = text.replace(/[^\u3400-\u9fff]/g, '');
+    const seen = new Set();
+    for (let size = 4; size <= 6; size += 1) {
+      for (let index = 0; index + size <= clean.length; index += 1) {
+        const phrase = clean.slice(index, index + size);
+        if (seen.has(phrase)) continue;
+        if (names.some((name) => phrase.includes(name))) continue;
+        seen.add(phrase);
+        if (!map.has(phrase)) map.set(phrase, new Set());
+        map.get(phrase).add(id);
+      }
+    }
+  }
+  const minimum = Math.max(3, Math.ceil(chapters.length * 0.4));
+  return [...map.entries()]
+    .filter(([, ids]) => ids.size >= minimum)
+    .sort((left, right) => right[1].size - left[1].size || left[0].localeCompare(right[0]))
+    .slice(0, 8)
+    .map(([phrase, ids]) => ({ phrase, chapters: ids.size, examples: [...ids].slice(0, 6) }));
+}
+
 function styleAudit(project, options = {}) {
   const thresholds = resolveThresholds(project.config);
+  const motifsConfig = resolveMotifs(project.config);
+  const targetChars = project.config.chapter_config?.target_chars;
   const setup = readOptionalJson(setupFile(project.dir));
   const names = setupNames(setup);
   const chapters = chapterFiles(project);
   const findings = [];
   if (setup) findings.push(...findingsFor(setupMetrics(setup), SETUP_RULES, thresholds.setup, 'setup'));
   const chapterResults = chapters.map(({ id, text }) => {
-    const metrics = chapterMetrics(text, { names });
+    const metrics = chapterMetrics(text, { names, targetChars, motifs: motifsConfig });
     const chapterFindings = findingsFor(metrics, CHAPTER_RULES, thresholds.chapter, id);
     findings.push(...chapterFindings);
     return { id, metrics, findings: chapterFindings };
   });
   const pooled = chapters.length
-    ? chapterMetrics(chapters.map((chapter) => chapter.text).join('\n\n'), { names })
+    ? chapterMetrics(chapters.map((chapter) => chapter.text).join('\n\n'), { names, targetChars, motifs: motifsConfig })
     : null;
-  const bookFindings = pooled ? findingsFor(pooled, CHAPTER_RULES, thresholds.chapter, 'book') : [];
+  const bookFindings = pooled ? findingsFor(pooled, BOOK_RULES, thresholds.chapter, 'book') : [];
+  const motifs = crossChapterMotifs(chapters, names);
+  if (motifs.length) {
+    const item = finding(
+      'style.book.repeated_motif',
+      'medium',
+      `重复出现的描写/动作短语：${motifs.slice(0, 3).map((entry) => entry.phrase).join('、')}`,
+      'book',
+      '同一动作/意象每次出现都要升级代价或认知；否则删掉重复，换成新信息。',
+    );
+    item.metrics = { name: 'crossChapterMotifChapters', value: motifs[0].chapters, totalChapters: chapters.length };
+    item.evidence = motifs.slice(0, 5);
+    bookFindings.push(item);
+  }
   findings.push(...bookFindings);
   const filtered = applyStyleFilters(findings, options);
   const view = options.view || 'brief';
@@ -243,6 +297,7 @@ function styleAudit(project, options = {}) {
     name: project.config.name,
     thresholds,
     metrics: pooled,
+    motifs,
     chapters: chapterResults.map((chapter) => ({
       id: chapter.id,
       metrics: chapter.metrics,

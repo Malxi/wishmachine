@@ -13,7 +13,7 @@ examples_en:
   - "Create a 3-volume × 5-chapter science-fiction project"
   - "Check the outline for blocking findings"
   - "Draw 12 science-fiction name cards"
-version: 0.5.1
+version: 0.5.2
 author: Malxi
 ---
 
@@ -125,8 +125,9 @@ $WM doctor --dir my-book                             # 目录/配置/JSON/regist
 3. 设定 loop：`check --profile style --target setup` → 按 `style.setup.*`（含 `name_*`）
    具体化/代价化/换名，最多 2 轮。
 4. 章节 loop：初稿 → `check --profile style --target chapter --id` → 只改命中句/段 →
-   复检，最多 2 轮；指标回到健康带即可，不追 0。退出条件与阈值见
-   `references/workflow-deai.md`。
+   复检，最多 2 轮；指标回到健康带即可，不追 0。每场戏先过“目标/阻碍/转折/结果”，
+   连续两段没有新信息就合并或删；母题预算见 `references/scene-guide.md`。
+   退出条件与阈值见 `references/workflow-deai.md`。
 5. 书级 loop：每 3 章 `audit --profile style --view summary`，指标漂移写回 voice card。
 6. 不要先写 AI 味再 humanize；humanizer 只能做第二遍清理。style 检查是体检，不是裁判。
 
@@ -186,7 +187,7 @@ $WM export --dir my-book --format html --output drafts/我的书-阅读版.html
 - setup/outline 字段与 `book write` 细节：`setup-schema.md`、`outline-schema.md`、`book-write.md`
 - profile/规则/findings：`references/check-profiles.md`
 - 风格与去 AI 味：`references/workflow-deai.md`、`references/style-checklist.md`、
-  `references/name-guide.md`
+  `references/name-guide.md`、`references/scene-guide.md`
 - 流程与编辑性审查：`references/workflow-*.md`、`references/review-checklist.md`
 
 读取：`$WM gen reference read <name>`、`$WM gen workflow read <name>`。

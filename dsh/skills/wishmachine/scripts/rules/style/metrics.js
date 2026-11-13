@@ -1,5 +1,6 @@
 // Deterministic style metrics for prose and setup artifacts. Pure functions:
 // no project/state imports, so rules/style can stay a leaf feature.
+import { chapterFocusMetrics } from './focus.js';
 
 const SENTENCE_SPLIT = /(?<=[。！？…])/;
 const CLAUSE_SPLIT = /[，,；;：:、]/;
@@ -97,6 +98,7 @@ function chapterMetrics(text, options = {}) {
   const cjk = cjkCount(text);
   const sentences = splitSentences(text);
   const paragraphs = splitParagraphs(text);
+  const focus = chapterFocusMetrics(text, paragraphs, cjk, options);
   const sentenceLengths = sentences.map((sentence) => cjkCount(sentence));
   const clauseLengths = sentences.flatMap((sentence) => splitClauses(sentence).map((clause) => cjkCount(clause)));
   const paragraphsLengths = paragraphs.map((paragraph) => cjkCount(paragraph));
@@ -152,6 +154,7 @@ function chapterMetrics(text, options = {}) {
     semicolonPer1k: round(per1k(semicolons, cjk)),
     colonPer1k: round(per1k(colons, cjk)),
     dialogueRatio: round(ratio(cjkCount(dialogueText), cjk)),
+    ...focus,
     duplicateSentenceCount: duplicateSentences.size,
     compressedExamples: compressed.slice(0, 8).map((item) => item.sentence),
     openingExamples: [...openings.entries()].filter(([, count]) => count >= 3).sort((left, right) => right[1] - left[1]).slice(0, 5).map(([prefix, count]) => ({ prefix, count })),

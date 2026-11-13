@@ -86,6 +86,28 @@ test('setup schema validates name_source and naming_style values', (t) => {
   assert.ok(result.findings.some((item) => item.rule_id === 'schema.setup.core_cast.naming_style'));
 });
 
+test('chapter style flags padding and configured motif overuse', (t) => {
+  const { dir } = tempProject(t, { name: 'padding motif', init: { chapter: 1 } });
+  writeChapter(dir, 'P1-V1-C1', `# 第一章\n\n${'她数了一遍。'.repeat(700)}`);
+  const project = loadProject(dir);
+  project.config.style = { motifs: ['数'], chapter: { motifMaxPer1k: { warn: 1, risk: 2 } } };
+  const result = checkProject(project, { profile: 'style', target: 'chapter', id: 'P1-V1-C1' });
+  assert.ok(result.findings.some((item) => item.rule_id === 'style.chapter.padding'));
+  const motif = result.findings.find((item) => item.rule_id === 'style.chapter.motif_overuse');
+  assert.ok(motif, JSON.stringify(result.findings));
+  assert.ok(motif.evidence.some((item) => item.term === '数'));
+});
+
+test('book style audit detects phrases repeated across chapters', (t) => {
+  const { dir } = tempProject(t, { name: 'book motifs', init: { chapter: 3 } });
+  for (const id of ['P1-V1-C1', 'P1-V1-C2', 'P1-V1-C3']) {
+    writeChapter(dir, id, `# ${id}\n\n${'她把纸边抹了一遍，又把账合上。'.repeat(20)}`);
+  }
+  const result = auditProject(loadProject(dir), { profile: 'style', view: 'full' });
+  assert.ok(result.motifs.length > 0, JSON.stringify(result.motifs));
+  assert.ok(result.findings.some((item) => item.rule_id === 'style.book.repeated_motif'));
+});
+
 test('style check is advisory: findings are low/medium and never blocking', (t) => {
   const { dir } = tempProject(t, { name: 'style check', init: { chapter: 1 } });
   writeArtifact(loadProject(dir), { section: 'setup', mode: 'replace', apply: true, content: JSON.stringify(sampleSetup()) });

@@ -28,7 +28,15 @@
 | `sentenceCv` | 句长标准差/均值 | 0.45–0.9，<0.3 风险（太均匀） |
 | `paragraphCv` | 段长标准差/均值 | ≥0.5，<0.35 风险（太整齐） |
 | `shortClauseRatio` | ≤4 字小句占比 | ≤0.2，>0.35 风险 |
+| `paddingRatio` | 章节 CJK / target_chars | ≤1.1，>1.25 风险（注水） |
+| `motifMaxPer1k` | `style.motifs` 配置的母题词最高密度 | ≤3，>6 风险 |
+| `dialogueParagraphRatio` | 含对话的段落占比 | ≥0.2，<0.1 风险 |
+| `redundantParagraphRatio` | 相邻段落 2-gram 相似度 ≥0.5 的占比 | ≤0.1，>0.2 风险 |
 | `duplicateSentenceCount` | 完全重复的句子数 | 0 |
+
+`style.motifs` 是项目级母题词表（如 `["数","手指","六","第七垄","纸边"]`）；
+`audit --profile style` 还会跨章检测重复的 4–6 字短语（`style.book.repeated_motif`）。
+场景焦点与母题预算的写法见 `references/scene-guide.md`。
 
 同时输出 `dashPer1k` / `semicolonPer1k` / `colonPer1k` 作为参考，默认只报不判。
 
