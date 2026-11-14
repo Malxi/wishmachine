@@ -34,7 +34,8 @@
 `book write writing-style` 会拒绝：没有人类来源的 `references`、`source: "ai"`、
 以及把“每章/每级/必须/报数/押/换壳”写进 principles 的节拍表。
 
-voice card（`story/style/voice.json`）最小形状；正样本必须带来源：
+voice card（`story/style/voice.json`）最小形状；正样本必须带来源。
+内置示例在 `references/voice-card.example.json`（公版样本，可直接复制后改）：
 
 ```json
 {
@@ -137,10 +138,9 @@ wishmachine audit --dir <project> --profile style --view summary
 ## 5. 反例（第七垄实测）
 
 - ❌ 马拉进去会躁。沈穗没争。
-  ✅ 车夫说，马进了那块地就烦躁，怎么打都不肯往前走。沈穗没跟他争，把箱子从车上提下来。
+  ✅ 车夫说，马进了那块地就烦躁，怎么打都不肯往前走。沈穗没说什么，把箱子从车上提下来。
 - ❌ 她数了一遍。六垄。又数了一遍，还是六垄。
-  ✅ 她数了一遍，六条。从东头数到西头，又从西头数回来，还是六条。垄沟直得不像荒了三年，
-  草根把土撑得歪歪扭扭，沟却一道没塌。
+  ✅ 她扫了一眼，有六条田垄。
 
 ## 6. 不要做的事
 

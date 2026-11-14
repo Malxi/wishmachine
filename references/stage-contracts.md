@@ -9,7 +9,7 @@ novel.json                      项目配置，由 book init 生成
 story/setup/story_setup.json    setup artifact
 story/compose/outline.json      outline artifact
 story/craft/<kind>.json         craft artifact（character|item|location|organization）
-story/style/voice.json          voice card（声音，可选但推荐）
+story/style/voice.json          voice card（声音，可选但推荐；示例见 references/voice-card.example.json）
 story/style/writing-style.json  写作风格 + 逐字人类参考样本（不再是 setup 字段）
 story/recaps/<chapter-id>.json  recap artifact
 story/ideas/<type>-<seed>-*.json 抽卡结果（ideas draw --save）

@@ -7,6 +7,16 @@
 
 ## [Unreleased]
 
+## [0.6.2] - 2026-11-15
+
+### Changed
+
+- `references/human-style-samples.md` 公版样本机械转为简体中文，保留 Wikisource 来源链接；
+  删除夹在样本文件里的“为什么没有现在作家”说明，说明只留在工作流文档。
+- 追加用户本人提供的一级闸样本（`source: human`，非公版），位于样本文件末尾。
+- 新增内置 voice card 示例 `references/voice-card.example.json`（含公版样本 + 反面样本）。
+- 文档补充 voice card 示例位置；writing style 的参考来源仍强制 `human|public-domain|licensed`。
+
 ## [0.6.1] - 2026-11-14
 
 ### Added
@@ -229,7 +239,8 @@
 
 - 完成 P0-P2 审核整改与大规模模块拆分。
 
-[Unreleased]: https://github.com/Malxi/wishmachine/compare/v0.6.1...HEAD
+[Unreleased]: https://github.com/Malxi/wishmachine/compare/v0.6.2...HEAD
+[0.6.2]: https://github.com/Malxi/wishmachine/compare/v0.6.1...v0.6.2
 [0.6.1]: https://github.com/Malxi/wishmachine/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/Malxi/wishmachine/compare/v0.5.4...v0.6.0
 [0.5.4]: https://github.com/Malxi/wishmachine/compare/v0.5.3...v0.5.4

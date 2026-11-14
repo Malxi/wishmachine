@@ -13,7 +13,7 @@ examples_en:
   - "Create a 3-volume × 5-chapter science-fiction project"
   - "Check the outline for blocking findings"
   - "Draw 12 science-fiction name cards"
-version: 0.6.1
+version: 0.6.2
 author: Malxi
 ---
 
@@ -117,7 +117,8 @@ $WM doctor --dir my-book                             # 目录/配置/JSON/regist
 
 1. 建 style 目录（每本书一次）：
    - `book write style --dir my-book --apply < voice.json` 写 `story/style/voice.json`（声音卡，
-     `voice.description/principles/avoid` + 带 `source` 的 `samples`）；
+     `voice.description/principles/avoid` + 带 `source` 的 `samples`；内置示例见
+     `references/voice-card.example.json`）；
    - `book write writing-style --dir my-book --apply < writing-style.json` 写
      `story/style/writing-style.json`。`references` 必须从 `references/human-style-samples.md`
      **逐字复制**真人/公版段落，不允许模型自己写示范；`principles` 只写声音，不写“每章报数/换壳”。
