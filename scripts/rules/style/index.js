@@ -6,6 +6,7 @@ import { readJson, readText } from '../../util.js';
 import { chapterFile, setupFile } from '../../paths.js';
 import { styleArtifactFindings } from './artifacts.js';
 import { crossChapterMotifs } from './motifs.js';
+import { bookShapeFindings, chapterShape } from './shape.js';
 import { finding, SEVERITY_RANK } from '../finding.js';
 import { chapterMetrics, setupMetrics } from './metrics.js';
 
@@ -29,6 +30,20 @@ const DEFAULT_THRESHOLDS = {
     recountPer1k: { warn: 0.5, risk: 1.5 },
     paddingRatio: { warn: 1.1, risk: 1.25 },
     motifMaxPer1k: { warn: 3, risk: 6 },
+    translationesePer1k: { warn: 1, risk: 2.5 },
+    nominalizationPer1k: { warn: 1.5, risk: 3.5 },
+    jargonPer1k: { warn: 1, risk: 2.5 },
+    embodiedEmotionPer1k: { warn: 1.5, risk: 3 },
+    softAdverbPer1k: { warn: 8, risk: 15 },
+    dialogueTagPer1k: { warn: 1.5, risk: 3 },
+    dialogueTagDiversity: { min: 0.4, riskMin: 0.2 },
+    singleSentenceParagraphRatio: { warn: 0.25, risk: 0.4 },
+    consecutiveSingleSentenceParagraphs: { warn: 3, risk: 5 },
+    punctuationTicPer1k: { warn: 15, risk: 25 },
+    lectureMarkerPer1k: { warn: 0.8, risk: 1.8 },
+    dialogueParagraphRatio: { warn: 0.75, risk: 0.9 },
+    qaRoundCount: { warn: 2, risk: 4 },
+    oneLineDialogueRatio: { warn: 0.7, risk: 0.85 },
   },
   setup: {
     genreCount: { warn: 3, risk: 5 },
@@ -50,7 +65,7 @@ const CHAPTER_RULES = [
   ['compressedDistinctRatio', 'style.chapter.predicate_variety', '单字谓语重复', '单字谓语类型过于集中', '换动词或改句式，避免“不响/没答/不动”反复出现。'],
   ['sentenceOpeningReuse', 'style.chapter.opening_reuse', '句首复用', '过多句子用同一个两字开头', '合并、倒装或从句中切入，减少“沈穗把/她把”式开头。', 'openingExamples'],
   ['subjectOpeningShare', 'style.chapter.subject_openers', '主语开头过多', '大量句子以人物名开头', '用动作、环境、对话或他人视角开头，让句子入口有变化。'],
-  ['templateConnectorsPer1k', 'style.chapter.template_connectors', '模板连接句', '“不是…而是/不仅…还/首先其次最后”等模板句偏多', '直接说结论，删掉对比铺垫；一次对比只保留真正纠正读者预期的那次。'],
+  ['templateConnectorsPer1k', 'style.chapter.template_connectors', '模板连接句', '“不是/并非…而是/不仅…还/一方面…另一方面/首先其次最后”等模板句偏多', '直接说结论，删掉对比铺垫；一次对比只保留真正纠正读者预期的那次。'],
   ['similePer1k', 'style.chapter.simile_density', '比喻密度', '比喻标记（像/仿佛/似乎/宛如）偏多', '删掉一半比喻，把意象换成人物职业/环境里独有的具体物。'],
   ['upliftPer1k', 'style.chapter.paragraph_uplift', '段尾升华', '段落结尾频繁用抽象词总结、拔高', '让段落停在动作、对话或未解释的细节上；主题让读者自己得出。', 'upliftExamples'],
   ['dialogueRatio', 'style.chapter.dialogue_balance', '对话比例', '对话占比过低或过高', '低则把部分叙述改成对话/动作；高则补动作与场景。'],
@@ -63,6 +78,20 @@ const CHAPTER_RULES = [
   ['recountPer1k', 'style.chapter.recount_tic', '重复点数', '“点过一遍，又点一遍”式重复动作', '第二次点数必须多数出/少数出东西；否则删掉第一次。', 'recountExamples'],
   ['paddingRatio', 'style.chapter.padding', '章节注水', '章节长度明显超过 target，且容易靠细节填充', '删掉不改变状态、不新增信息的段落，回到 target 附近；把笔墨留给转折。'],
   ['motifMaxPer1k', 'style.chapter.motif_overuse', '母题过密', '配置的母题词在单章里出现密度过高', '同一母题每次出现都要改变代价或认知；删掉纯仪式性的重复。', 'motifCounts'],
+  ['translationesePer1k', 'style.chapter.translationese', '翻译腔', '“对于…来说/在…背景下/随着…发展”等西化连接偏多', '删掉连接词，先写谁做了什么；条件、时间放到动作附近。', 'translationeseExamples'],
+  ['nominalizationPer1k', 'style.chapter.nominalization', '名词化/弱动词', '“进行讨论/作出判断/实现提升”等抽象外壳偏多', '还原成“谁做了什么”；保留必要术语，不要机械拆词。', 'nominalizationExamples'],
+  ['jargonPer1k', 'style.chapter.jargon', '互联网黑话', '“赋能/抓手/闭环/颗粒度/底层逻辑”等词偏多', '删掉不承担信息的黑话，换成具体动作、对象、代价。', 'jargonExamples'],
+  ['embodiedEmotionPer1k', 'style.chapter.emotion_body', '身体表演式情绪', '“瞳孔骤缩/呼吸一滞/心脏漏跳”等身体反应偏多', '情绪可以直说，但要写清怕谁/怕什么；身体反应必须改变后续动作。', 'embodiedEmotionExamples'],
+  ['softAdverbPer1k', 'style.chapter.soft_adverbs', '弱化副词', '“微微/缓缓/淡淡/轻轻/默默”等副词偏多', '删掉一半，用具体动作或直接判断代替；保留真正有节奏作用的。', 'softAdverbExamples'],
+  ['dialogueTagPer1k', 'style.chapter.dialogue_tags', '对白标签模板', '“淡淡道/低声道/冷冷道/薄唇轻启”等标签偏多', '用动作、停顿、答非所问代替标签；保留少量必要提示。', 'dialogueTagExamples'],
+  ['dialogueTagDiversity', 'style.chapter.dialogue_tag_variety', '对白标签单一', '对白标签类型过于集中', '换动作/神态/沉默；不要只在“淡淡道/低声道”里轮换。'],
+  ['singleSentenceParagraphRatio', 'style.chapter.subtitle_paragraphs', '字幕化段落', '非对白单句段占比过高', '普通动作/判断并回同一段；单句成段只留给真正的重音。', 'singleSentenceParagraphExamples'],
+  ['consecutiveSingleSentenceParagraphs', 'style.chapter.subtitle_run', '连续单句段', '连续多个非对白单句段，像分镜/字幕', '合并成连续动作或心理过程；只在转折/爆点处保留短段。', 'singleSentenceParagraphExamples'],
+  ['punctuationTicPer1k', 'style.chapter.punctuation_tic', '标点承载结构', '破折号/冒号/分号密度偏高', '先重写句法关系，再选标点；不要只换符号。'],
+  ['lectureMarkerPer1k', 'style.chapter.lecture_markers', '抽象抬升/说教句', '“本质上/真正重要的是/这说明”等抬升句偏多', '删掉抬升壳，直接写事实、后果或人物判断。', 'lectureMarkerExamples'],
+  ['dialogueParagraphRatio', 'style.chapter.dialogue_paragraphs', '对白段落过多', '对白段落占比过高，场景可能靠问答推进', '保留不可替代的对白，把重复确认/已知信息转成动作或叙述。'],
+  ['qaRoundCount', 'style.chapter.qa_rounds', '连续问答推进', '连续多轮信息型问答', '合并问答、改成动作反馈或让一方不回答；对白不应垄断推进。'],
+  ['oneLineDialogueRatio', 'style.chapter.one_line_dialogue', '碎对白段落', '对白段落多为一句一换段', '同一说话人的连续话合并；对白之间补动作/观察。'],
 ];
 
 const BOOK_RULES = CHAPTER_RULES.filter(([metric]) => metric !== 'paddingRatio');
@@ -256,7 +285,7 @@ function styleAudit(project, options = {}) {
     const metrics = chapterMetrics(text, { names, targetChars, motifs: motifsConfig });
     const chapterFindings = findingsFor(metrics, CHAPTER_RULES, thresholds.chapter, id);
     findings.push(...chapterFindings);
-    return { id, metrics, findings: chapterFindings };
+    return { id, metrics, shape: chapterShape(text, metrics), findings: chapterFindings };
   });
   const pooled = chapters.length
     ? chapterMetrics(chapters.map((chapter) => chapter.text).join('\n\n'), { names, targetChars, motifs: motifsConfig })
@@ -275,6 +304,7 @@ function styleAudit(project, options = {}) {
     item.evidence = motifs.slice(0, 5);
     bookFindings.push(item);
   }
+  bookFindings.push(...bookShapeFindings(chapterResults));
   findings.push(...bookFindings);
   const filtered = applyStyleFilters(findings, options);
   const view = options.view || 'brief';
@@ -291,6 +321,7 @@ function styleAudit(project, options = {}) {
     chapters: chapterResults.map((chapter) => ({
       id: chapter.id,
       metrics: chapter.metrics,
+      shape: chapter.shape,
       findings: view === 'summary' ? undefined : applyStyleFilters(chapter.findings, options).active,
     })),
     findings: view === 'summary' ? [] : filtered.active,

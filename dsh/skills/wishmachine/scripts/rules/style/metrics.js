@@ -1,5 +1,6 @@
 // Deterministic style metrics for prose and setup artifacts. Pure functions:
 // no project/state imports, so rules/style can stay a leaf feature.
+import { chapterChineseMetrics } from './chinese.js';
 import { chapterFocusMetrics } from './focus.js';
 
 const SENTENCE_SPLIT = /(?<=[。！？…])/;
@@ -18,7 +19,10 @@ const RECOUNT = /(?:又|再)(?:数|点|核|查|对|验|清点|盘)[^。！？]*(
 const UPLIFT = new RegExp(`(?:这|那|原来|终究|或许|也许|所谓|真正|某种|一切|所有|从来|不过|只是|毕竟|到底)[^。！？]{0,30}(?:${ABSTRACT_PATTERN})[^。！？]*[。！？]`, 'g');
 const TEMPLATE = [
   /不是[^。！？]{0,24}而是/g,
-  /不仅[^。！？]{0,24}(?:还|更)/g,
+  /并非[^。！？]{0,24}而是/g,
+  /不仅[^。！？]{0,24}(?:还|更|而且)/g,
+  /一方面[^。！？]{0,40}另一方面/g,
+  /与其说[^。！？]{0,20}不如说/g,
   /首先|其次|最后|值得注意的是|总而言之|某种意义上|由此可见|不难看出/g,
 ];
 const APHORISM = /不是[^。！？]{0,30}是|从来|唯一|真正|说到底|归根结底|某种意义上/;
@@ -131,6 +135,7 @@ function chapterMetrics(text, options = {}) {
   const sentences = splitSentences(text);
   const paragraphs = splitParagraphs(text);
   const focus = chapterFocusMetrics(text, paragraphs, cjk, options);
+  const chinese = chapterChineseMetrics(text, { sentences, paragraphs, cjk });
   const tics = narrationTicMetrics(sentences, cjk);
   const sentenceLengths = sentences.map((sentence) => cjkCount(sentence));
   const clauseLengths = sentences.flatMap((sentence) => splitClauses(sentence).map((clause) => cjkCount(clause)));
@@ -190,6 +195,7 @@ function chapterMetrics(text, options = {}) {
     colonPer1k: round(per1k(colons, cjk)),
     dialogueRatio: round(ratio(cjkCount(dialogueText), cjk)),
     ...focus,
+    ...chinese,
     ...tics,
     duplicateSentenceCount: duplicateSentences.size,
     compressedExamples: compressed.slice(0, 8).map((item) => item.sentence),

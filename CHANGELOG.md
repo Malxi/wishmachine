@@ -5,6 +5,32 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+## [0.8.0] - 2026-11-15
+
+### Added
+
+- 中文句法/对白/段落指标：`translationesePer1k`、`nominalizationPer1k`、`jargonPer1k`、
+  `embodiedEmotionPer1k`、`emotionBodyShare`、`softAdverbPer1k`、`dialogueTagPer1k`、
+  `dialogueTagDiversity`、`singleSentenceParagraphRatio`、
+  `consecutiveSingleSentenceParagraphs`、`punctuationTicPer1k`、`lectureMarkerPer1k`、
+  `qaRoundCount`、`oneLineDialogueRatio`。
+- 对应 advisory 规则：`style.chapter.translationese`、`nominalization`、`jargon`、
+  `emotion_body`、`soft_adverbs`、`dialogue_tags`、`dialogue_tag_variety`、
+  `subtitle_paragraphs`、`subtitle_run`、`punctuation_tic`、`lecture_markers`、
+  `dialogue_paragraphs`、`qa_rounds`、`one_line_dialogue`；全部 low/medium，永不 blocking。
+- 全书结构检查：每章 `shape`（开头/收尾/对话带/情绪模式），
+  `style.book.shape_convergence`（多章同构）与 `style.book.theme_explicitness`
+  （多章以主题总结/抽象抬升收尾）。
+- `tests/style-chinese.test.js`：命中、误报、配置覆盖和跨章结构回归测试。
+- `references/style-checklist.md` / `references/workflow-deai.md` / `SKILL.md` 增加中文
+  prose pass 与结构层说明。
+
+### Changed
+
+- `style` profile 的指标从“句子层 AI 味”扩展到“中文句法 + 对白 + 段落 + 跨章结构”；
+  仍然只给方向和命中句，不自动改写，不把词表当禁令。
+- `audit --profile style` 的每章输出新增 `shape`；`--view summary` 保持小输出。
+
 ## [0.7.0] - 2026-11-15
 
 ### Added
@@ -275,7 +301,8 @@
 
 - 完成 P0-P2 审核整改与大规模模块拆分。
 
-[Unreleased]: https://github.com/Malxi/wishmachine/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/Malxi/wishmachine/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/Malxi/wishmachine/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/Malxi/wishmachine/compare/v0.6.2...v0.7.0
 [0.6.2]: https://github.com/Malxi/wishmachine/compare/v0.6.1...v0.6.2
 [0.6.1]: https://github.com/Malxi/wishmachine/compare/v0.6.0...v0.6.1

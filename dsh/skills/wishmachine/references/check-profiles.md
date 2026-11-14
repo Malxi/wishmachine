@@ -13,8 +13,9 @@ all       quality + schema + custom（默认，不含 style）
 ```
 
 `--profile rpg` 等未知值会被枚举校验拒绝（退出码 1），不会静默跳检查。
-`style` 只支持 `--target setup` 与 `--target chapter --id`；指标与阈值见
-`references/style-checklist.md`，改稿流程见 `references/workflow-deai.md`。
+`style` 只支持 `--target setup` 与 `--target chapter --id`；`audit --profile style`
+还会给每章 `shape`（开头/收尾/对话带/情绪模式），并报跨章结构同构与主题总结式收尾。
+指标与阈值见 `references/style-checklist.md`，改稿流程见 `references/workflow-deai.md`。
 
 ## 常用命令
 

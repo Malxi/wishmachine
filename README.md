@@ -27,7 +27,7 @@ setup/outline、写入风险）见 [SKILL.md](SKILL.md)。
 ### DeepSeek Harness（链接安装）
 
 仓库里包含一个 DSH bundle（`dsh/`）：在 DSH 的 **Plugins → Add plugin** 粘贴
-`git+https://github.com/Malxi/wishmachine.git#v0.7.0&path:/dsh` 即可安装 `wishmachine` 技能；
+`git+https://github.com/Malxi/wishmachine.git#v0.8.0&path:/dsh` 即可安装 `wishmachine` 技能；
 也可以用自定义插件索引在 Discover 里安装。详见 [docs/DSH.md](docs/DSH.md)。
 
 ## 项目格式
@@ -80,10 +80,11 @@ my-book/
 - setup/outline 写入会自动重建派生的 `thread_registry`/`mystery_registry`；`check` 也会报
   `quality.registry.drift`，不再出现“audit 100 分、doctor 报漂移”的假绿灯。
 - `check --profile style` 用统计指标查 AI 味（单字谓语、否定式谓语、句首复用、段尾升华、
-  比喻/模板句密度、对话比例、章节注水、母题密度等），`audit --profile style` 汇总全书与
-  每章指标，并跨章检测重复的描写/动作短语；只报 low/medium，永不 blocking。setup 还会查
-  题材堆叠、抽象词、格言式 theme、规则可操作性，以及名字的姓氏集中/描述式名字/单字名/
-  来源覆盖率/重名。voice card 用 `book write style`、writing-style 用
+  比喻/模板句密度、对话比例、章节注水、母题密度，以及翻译腔、名词化/弱动词、互联网黑话、
+  身体表演式情绪、弱化副词、对白标签、字幕化段落、抽象抬升句、连续问答等中文句法项），
+  `audit --profile style` 汇总全书与每章指标，并跨章检测重复的描写/动作短语、章节结构同构
+  和主题总结式收尾；只报 low/medium，永不 blocking。setup 还会查题材堆叠、抽象词、
+  格言式 theme、规则可操作性，以及名字的姓氏集中/描述式名字/单字名/来源覆盖率/重名。voice card 用 `book write style`、writing-style 用
   `book write writing-style` 写入，样本必须逐字引用 [data/style/human-samples.json](data/style/human-samples.json)
   的 `sample_id` 或用户确认的 human 文本；改稿流程见
   [references/workflow-deai.md](references/workflow-deai.md)、取名见

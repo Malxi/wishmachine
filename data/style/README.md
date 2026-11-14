@@ -1,6 +1,7 @@
 # style data
 
-本目录存放**人类风格参考**，不是文档：
+本目录存放**人类风格参考样本**，不是写作规则文档。中文句法/对白/段落规则在
+`references/style-checklist.md` 与 `references/workflow-deai.md`，不要把规则塞进样本 JSON。
 
 - `human-samples.json`：内置公版/授权样本。每条带 `id/source/author/work/url/license/text`。
   - 鲁迅、朱自清、郁达夫：中国 life+50 公版；其他法域请自行确认。

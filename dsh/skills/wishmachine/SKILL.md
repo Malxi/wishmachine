@@ -13,7 +13,7 @@ examples_en:
   - "Create a 3-volume × 5-chapter science-fiction project"
   - "Check the outline for blocking findings"
   - "Draw 12 science-fiction name cards"
-version: 0.7.0
+version: 0.8.0
 author: Malxi
 ---
 
@@ -111,7 +111,9 @@ $WM doctor --dir my-book                             # 目录/配置/JSON/regist
 - `quality.registry.drift`（medium）：setup/outline 的派生 registry 不一致；`doctor --fix`
   或重新 `book write setup/outline --apply` 自动重建，不会阻塞。
 - `style.*`（low/medium）：单字谓语、否定式谓语、句首复用、段尾升华、比喻密度、模板句、
-  对话比例等统计指标；只给方向和命中句，不阻塞写入。详见 `references/style-checklist.md`。
+  对话比例，以及翻译腔、名词化/弱动词、黑话、身体表演式情绪、弱化副词、对白标签、
+  字幕化段落、抽象抬升句、连续问答等中文句法指标；`audit` 还会报跨章结构同构。
+  只给方向和命中句，不阻塞写入。详见 `references/style-checklist.md`。
 - blocking = `severity` 为 `high` 或 `critical`；check/audit/doctor/write 此时退出码 2；
   `--no-strict` 让 check/audit/doctor 强制退出 0（脚本容错用）。
 - `--min-severity low|medium|high|critical` 只过滤展示，`summary` 仍统计全量；
@@ -147,9 +149,16 @@ $WM doctor --dir my-book                             # 目录/配置/JSON/regist
 4. 章节 loop：初稿 → `check --profile style --target chapter --id` → 只改命中句/段 →
    复检，最多 2 轮；指标回到健康带即可，不追 0。每场戏先过“目标/阻碍/转折/结果”，
    连续两段没有新信息就合并或删；母题预算见 `references/scene-guide.md`。
-   特别注意 `fragments`（电报句）、`enumeration`（清单罗列）、`counting_tic` /
-   `recount_tic`（数数/核对口头禅）。退出条件与阈值见 `references/workflow-deai.md`。
-5. 书级 loop：每 3 章 `audit --profile style --view summary`，指标漂移写回 voice card。
+   除 `fragments` / `enumeration` / `counting_tic` / `recount_tic` 外，重点看中文句法：
+   `translationese`（翻译腔）、`nominalization`（名词化/弱动词）、`jargon`（黑话）、
+   `emotion_body`（身体表演式情绪）、`soft_adverbs`（微微/缓缓/淡淡）、
+   `dialogue_tags`（淡淡道/低声道）、`subtitle_paragraphs` / `subtitle_run`（字幕化段落）、
+   `lecture_markers`（本质上/真正重要的是）、`qa_rounds` / `one_line_dialogue`（对白垄断）。
+   对白里的这些可能是人物声口，先判断人物会不会这样说话，不要一律删。
+   退出条件与阈值见 `references/workflow-deai.md`。
+5. 书级 loop：每 3 章 `audit --profile style --view summary`，指标漂移写回 voice card；
+   同时看 `style.book.shape_convergence`（多章同构）和 `style.book.theme_explicitness`
+   （多章以主题总结收尾），不要每章同一套开头/收尾节拍。
 6. 不要先写 AI 味再 humanize；humanizer 只能做第二遍清理。style 检查是体检，不是裁判。
 
 ## 抽卡

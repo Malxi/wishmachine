@@ -28,12 +28,12 @@
       },
       "versions": [
         {
-          "version": "0.7.0",
+          "version": "0.8.0",
           "publishTimestamp": 1794563871,
           "source": {
             "type": "git",
             "url": "https://github.com/Malxi/wishmachine.git",
-            "commit": "6094561e5f438855b883151685a68c6ac37b2781",
+            "commit": "1fe937779b3a6245dc37322863be25c8d1dafa89",
             "path": "dsh"
           },
           "engines": {
