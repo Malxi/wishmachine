@@ -13,6 +13,7 @@
 | chapter | replace、append | 完整 chapter markdown，配 `--id P1-V1-C1` |
 | recap | replace、patch | recap JSON，配 `--id P1-V1-C1` |
 | style | replace | voice card JSON（`story/style/voice.json`，schema 见 workflow-deai） |
+| writing-style | replace | writing-style JSON（`story/style/writing-style.json`，references 必须逐字引用人类/公版样本） |
 | research | 仅 `--apply` 落盘 | 考究报告 JSON，配 `--id <pack-id>` |
 
 ```bash
@@ -38,13 +39,18 @@ node scripts/wishmachine.js book write research --dir my-book --id <pack-id> --a
 dry-run 若发现需要修复，会返回 `"registry_repair": { "needed": ["..."] }`，不写盘。
 因此正常流程不需要手工补 registry；只有手工改了 JSON 才需要 `doctor --fix`。
 
-## voice card（style）
+## voice card（style）与 writing-style
 
 `book write style --dir my-book --mode replace --apply < voice.json` 写
-`story/style/voice.json`；默认 dry-run，只做 schema 校验。读取用
-`book read style`，`book read context` 会带 `style` summary。voice card 是
-去 AI 味工作流的项目级声音契约（samples/principles/avoid），见
-`references/workflow-deai.md`。
+`story/style/voice.json`；`book write writing-style --dir my-book --mode replace --apply < writing-style.json`
+写 `story/style/writing-style.json`。两者都只支持 `replace`，
+不接受 `--target`；默认 dry-run。读取用 `book read style` / `book read writing-style`，
+`book read context` 会同时带 `style` 与 `writing_style` summary。
+
+voice card 的正样本与 writing-style 的 `references` 都必须是内置
+`data/style/human-samples.json` 的 `sample_id`（text 逐字匹配），或用户本人提供并
+`user_confirmed: true` 的 human/licensed 文本；AI 文本只能放进 `negative_samples`。
+见 `references/workflow-deai.md` 与 `data/style/README.md`。
 
 ## 章节长度
 
@@ -94,8 +100,8 @@ node scripts/wishmachine.js gen reference read setup-schema
 node scripts/wishmachine.js gen reference read outline-schema
 ```
 
-schema 区分 `premise`（字符串）与 `premises`（对象数组）、`writing_style`（对象），
-这是最常见的首次写入失败原因。
+schema 区分 `premise`（字符串）与 `premises`（对象数组）；`writing_style` 不属于
+setup，写作风格走 `book write writing-style`。这是最常见的首次写入失败原因。
 
 导出面向读者的稿子：
 

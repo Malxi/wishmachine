@@ -21,8 +21,8 @@ wishmachine ideas draw --type namecard --genre 种田文 --count 20 --seed 13 --
 
 ## 2. 选名字，写进 setup
 
-从 20 张里选主配角，**至少 60% 的 core_cast 来自抽卡**；允许改名，但要保留
-`namecard_id`、`naming_style`、`naming_logic`，并把来源记成 `draw`：
+从 20 张里选主配角，**至少 60% 的 core_cast 来自抽卡**；名字由用户选定/确认，
+不要由 AI 另起。保留 `namecard_id`、`naming_style`、`naming_logic`，并把来源记成 `draw`：
 
 ```json
 {
@@ -35,8 +35,8 @@ wishmachine ideas draw --type namecard --genre 种田文 --count 20 --seed 13 --
 }
 ```
 
-自己起的名字写 `"name_source": "authored"`，并在 voice card 的 `voice.avoid` 里记下
-“不要所有名字都点题”。
+如果名字由用户本人提供，写 `"name_source": "human"`（不需要 namecard_id）。**AI 不得
+自己取名，也不得把自造名字标成 `authored`**；没有抽卡或用户输入时，先补 namecard pass。
 
 ## 3. 取名规则
 

@@ -9,8 +9,9 @@ novel.json                      项目配置，由 book init 生成
 story/setup/story_setup.json    setup artifact
 story/compose/outline.json      outline artifact
 story/craft/<kind>.json         craft artifact（character|item|location|organization）
-story/style/voice.json          voice card（声音，可选但推荐；示例见 references/voice-card.example.json）
+story/style/voice.json          voice card（声音，可选但推荐；示例见 data/style/voice-card.example.json）
 story/style/writing-style.json  写作风格 + 逐字人类参考样本（不再是 setup 字段）
+data/style/human-samples.json   只读内置人类样本目录（skill 自带，sample_id 从这里取）
 story/recaps/<chapter-id>.json  recap artifact
 story/ideas/<type>-<seed>-*.json 抽卡结果（ideas draw --save）
 chapters/<chapter-id>.md        章节正文
@@ -31,6 +32,8 @@ node scripts/wishmachine.js book write outline --dir my-book --mode replace < ou
 node scripts/wishmachine.js book write outline --dir my-book --mode replace --apply < outline.json
 node scripts/wishmachine.js book write chapter --dir my-book --id P1-V1-C1 --mode replace --apply < chapter.md
 node scripts/wishmachine.js book write recap   --dir my-book --id P1-V1-C1 --mode replace --apply < recap.json
+node scripts/wishmachine.js book write style   --dir my-book --mode replace --apply < voice.json
+node scripts/wishmachine.js book write writing-style --dir my-book --mode replace --apply < writing-style.json
 ```
 
 1. 从 stdin 读完整 artifact（`setup|outline|craft|chapter|recap`）或 JSON 报告（`research`）。
@@ -47,6 +50,8 @@ mode / target：
 | craft | `replace`、`patch` | `--target character\|item\|location\|organization` |
 | chapter | `replace`、`append` | `--id <chapter-id>` 必填 |
 | recap | `replace`、`patch` | `--id <chapter-id>` 必填 |
+| style | `replace` | 不接受 `--target` |
+| writing-style | `replace` | 不接受 `--target` |
 | research | 仅 `--apply` 落盘 | `--id <pack-id>` |
 
 `replace` 整块覆盖；`patch` 只合并传入字段。非法 section/mode/target 组合直接报错退出 1。

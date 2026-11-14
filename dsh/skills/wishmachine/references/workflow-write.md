@@ -39,14 +39,23 @@
    node scripts/wishmachine.js book write chapter --dir my-book --id P1-V1-C1 --mode replace --apply < chapter.md
    ```
 
-5. 检查章节，并从**正文**写 recap（不要从 outline 抄）：
+5. 检查章节，并做本章 style pass（只改命中句/段，最多 2 轮）：
 
    ```bash
    node scripts/wishmachine.js check --dir my-book --profile all --target chapter --id P1-V1-C1
+   node scripts/wishmachine.js check --dir my-book --profile style --target chapter --id P1-V1-C1
+   ```
+
+   按 `style.*` findings 的 `evidence` 定点改写，不要整章重写；退出条件见
+   `references/workflow-deai.md`。
+
+6. 从**正文**写 recap（不要从 outline 抄）：
+
+   ```bash
    node scripts/wishmachine.js book write recap --dir my-book --id P1-V1-C1 --mode replace --apply < recap.json
    ```
 
    recap 字段形状见 `references/book-write.md`；`quality.recap.outline_copy` 会检出复制
    outline 文本的取巧做法。
 
-6. 本章通过且 recap 有正文依据后，再进入下一章。Wishmachine 不调用模型、不生成正文。
+7. 本章通过且 recap 有正文依据后，再进入下一章。Wishmachine 不调用模型、不生成正文。

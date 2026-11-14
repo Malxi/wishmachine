@@ -81,7 +81,7 @@ const UNSAFE_ID_PATTERN = /[\\/]|^\.\.?$/;
 
 // Optional setup cast naming provenance. Namecards carry an id/style/logic; setup
 // copies them so the drawn name is auditable and name quality can be checked.
-const CAST_NAME_SOURCE_VALUES = Object.freeze(['draw', 'authored']);
+const CAST_NAME_SOURCE_VALUES = Object.freeze(['draw', 'human']);
 const CAST_NAMING_STYLE_VALUES = Object.freeze(['plain', 'literary', 'hard', 'rustic']);
 const CAST_NAMING_FIELDS = Object.freeze(['namecard_id', 'naming_style', 'naming_logic', 'name_source']);
 

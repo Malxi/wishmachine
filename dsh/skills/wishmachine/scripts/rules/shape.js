@@ -139,7 +139,10 @@ function validateSetupCastItem(item, index, findings) {
     }
   }
   if (item.name_source !== undefined && !CAST_NAME_SOURCE_VALUES.includes(item.name_source)) {
-    findings.push(finding('schema.setup.core_cast.name_source', 'medium', `core_cast[${index}].name_source must be ${CAST_NAME_SOURCE_VALUES.join('|')}`, item.name || `cast_${index + 1}`));
+    findings.push(finding('schema.setup.core_cast.name_source', 'high', `core_cast[${index}].name_source must be ${CAST_NAME_SOURCE_VALUES.join('|')} (AI-invented names are not allowed; use a namecard draw or a human-provided name)`, item.name || `cast_${index + 1}`));
+  }
+  if (item.name_source === 'draw' && typeof item.namecard_id !== 'string') {
+    findings.push(finding('schema.setup.core_cast.namecard_id', 'medium', `core_cast[${index}].namecard_id is required when name_source=draw`, item.name || `cast_${index + 1}`));
   }
   if (item.naming_style !== undefined && !CAST_NAMING_STYLE_VALUES.includes(item.naming_style)) {
     findings.push(finding('schema.setup.core_cast.naming_style', 'medium', `core_cast[${index}].naming_style must be ${CAST_NAMING_STYLE_VALUES.join('|')}`, item.name || `cast_${index + 1}`));

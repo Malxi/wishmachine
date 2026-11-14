@@ -129,7 +129,7 @@ node scripts/wishmachine.js book write setup --dir my-book --from-idea <outlinep
 ## Common mistakes
 
 - `premise` 是**字符串**；`premises` 是**对象数组**。不要把字符串放进 `premises`。
-- `writing_style` 是**对象**，不是字符串。可省略，或用上面的对象形状。
+- `writing_style` 不属于 setup，已移到 `story/style/writing-style.json`。
 - `world_resources`、`core_cast`、`storylines`、`world_timeline` 是对象数组，不是字符串数组。
 - `genres`、`rules`、`storyline_refs`、`principles` 是字符串数组。
 - `importance` 是数字；`long_form_plan.target_chapters` / `target_volumes` 是数字。
@@ -143,7 +143,8 @@ node scripts/wishmachine.js book write setup --dir my-book --from-idea <outlinep
 
 - setup 只负责“故事是什么”（premise/theme/rules/cast/plan）。
 - writing-style 只负责“怎么说话”，且 `references` 必须是**逐字拷贝的真人/公版文本**
-  （内置于 `references/human-style-samples.md`），不允许模型自己写示范段落。
+  （内置于 `data/style/human-samples.json`，用 `sample_id` 引用），或用户本人提供并确认的
+  human/licensed 文本；不允许模型自己写、改写或补写示范段落。
 - “每章一次报数/每级换壳/每章押东西”属于 outline 节拍，不是写作风格。
 
 ## 人物命名（namecard pass）
@@ -160,9 +161,11 @@ node scripts/wishmachine.js book write setup --dir my-book --from-idea <outlinep
 }
 ```
 
-- `name_source`：`draw` 或 `authored`；`naming_style`：`plain|literary|hard|rustic`。
+- `name_source`：`draw` 或 `human`；`naming_style`：`plain|literary|hard|rustic`。
+  `draw` 必须带 `namecard_id`；`human` 表示用户本人提供/确认的名字。AI 不得自己取名，
+  `authored` 或其他值会被 schema high finding 阻止写入。
 - 取名流程：先定最终题材 → `ideas draw --type namecard --genre <题材> --count 20` →
-  选名字 → 把 `namecard_id/naming_style/naming_logic` 抄进 setup。
+  用户选名字 → 把 `namecard_id/naming_style/naming_logic/name_source` 抄进 setup。
 - `check --profile style --target setup` 会检查姓氏集中度、描述式名字、单字名比例、
   来源覆盖率、命名风格多样性、重名；详见 `references/name-guide.md`。
 

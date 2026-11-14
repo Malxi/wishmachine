@@ -27,7 +27,7 @@ setup/outline、写入风险）见 [SKILL.md](SKILL.md)。
 ### DeepSeek Harness（链接安装）
 
 仓库里包含一个 DSH bundle（`dsh/`）：在 DSH 的 **Plugins → Add plugin** 粘贴
-`git+https://github.com/Malxi/wishmachine.git#v0.6.2&path:/dsh` 即可安装 `wishmachine` 技能；
+`git+https://github.com/Malxi/wishmachine.git#v0.7.0&path:/dsh` 即可安装 `wishmachine` 技能；
 也可以用自定义插件索引在 Discover 里安装。详见 [docs/DSH.md](docs/DSH.md)。
 
 ## 项目格式
@@ -83,7 +83,9 @@ my-book/
   比喻/模板句密度、对话比例、章节注水、母题密度等），`audit --profile style` 汇总全书与
   每章指标，并跨章检测重复的描写/动作短语；只报 low/medium，永不 blocking。setup 还会查
   题材堆叠、抽象词、格言式 theme、规则可操作性，以及名字的姓氏集中/描述式名字/单字名/
-  来源覆盖率/重名。voice card 用 `book write style` 写入、`book read style` 读取，改稿流程见
+  来源覆盖率/重名。voice card 用 `book write style`、writing-style 用
+  `book write writing-style` 写入，样本必须逐字引用 [data/style/human-samples.json](data/style/human-samples.json)
+  的 `sample_id` 或用户确认的 human 文本；改稿流程见
   [references/workflow-deai.md](references/workflow-deai.md)、取名见
   [references/name-guide.md](references/name-guide.md)、场景焦点与母题预算见
   [references/scene-guide.md](references/scene-guide.md)。

@@ -25,7 +25,7 @@
 | `similePer1k` | 像/仿佛/似乎/宛如/像是 / 千字 | ≤2.5，>4 风险 |
 | `upliftPer1k` | 段尾抽象升华句 / 千字 | ≤0.3，>0.6 风险 |
 | `dialogueRatio` | 引号内 CJK / 全章 CJK | 8%–35%，<5% 或 >50% 风险 |
-| `sentenceCv` | 句长标准差/均值 | 0.45–0.9，<0.3 风险（太均匀） |
+| `sentenceCv` | 句长标准差/均值 | ≥0.45，<0.3 风险（太均匀；过高只提示长短过碎） |
 | `paragraphCv` | 段长标准差/均值 | ≥0.5，<0.35 风险（太整齐） |
 | `shortClauseRatio` | ≤4 字小句占比 | ≤0.2，>0.35 风险 |
 | `fragmentSentenceRatio` | 叙述句里 ≤5 字碎片句占比（排除对话） | ≤0.04，>0.08 风险 |
@@ -55,7 +55,7 @@
 | `nameSurnameConcentration` | 同一姓氏占比 | ≤40%，>60% 风险 |
 | `nameDescriptorRatio` | 老X/阿X/收成人/XX那位式名字占比 | ≤20%，>40% 风险 |
 | `nameSingleCharGivenRatio` | 双字姓名中的单字名占比 | ≤50%，>75% 风险 |
-| `nameSourceCoverage` | core_cast 有 namecard_id/name_source 的占比 | ≥60%，<30% 风险 |
+| `nameSourceCoverage` | `name_source=draw`（带 `namecard_id`）的占比；旧式 `name-` 前缀 namecard_id 也计入 | ≥60%，<30% 风险 |
 | `nameStyleDiversity` | 不同 naming_style / 有风格记录的角色数 | ≥0.5，<0.25 风险 |
 | `nameDuplicateCount` | 重复姓名数 | 0 |
 
@@ -65,10 +65,13 @@
   `story/style/writing-style.json`（medium）。
 - `style.writing_style.missing`：缺少 `story/style/writing-style.json`（low）。
 - `style.writing_style.invalid`：references 为空 / 来源不是 human|public-domain|licensed /
+  公版样本缺 `sample_id` 或 text 不逐字匹配 / human 样本缺 `license` 或 `user_confirmed` /
   principles 写成“每章报数/换壳”节拍表（medium）。
-- `style.voice.sample_source`：voice card 的正样本缺少人类来源（medium）。
+- `style.voice.sample_source`：voice card 的正样本缺少人类来源、`sample_id` 不存在或 text
+  不逐字匹配（medium）。
 
-内置公版样本：`references/human-style-samples.md`（逐字拷贝，不要改写）。
+内置人类样本：`data/style/human-samples.json`（逐字使用，不要改写）；公版状态、授权与
+`sample_id` 规则见 `data/style/README.md`。AI 文本只能放进 `negative_samples`。
 
 ## 用法
 

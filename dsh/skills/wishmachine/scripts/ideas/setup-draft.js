@@ -15,10 +15,9 @@ function buildSetupCast(plot, storylineList) {
       entry_phase: 'opening',
       payoff: character.want || 'their want is tested',
       storyline_refs: storylineList.map((item, index2) => item.id || `thread-${index2 + 1}`).filter(Boolean),
-      ...(character.id ? { namecard_id: character.id } : {}),
+      ...(character.id ? { namecard_id: character.id, name_source: 'draw' } : {}),
       ...(character.naming_style ? { naming_style: character.naming_style } : {}),
       ...(character.naming_logic ? { naming_logic: character.naming_logic } : {}),
-      name_source: character.id ? 'draw' : 'authored',
     };
   });
 }

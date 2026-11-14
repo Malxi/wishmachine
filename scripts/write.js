@@ -1,7 +1,6 @@
 // Artifact write path. Every section declares its allowed modes/targets up
 // front, candidates are validated before touching disk, and the previous file
 // is checkpointed with a bounded history.
-
 import fs from 'node:fs';
 import path from 'node:path';
 import {
@@ -61,9 +60,7 @@ function parseCandidate(raw, mode, file, label) {
 function prepareSetup(project, request) {
   const file = setupFile(project.dir);
   const patch = parseCandidate(request.raw, request.mode, file, 'setup');
-  const candidate = request.mode === 'patch' && fs.existsSync(file)
-    ? deepMerge(readJson(file), patch)
-    : patch;
+  const candidate = request.mode === 'patch' && fs.existsSync(file) ? deepMerge(readJson(file), patch) : patch;
   return { file, candidate, isJson: true };
 }
 
@@ -124,9 +121,7 @@ function prepareCraft(project, request) {
   const kind = safeSegment(request.target || 'character', 'craft kind');
   const file = craftFile(project.dir, kind);
   const patch = parseCandidate(request.raw, request.mode, file, 'craft');
-  const candidate = request.mode === 'patch' && fs.existsSync(file)
-    ? deepMerge(readJson(file), patch)
-    : patch;
+  const candidate = request.mode === 'patch' && fs.existsSync(file) ? deepMerge(readJson(file), patch) : patch;
   return { file, candidate, isJson: true };
 }
 
@@ -134,9 +129,7 @@ function prepareRecap(project, request) {
   if (!request.id) throw new Error('recap write requires --id');
   const file = recapFile(project.dir, request.id);
   const patch = parseCandidate(request.raw, request.mode, file, 'recap');
-  const candidate = request.mode === 'patch' && fs.existsSync(file)
-    ? deepMerge(readJson(file), patch)
-    : patch;
+  const candidate = request.mode === 'patch' && fs.existsSync(file) ? deepMerge(readJson(file), patch) : patch;
   return { file, candidate, isJson: true };
 }
 
@@ -268,7 +261,15 @@ function runPostWriteCheck(project, section, config, options) {
   });
 }
 
+function assertStyleWriteOptions(options, section) {
+  if (options.mode !== undefined && options.mode !== 'replace') {
+    throw new Error(`${section} mode must be replace`);
+  }
+  if (options.target) throw new Error(`${section} does not support --target`);
+}
+
 function writeWritingStyleArtifact(project, options) {
+  assertStyleWriteOptions(options, 'writing-style');
   const style = parseJson(options.content ?? '', 'writing style');
   validateWritingStyle(style);
   const summary = writingStyleSummary(style);
@@ -284,6 +285,7 @@ function writeWritingStyleArtifact(project, options) {
 }
 
 function writeStyleArtifact(project, options) {
+  assertStyleWriteOptions(options, 'style');
   const card = parseJson(options.content ?? '', 'style voice card');
   validateVoiceCard(card);
   const summary = voiceCardSummary(card);

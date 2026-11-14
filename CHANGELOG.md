@@ -5,7 +5,7 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
-## [Unreleased]
+## [0.7.0] - 2026-11-15
 
 ### Added
 
@@ -15,6 +15,33 @@
   `ideas cards` 查看卡池统计。卡池来源为 CMU Movie Summary Corpus（CC BY-SA 4.0）与
   Project Gutenberg（public domain）的模式归纳，不收录原文。
 - `references/card-pool.md`：卡池 schema、来源、打分权重与扩卡方法。
+- `data/style/human-samples.json`：内置人类风格样本目录（公版 + 作者授权样本），每条带
+  `id/source/author/work/url/license/text`；`data/style/README.md` 说明公版状态与授权边界。
+- `data/style/voice-card.example.json`：可直接改写的 voice card 示例，正样本用 `sample_id`
+  引用内置样本，AI 文本只出现在 `negative_samples`。
+- `scripts/style-samples.js`：样本目录加载、逐字文本校验与 `sample_id` / `user_confirmed`
+  校验；writing-style 与 voice card 正样本共用。
+- setup schema 校验 `name_source` 只能是 `draw|human`；`draw` 必须带 `namecard_id`。
+
+### Changed
+
+- 人类风格参考从 `references/` 移到 `data/style/`；skill zip 与 DSH bundle 现在打包整个
+  `data/` 目录。
+- writing-style / voice card 正样本必须是内置 `sample_id`（text 逐字匹配），或用户本人提供并
+  `user_confirmed: true` 的 human/licensed 文本；公版样本不再允许只声明来源。AI 自产文本
+  只能放进 `negative_samples`。
+- `book write style` / `book write writing-style` 只接受 `--mode replace`，不再接受
+  `--target`；与文档约定一致。
+- writing-style `principles` 的校验从泛化的“必须/每次”改为只拒绝章/级节拍表，避免误伤正常
+  风格描述。
+- `name_source` 的 `authored` 值被拒绝（high finding），不再允许 AI 自创名字；用户提供的
+  名字用 `human`。
+- `scripts/pack.js`、`scripts/build-dsh-bundle.js` 与模块文档同步新的 `data/` 布局。
+
+### Removed
+
+- `references/human-style-samples.md`、`references/voice-card.example.json`：内容迁入
+  `data/style/`，旧路径不再随 skill 分发。
 
 ## [0.6.2] - 2026-11-15
 
@@ -248,7 +275,8 @@
 
 - 完成 P0-P2 审核整改与大规模模块拆分。
 
-[Unreleased]: https://github.com/Malxi/wishmachine/compare/v0.6.2...HEAD
+[Unreleased]: https://github.com/Malxi/wishmachine/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/Malxi/wishmachine/compare/v0.6.2...v0.7.0
 [0.6.2]: https://github.com/Malxi/wishmachine/compare/v0.6.1...v0.6.2
 [0.6.1]: https://github.com/Malxi/wishmachine/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/Malxi/wishmachine/compare/v0.5.4...v0.6.0

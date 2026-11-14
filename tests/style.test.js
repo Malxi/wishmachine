@@ -8,8 +8,9 @@ import { fileURLToPath } from 'node:url';
 import {
   loadProject, writeArtifact, readSection, auditProject, initProject,
 } from '../scripts/project.js';
-import { checkProject } from '../scripts/schema.js';
+import { checkProject, validateSetup } from '../scripts/schema.js';
 import { chapterMetrics, setupMetrics } from '../scripts/rules/style/metrics.js';
+import { validateVoiceCard, validateWritingStyle } from '../scripts/style-card.js';
 import { fixtureSet, sampleSetup, sampleOutline, longChapter, outlinepack } from './fixtures.js';
 
 const { tempProject, tempDir } = fixtureSet('wishmachine-style-');
@@ -82,18 +83,19 @@ test('setup schema validates name_source and naming_style values', (t) => {
   const setup = sampleSetup();
   setup.core_cast[0].name_source = 'invented';
   setup.core_cast[0].naming_style = 'unknown';
-  writeArtifact(loadProject(dir), { section: 'setup', mode: 'replace', apply: true, content: JSON.stringify(setup) });
-  const result = checkProject(loadProject(dir), { profile: 'schema', target: 'setup' });
-  assert.ok(result.findings.some((item) => item.rule_id === 'schema.setup.core_cast.name_source'));
-  assert.ok(result.findings.some((item) => item.rule_id === 'schema.setup.core_cast.naming_style'));
+  const write = writeArtifact(loadProject(dir), { section: 'setup', mode: 'replace', apply: true, content: JSON.stringify(setup) });
+  assert.equal(write.applied, false);
+  const rules = new Set(write.check.findings.map((item) => item.rule_id));
+  assert.ok(rules.has('schema.setup.core_cast.name_source'), JSON.stringify([...rules]));
+  assert.ok(rules.has('schema.setup.core_cast.naming_style'), JSON.stringify([...rules]));
 });
 
-test('authored namecard ids do not count as drawn-name coverage', () => {
+test('human namecard ids do not count as drawn-name coverage', () => {
   const setup = sampleSetup();
   setup.core_cast = [
-    { name: '周辙', role: 'protagonist', name_source: 'authored', namecard_id: 'authored-01' },
+    { name: '周辙', role: 'protagonist', name_source: 'human', namecard_id: 'human-01' },
     { name: '罗绍安', role: 'mentor', name_source: 'draw', namecard_id: 'name-88-04', naming_style: 'plain' },
-    { name: '丁小满', role: 'support', name_source: 'authored', namecard_id: 'authored-02' },
+    { name: '丁小满', role: 'support', name_source: 'human', namecard_id: 'human-02' },
     { name: '程启明', role: 'support', name_source: 'draw', namecard_id: 'name-88-11', naming_style: 'hard' },
   ];
   const metrics = setupMetrics(setup);
@@ -136,14 +138,22 @@ test('book style audit detects phrases repeated across chapters', (t) => {
 test('writing-style lives in story/style and rejects AI or recipe sources', (t) => {
   const dir = tempDir(t);
   initProject({ name: 'writing style', dir });
-  const humanText = '魯鎭的酒店的格局，是和別處不同的：都是當街一個曲尺形的大櫃臺，櫃裏面豫備着熱水，可以隨時温酒。做工的人，傍午傍晚散了工，每每花四文銅錢，買一碗酒——這是二十多年前的事，現在每碗要漲到十文，——靠櫃外站着，熱熱的喝了休息。';
+  const sample = JSON.parse(fs.readFileSync(path.join(root, 'data/style/human-samples.json'), 'utf8')).entries
+    .find((entry) => entry.id === 'zh-luxun-kongyiji-01');
   const style = {
     version: 1,
     name: '贴近人物视角',
     description: '只写人物能看见和摸到的东西，句子长短不匀。',
     principles: ['只写人物能感知的具体物', '对话短、答非所问'],
     avoid: ['段尾升华'],
-    references: [{ source: 'public-domain', author: '鲁迅', work: '孔乙己', url: 'https://zh.wikisource.org/wiki/孔乙己', text: humanText }],
+    references: [{
+      source: 'public-domain',
+      sample_id: sample.id,
+      author: sample.author,
+      work: sample.work,
+      url: sample.url,
+      text: sample.text,
+    }],
   };
   const dry = writeArtifact(loadProject(dir), { section: 'writing-style', mode: 'replace', content: JSON.stringify(style) });
   assert.equal(dry.applied, false);
@@ -153,11 +163,14 @@ test('writing-style lives in story/style and rejects AI or recipe sources', (t) 
   assert.ok(fs.existsSync(path.join(dir, 'story', 'style', 'writing-style.json')));
   assert.equal(readSection(loadProject(dir), 'writing-style').present, true);
   assert.throws(() => writeArtifact(loadProject(dir), {
-    section: 'writing-style', mode: 'replace', content: JSON.stringify({ ...style, references: [{ source: 'ai', text: humanText }] }),
+    section: 'writing-style', mode: 'replace', content: JSON.stringify({ ...style, references: [{ source: 'ai', text: sample.text }] }),
   }), /AI-generated samples are not accepted/);
   assert.throws(() => writeArtifact(loadProject(dir), {
     section: 'writing-style', mode: 'replace', content: JSON.stringify({ ...style, principles: ['每章一次报数，数字要对上'] }),
   }), /not chapter recipes/);
+  assert.throws(() => writeArtifact(loadProject(dir), {
+    section: 'writing-style', mode: 'append', content: JSON.stringify(style),
+  }), /mode must be replace/);
 });
 
 test('style check flags legacy setup writing_style and AI voice samples', (t) => {
@@ -170,7 +183,8 @@ test('style check flags legacy setup writing_style and AI voice samples', (t) =>
     voice: { description: '测试', principles: [], avoid: [] },
     samples: [{ label: 'AI 自产', text: '这是一段没有人类来源的示例文本，用来验证检查器的行为。' }],
   };
-  writeArtifact(loadProject(dir), { section: 'style', mode: 'replace', apply: true, content: JSON.stringify(card) });
+  fs.mkdirSync(path.join(dir, 'story', 'style'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'story', 'style', 'voice.json'), JSON.stringify(card));
   const result = checkProject(loadProject(dir), { profile: 'style', target: 'setup' });
   const rules = new Set(result.findings.map((item) => item.rule_id));
   assert.ok(rules.has('style.setup.writing_style_deprecated'), JSON.stringify([...rules]));
@@ -178,14 +192,52 @@ test('style check flags legacy setup writing_style and AI voice samples', (t) =>
   assert.ok(rules.has('style.voice.sample_source'), JSON.stringify([...rules]));
 });
 
-test('built-in human samples are public-domain verbatim excerpts', () => {
-  const file = path.join(root, 'references', 'human-style-samples.md');
-  const text = fs.readFileSync(file, 'utf8');
-  assert.match(text, /source: public-domain/);
-  assert.match(text, /鲁迅/);
-  assert.match(text, /朱自清/);
-  assert.match(text, /zh\.wikisource\.org/);
-  assert.ok(text.length > 2000);
+test('style references require verbatim sample ids or explicit user confirmation', () => {
+  const sample = JSON.parse(fs.readFileSync(path.join(root, 'data/style/human-samples.json'), 'utf8')).entries
+    .find((entry) => entry.id === 'zh-luxun-kongyiji-01');
+  const base = {
+    version: 1,
+    name: '样本来源',
+    description: '只测校验，不涉及正文。',
+    principles: [],
+    avoid: [],
+    references: [{ source: 'public-domain', text: sample.text }],
+  };
+  assert.throws(() => validateWritingStyle(base), /needs sample_id/);
+  assert.throws(() => validateWritingStyle({
+    ...base,
+    references: [{ source: 'public-domain', sample_id: sample.id, text: `${sample.text.slice(0, 80)}改` }],
+  }), /verbatim/);
+  assert.throws(() => validateWritingStyle({
+    ...base,
+    references: [{ source: 'human', text: '用户提供的样本'.repeat(20) }],
+  }), /needs author/);
+  assert.throws(() => validateWritingStyle({
+    ...base,
+    references: [{ source: 'human', author: '用户', license: '授权', text: '用户提供的样本'.repeat(20) }],
+  }), /user_confirmed/);
+  assert.doesNotThrow(() => validateVoiceCard({
+    version: 1,
+    samples: [{ source: 'human', author: '用户', license: '授权', user_confirmed: true, text: '用户提供的样本'.repeat(20) }],
+    negative_samples: [{ source: 'ai', text: '一段 AI 反面样本。' }],
+  }));
+});
+
+test('draw name_source without namecard_id is reported', () => {
+  const setup = sampleSetup();
+  setup.core_cast[0].name_source = 'draw';
+  const findings = validateSetup(setup);
+  assert.ok(findings.some((item) => item.rule_id === 'schema.setup.core_cast.namecard_id'));
+});
+
+test('built-in human samples are public-domain or authorized excerpts', () => {
+  const file = path.join(root, 'data/style/human-samples.json');
+  const entries = JSON.parse(fs.readFileSync(file, 'utf8')).entries;
+  assert.ok(entries.length > 2);
+  assert.ok(entries.some((entry) => entry.source === 'public-domain' && entry.author === '鲁迅'));
+  assert.ok(entries.some((entry) => entry.source === 'public-domain' && entry.author === '朱自清'));
+  assert.ok(entries.some((entry) => entry.source === 'human'));
+  assert.ok(entries.every((entry) => entry.url || entry.license));
 });
 
 test('style check is advisory: findings are low/medium and never blocking', (t) => {
@@ -247,11 +299,21 @@ test('book-level style audit aggregates metrics and per-chapter findings', (t) =
 test('voice card writes, reads and validates', (t) => {
   const dir = tempDir(t);
   initProject({ name: 'voice', dir });
+  const sample = JSON.parse(fs.readFileSync(path.join(root, 'data/style/human-samples.json'), 'utf8')).entries
+    .find((entry) => entry.id === 'zh-luxun-kongyiji-01');
   const card = {
     version: 1,
     narrative: { pov: 'third_person_limited', tense: 'past' },
     voice: { description: '冷峻具体', principles: ['用账目写情绪'], avoid: ['段尾升华'] },
-    samples: [{ label: '开篇', text: '车在田埂尽头停下。' }],
+    samples: [{
+      label: '开篇',
+      source: 'public-domain',
+      sample_id: sample.id,
+      author: sample.author,
+      work: sample.work,
+      url: sample.url,
+      text: sample.text,
+    }],
   };
   const dry = writeArtifact(loadProject(dir), { section: 'style', mode: 'replace', content: JSON.stringify(card) });
   assert.equal(dry.applied, false);
@@ -267,6 +329,9 @@ test('voice card writes, reads and validates', (t) => {
   assert.throws(() => writeArtifact(loadProject(dir), {
     section: 'style', mode: 'replace', apply: true, content: JSON.stringify({ version: 2 }),
   }), /version must be 1/);
+  assert.throws(() => writeArtifact(loadProject(dir), {
+    section: 'style', mode: 'append', content: JSON.stringify(card),
+  }), /mode must be replace/);
 });
 
 test('longChapter still passes structural checks while style stays advisory', (t) => {

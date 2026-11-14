@@ -13,7 +13,7 @@ examples_en:
   - "Create a 3-volume × 5-chapter science-fiction project"
   - "Check the outline for blocking findings"
   - "Draw 12 science-fiction name cards"
-version: 0.6.2
+version: 0.7.0
 author: Malxi
 ---
 
@@ -112,32 +112,6 @@ $WM doctor --dir my-book                             # 目录/配置/JSON/regist
   或重新 `book write setup/outline --apply` 自动重建，不会阻塞。
 - `style.*`（low/medium）：单字谓语、否定式谓语、句首复用、段尾升华、比喻密度、模板句、
   对话比例等统计指标；只给方向和命中句，不阻塞写入。详见 `references/style-checklist.md`。
-
-## 风格与去 AI 味
-
-1. 建 style 目录（每本书一次）：
-   - `book write style --dir my-book --apply < voice.json` 写 `story/style/voice.json`（声音卡，
-     `voice.description/principles/avoid` + 带 `source` 的 `samples`；内置示例见
-     `references/voice-card.example.json`）；
-   - `book write writing-style --dir my-book --apply < writing-style.json` 写
-     `story/style/writing-style.json`。`references` 必须从 `references/human-style-samples.md`
-     **逐字复制**真人/公版段落，不允许模型自己写示范；`principles` 只写声音，不写“每章报数/换壳”。
-   - 写正文前 `book read context`（含 style / writing_style summary）。
-2. 取名 pass（setup 前）：先定最终题材，再
-   `ideas draw --type namecard --genre <实际题材> --count 20 --seed <n> --output names.json`，
-   把选中的 `namecard_id/naming_style/naming_logic/name_source` 写进 `core_cast`；
-   规则见 `references/name-guide.md`。
-3. 设定 loop：`check --profile style --target setup` → 按 `style.setup.*`（含 `name_*`）
-   具体化/代价化/换名，最多 2 轮；setup 里出现旧 `writing_style` 会报
-   `style.setup.writing_style_deprecated`，把它移到 style 目录。
-4. 章节 loop：初稿 → `check --profile style --target chapter --id` → 只改命中句/段 →
-   复检，最多 2 轮；指标回到健康带即可，不追 0。每场戏先过“目标/阻碍/转折/结果”，
-   连续两段没有新信息就合并或删；母题预算见 `references/scene-guide.md`。
-   特别注意 `fragments`（电报句）、`enumeration`（清单罗列）、`counting_tic` /
-   `recount_tic`（数数/核对口头禅）。退出条件与阈值见 `references/workflow-deai.md`。
-5. 书级 loop：每 3 章 `audit --profile style --view summary`，指标漂移写回 voice card。
-6. 不要先写 AI 味再 humanize；humanizer 只能做第二遍清理。style 检查是体检，不是裁判。
-
 - blocking = `severity` 为 `high` 或 `critical`；check/audit/doctor/write 此时退出码 2；
   `--no-strict` 让 check/audit/doctor 强制退出 0（脚本容错用）。
 - `--min-severity low|medium|high|critical` 只过滤展示，`summary` 仍统计全量；
@@ -148,6 +122,35 @@ $WM doctor --dir my-book                             # 目录/配置/JSON/regist
 - 缺失或损坏的 artifact 不再抛原始 ENOENT：返回 `artifact.<target>.missing` /
   `artifact.<target>.invalid_json` finding（blocking，exit 2），先补写入或跑 `doctor`。
 - 枚举写错或未知 flag/缺值都会 JSON 报错并退出 1，不再静默回退。
+
+## 风格与去 AI 味
+
+1. 建 style 目录（每本书一次）：
+   - `book write style --dir my-book --apply < voice.json` 写 `story/style/voice.json`（声音卡，
+     `voice.description/principles/avoid` + 正样本 `samples`；正样本必须带内置
+     `sample_id`，或用户本人提供且 `user_confirmed: true`；示例见
+     `data/style/voice-card.example.json`）；
+   - `book write writing-style --dir my-book --apply < writing-style.json` 写
+     `story/style/writing-style.json`。`references` 必须是 `data/style/human-samples.json`
+     中的 `sample_id`（逐字匹配），或用户确认的 human/licensed 文本；**AI 不得生成、改写或
+     补写示范段落**，AI 文本只能放进 `negative_samples`。`principles` 只写声音，不写“每章报数/换壳”。
+   - 两者只支持 `--mode replace`，不接受 `--target`；写正文前 `book read context`
+     （含 style / writing_style summary）。数据说明见 `data/style/README.md`。
+2. 取名 pass（setup 前）：先定最终题材，再
+   `ideas draw --type namecard --genre <实际题材> --count 20 --seed <n> --output names.json`，
+   把选中的 `namecard_id/naming_style/naming_logic/name_source` 写进 `core_cast`；
+   `name_source` 只能是 `draw`（必须带 `namecard_id`）或 `human`（用户提供），
+   **AI 不得自己取名**；规则见 `references/name-guide.md`。
+3. 设定 loop：`check --profile style --target setup` → 按 `style.setup.*`（含 `name_*`）
+   具体化/代价化/换名，最多 2 轮；setup 里出现旧 `writing_style` 会报
+   `style.setup.writing_style_deprecated`，把它移到 style 目录。
+4. 章节 loop：初稿 → `check --profile style --target chapter --id` → 只改命中句/段 →
+   复检，最多 2 轮；指标回到健康带即可，不追 0。每场戏先过“目标/阻碍/转折/结果”，
+   连续两段没有新信息就合并或删；母题预算见 `references/scene-guide.md`。
+   特别注意 `fragments`（电报句）、`enumeration`（清单罗列）、`counting_tic` /
+   `recount_tic`（数数/核对口头禅）。退出条件与阈值见 `references/workflow-deai.md`。
+5. 书级 loop：每 3 章 `audit --profile style --view summary`，指标漂移写回 voice card。
+6. 不要先写 AI 味再 humanize；humanizer 只能做第二遍清理。style 检查是体检，不是裁判。
 
 ## 抽卡
 

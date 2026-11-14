@@ -1,28 +1,20 @@
-// Voice card artifact: the project-level "how this book sounds" contract.
-// Stored at story/style/voice.json; validated on write and summarized on read.
+// Voice/writing style artifacts: project-level sound contracts, validated on
+// write. Positive samples must be built-in sample_ids or explicitly confirmed
+// human/licensed excerpts; AI-written text is only allowed in negative_samples.
+import { validateReferenceSample } from './style-samples.js';
 
 const SOURCE_VALUES = ['human', 'public-domain', 'licensed'];
-const RECIPE_WORDS = ['每章', '每级', '每次', '必须', '报数', '押头', '押掉', '换壳'];
+const RECIPE_PATTERNS = [
+  /每章[^。！？]*(?:报数|点件|换壳|押|仪式)/,
+  /每级[^。！？]*(?:报数|换壳|押|仪式)/,
+  /(?:报数|点件|换壳)[^。！？]*每章/,
+];
 
 function validateReferenceList(value, label) {
   if (!Array.isArray(value) || value.length === 0) {
     throw new Error(`${label} must be a non-empty array of human-written excerpts`);
   }
-  for (const reference of value) {
-    if (!isPlainObject(reference)) throw new Error(`${label} entries must be objects`);
-    if (typeof reference.text !== 'string' || reference.text.trim().length < 80) {
-      throw new Error(`${label} entries need a verbatim text of at least 80 chars`);
-    }
-    if (!SOURCE_VALUES.includes(reference.source)) {
-      throw new Error(`${label}.source must be one of ${SOURCE_VALUES.join('|')}; AI-generated samples are not accepted`);
-    }
-    if (reference.source === 'licensed' && typeof reference.license !== 'string') {
-      throw new Error(`${label} entries with source=licensed need a license string`);
-    }
-    for (const field of ['author', 'work', 'url', 'license']) {
-      if (reference[field] !== undefined && typeof reference[field] !== 'string') throw new Error(`${label}.${field} must be a string`);
-    }
-  }
+  for (const reference of value) validateReferenceSample(reference, label);
 }
 
 function writingStyleSummary(style) {
@@ -50,7 +42,7 @@ function validateWritingStyle(style) {
   validateStringList(style.avoid, 'avoid');
   validateReferenceList(style.references, 'references');
   for (const principle of style.principles || []) {
-    if (RECIPE_WORDS.some((word) => principle.includes(word))) {
+    if (RECIPE_PATTERNS.some((pattern) => pattern.test(principle))) {
       throw new Error(`writing style principles must describe voice, not chapter recipes (found “${principle.slice(0, 30)}”); move per-chapter beats to the outline`);
     }
   }
@@ -72,7 +64,7 @@ function validateStringList(value, label) {
   }
 }
 
-function validateSamples(value, label) {
+function validateSamples(value, label, options = {}) {
   if (value === undefined) return;
   if (!Array.isArray(value)) throw new Error(`${label} must be an array`);
   if (value.length > MAX_SAMPLES) throw new Error(`${label} supports at most ${MAX_SAMPLES} samples`);
@@ -81,6 +73,10 @@ function validateSamples(value, label) {
     if (typeof sample.text !== 'string' || !sample.text.trim()) throw new Error(`${label} samples need a text string`);
     if (sample.text.length > MAX_SAMPLE_CHARS) throw new Error(`${label} sample text is too long (max ${MAX_SAMPLE_CHARS} chars)`);
     if (sample.label !== undefined && typeof sample.label !== 'string') throw new Error(`${label} sample label must be a string`);
+    if (options.positive) {
+      validateReferenceSample(sample, label);
+      continue;
+    }
     if (sample.source !== undefined && ![...SOURCE_VALUES, 'ai'].includes(sample.source)) {
       throw new Error(`${label} sample source must be human|public-domain|licensed|ai`);
     }
@@ -98,7 +94,7 @@ function validateVoiceCard(card) {
     validateStringList(card.voice.avoid, 'voice.avoid');
     if (Array.isArray(card.voice.avoid) && card.voice.avoid.length > MAX_AVOID) throw new Error(`voice.avoid supports at most ${MAX_AVOID} entries`);
   }
-  validateSamples(card.samples, 'samples');
+  validateSamples(card.samples, 'samples', { positive: true });
   validateSamples(card.negative_samples, 'negative_samples');
   if (card.baseline !== undefined && !isPlainObject(card.baseline)) throw new Error('baseline must be an object');
   if (card.history !== undefined && !Array.isArray(card.history)) throw new Error('history must be an array');

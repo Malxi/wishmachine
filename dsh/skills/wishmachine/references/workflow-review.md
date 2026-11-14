@@ -6,11 +6,14 @@
 
 ```bash
 node scripts/wishmachine.js audit --dir my-book --view brief
+node scripts/wishmachine.js audit --dir my-book --profile style --view summary
 node scripts/wishmachine.js check --dir my-book --profile all --target outline --max-findings 20
 node scripts/wishmachine.js check --dir my-book --profile all --target chapter --id P1-V1-C1
+node scripts/wishmachine.js check --dir my-book --profile style --target chapter --id P1-V1-C1
 ```
 
 blocking（high/critical）时这些命令退出码为 2；先修 blocking，再看 medium/low。
+`--profile style` 只报 low/medium，但全书漂移、重复短语与逐章指标仍值得单独看。
 
 ## 2. 编辑性审查
 

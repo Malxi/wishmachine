@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import { setupFile, styleVoiceFile, styleWritingFile } from '../../paths.js';
 import { finding } from '../finding.js';
 import { validateWritingStyle } from '../../style-card.js';
+import { validateReferenceSample } from '../../style-samples.js';
 
 function readOptionalJson(file) {
   if (!fs.existsSync(file)) return null;
@@ -44,14 +45,21 @@ function styleArtifactFindings(project) {
   }
   const voice = readOptionalJson(styleVoiceFile(project.dir));
   const positiveSamples = Array.isArray(voice?.samples) ? voice.samples : [];
-  const aiSamples = positiveSamples.filter((sample) => sample?.source === 'ai' || !sample?.source).length;
-  if (positiveSamples.length > 0 && aiSamples > 0) {
+  const invalidSamples = [];
+  for (const [index, sample] of positiveSamples.entries()) {
+    try {
+      validateReferenceSample(sample, `samples[${index}]`);
+    } catch (error) {
+      invalidSamples.push(error.message);
+    }
+  }
+  if (invalidSamples.length > 0) {
     findings.push(finding(
       'style.voice.sample_source',
       'medium',
-      `${aiSamples}/${positiveSamples.length} voice samples have no human source (source must be human|public-domain|licensed)`,
+      `${invalidSamples.length}/${positiveSamples.length} voice samples are not human/public-domain: ${invalidSamples[0]}`,
       'voice',
-      'Replace AI-written samples with verbatim human/public-domain excerpts; keep AI text only in negative_samples.',
+      'Use a built-in sample_id from data/style/human-samples.json, or a user-confirmed human/licensed excerpt; keep AI text only in negative_samples.',
     ));
   }
   return findings;

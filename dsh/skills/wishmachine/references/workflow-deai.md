@@ -9,11 +9,12 @@
 - `story/style/writing-style.json`：写作风格 + **逐字人类参考样本**
   （`book read writing-style` / `book write writing-style`）。`writing_style` 不再放 setup。
 
-参考样本不允许 AI 自己写。内置样本见 `references/human-style-samples.md`
-（鲁迅《孔乙己》《故乡》《药》、郁达夫《春風沉醉的晚上》、老舍《老張的哲學》、
-廢名《長日》、朱自清《背影》；均为 1920 年代公版文本，不是当代作家）。
-写作时只取与本书语感相近的 1–3 段，写进 `references[]`，并保留
-`source: "public-domain"`、`author`、`work`、`url`。
+参考样本不允许 AI 自己写。内置样本见 `data/style/human-samples.json`
+（鲁迅《孔乙己》《故乡》《药》、郁达夫《春风沉醉的晚上》、老舍《老张的哲学》、
+废名《长日》、朱自清《背影》，以及用户授权样本；公版状态与 jurisdiction 说明见
+`data/style/README.md`）。写作时只取与本书语感相近的 1–3 段，写进 `references[]`，
+并保留 `sample_id`、`source`、`author`、`work`、`url`，`text` 必须与目录中的
+`text` 逐字一致。**不要自己概括、改写或补写样本**。
 
 `writing-style.json` 最小形状：
 
@@ -25,17 +26,22 @@
   "principles": ["只写人物能感知的具体物", "对话短、答非所问", "段落停在动作或物件上"],
   "avoid": ["段尾升华", "不是…而是…", "每章报数打卡"],
   "references": [
-    { "source": "public-domain", "author": "鲁迅", "work": "孔乙己",
-      "url": "https://zh.wikisource.org/wiki/孔乙己", "text": "……逐字拷贝……" }
+    { "source": "public-domain", "sample_id": "zh-luxun-kongyiji-01",
+      "author": "鲁迅", "work": "孔乙己",
+      "url": "https://zh.wikisource.org/wiki/孔乙己",
+      "text": "……把 data/style/human-samples.json 中该 sample_id 的 text 原样粘贴……" }
   ]
 }
 ```
 
 `book write writing-style` 会拒绝：没有人类来源的 `references`、`source: "ai"`、
-以及把“每章/每级/必须/报数/押/换壳”写进 principles 的节拍表。
+公版样本缺少 `sample_id` 或 text 与目录不一致、human/licensed 样本缺少
+`license` 或 `user_confirmed: true`，以及把“每章/每级报数、换壳、押、仪式”
+写进 principles 的节拍表。
 
-voice card（`story/style/voice.json`）最小形状；正样本必须带来源。
-内置示例在 `references/voice-card.example.json`（公版样本，可直接复制后改）：
+voice card（`story/style/voice.json`）最小形状；正样本同样必须是内置 `sample_id`
+或用户确认的 human/licensed 文本。内置示例在 `data/style/voice-card.example.json`
+（公版样本，可直接复制后改）：
 
 ```json
 {
@@ -47,13 +53,18 @@ voice card（`story/style/voice.json`）最小形状；正样本必须带来源�
     "avoid": ["会躁式单字谓语", "段尾升华", "不是…而是…", "三连排比"]
   },
   "samples": [
-    { "label": "公版样本", "source": "public-domain", "text": "……逐字拷贝……" }
+    { "label": "公版样本", "source": "public-domain", "sample_id": "zh-luxun-kongyiji-01",
+      "author": "鲁迅", "work": "孔乙己",
+      "url": "https://zh.wikisource.org/wiki/孔乙己",
+      "text": "……把目录中该 sample_id 的 text 原样粘贴……" }
   ],
   "negative_samples": [{ "label": "反面", "source": "ai", "text": "……一段你觉得 AI 味的文字……" }]
 }
 ```
 
 写入：`book write style --dir <project> --apply < voice.json`（默认 dry-run）。
+`style` 与 `writing-style` 都只支持 `--mode replace`，不接受 `--target`；写正文前用
+`book read context` 确认 style / writing_style summary。
 
 ## 1. 设定 loop（写正文前，最多 2 轮）
 
@@ -74,8 +85,9 @@ wishmachine check --dir <project> --profile style --target setup
 `style.setup.theme_aphorism`（格言式主题）、`style.setup.rules_concrete`（规则不可操作），
 以及 `style.setup.name_*`（姓氏集中、描述式名字、单字名、来源缺失、重名）。
 取名先做 namecard pass：先定最终题材，再 `ideas draw --type namecard --genre <实际题材>
---count 20`，把选中的 `namecard_id/naming_style/naming_logic` 写进 setup；详见
-`references/name-guide.md`。
+--count 20`，把选中的 `namecard_id/naming_style/naming_logic/name_source` 写进 setup；
+`name_source` 只能是 `draw`（带 `namecard_id`）或 `human`（用户提供），AI 不得自己取名。
+详见 `references/name-guide.md`。
 改法：
 
 - theme 不要写“守住边界的不是墙，是……”这种格言，改成一条人物每天要执行的规矩。
