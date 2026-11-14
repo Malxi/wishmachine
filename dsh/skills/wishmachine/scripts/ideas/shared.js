@@ -6,6 +6,7 @@ const TYPES = [
   'provocation', 'axiom', 'event', 'law', 'scenario', 'engine',
   'worldpack', 'plotpack', 'outlinepack', 'premise', 'storyline', 'cast', 'namecard',
   'resource', 'equipment', 'itemcard', 'location', 'faction', 'motif', 'reference', 'name',
+  'combo',
 ];
 
 const COMPOSITE_IDEA_TYPES = new Set(['worldpack', 'plotpack', 'outlinepack']);

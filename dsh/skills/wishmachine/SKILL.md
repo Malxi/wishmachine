@@ -161,7 +161,7 @@ $WM ideas validate --dir my-book --all
 
 | 参数 | 说明 |
 |---|---|
-| `--type` | 默认 namecard，共 21 种；`ideas types` 列出 |
+| `--type` | 默认 namecard，共 22 种；`ideas types` 列出；`combo` 是 JSON 卡池组合抽卡 |
 | `--genre` | 科幻（默认）/修仙/悬疑/都市/历史/言情；未收录的题材回退默认科幻盘并在 `meta.warnings` 里给出 `genre.fallback` 提示 |
 | `--count` | composite（worldpack/plotpack/outlinepack）默认 1、上限 10；其他默认 5、上限 50；超限降级并 warning |
 | `--seed` | 确定性复现；省略则随机 |
@@ -195,6 +195,7 @@ $WM export --dir my-book --format html --output drafts/我的书-阅读版.html
 - profile/规则/findings：`references/check-profiles.md`
 - 风格与去 AI 味：`references/workflow-deai.md`、`references/style-checklist.md`、
   `references/name-guide.md`、`references/scene-guide.md`
+- 抽卡与卡池：`references/card-pool.md`（JSON 卡池 + combo 组合抽卡）
 - 流程与编辑性审查：`references/workflow-*.md`、`references/review-checklist.md`
 
 读取：`$WM gen reference read <name>`、`$WM gen workflow read <name>`。

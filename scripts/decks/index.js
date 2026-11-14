@@ -49,6 +49,7 @@ export const KNOWN_RELATION_TYPES = new Set([
 // Compound genre names must win over their component words: 现代言情 is romance,
 // not urban, and 古代言情 is romance, not history.
 const GENRE_MATCHERS = [
+  ['default', /科幻|末世|未来|sci[- ]?fi|science fiction/i],
   ['xianxia', /仙|修|玄幻|古风|武侠|fantasy|xian/i],
   ['romance', /言情|爱情|婚恋|古言|现言|古装|romance/i],
   ['suspense', /悬疑|推理|侦探|犯罪|恐怖|thriller|mystery/i],

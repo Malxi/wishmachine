@@ -7,6 +7,15 @@
 
 ## [Unreleased]
 
+### Added
+
+- JSON 卡池 `data/cards/`（archetypes/engines/settings/twists/costs/motifs/genres）与
+  `scripts/ideas/cards.js` 组合引擎：`ideas draw --type combo` 支持
+  `--strategy balanced|focused|diverse|wild|safe`、`--candidates`、`--avoid`，确定性打分排序；
+  `ideas cards` 查看卡池统计。卡池来源为 CMU Movie Summary Corpus（CC BY-SA 4.0）与
+  Project Gutenberg（public domain）的模式归纳，不收录原文。
+- `references/card-pool.md`：卡池 schema、来源、打分权重与扩卡方法。
+
 ## [0.6.2] - 2026-11-15
 
 ### Changed

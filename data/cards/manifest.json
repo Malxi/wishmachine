@@ -1,0 +1,47 @@
+{
+  "format": 1,
+  "name": "wishmachine-card-pool",
+  "version": "0.1.0",
+  "description": "组合抽卡用的结构化卡池：JSON 存数据，JS 引擎负责过滤、组合、打分和排序。",
+  "packs": [
+    { "name": "archetypes", "file": "archetypes.json", "count": 20, "role": "角色原型" },
+    { "name": "engines", "file": "engines.json", "count": 14, "role": "冲突引擎" },
+    { "name": "settings", "file": "settings.json", "count": 12, "role": "场景/世界" },
+    { "name": "twists", "file": "twists.json", "count": 12, "role": "转折" },
+    { "name": "costs", "file": "costs.json", "count": 10, "role": "代价" },
+    { "name": "motifs", "file": "motifs.json", "count": 10, "role": "母题" },
+    { "name": "genres", "file": "genres.json", "count": 16, "role": "类型画像" }
+  ],
+  "sources": [
+    {
+      "name": "CMU Movie Summary Corpus",
+      "url": "https://www.cs.cmu.edu/~ark/personas/",
+      "license": "CC BY-SA 4.0",
+      "used_for": "类型统计、tvtropes 人物类型、剧情摘要模式",
+      "note": "只保存归纳后的结构化字段，不保存原始摘要或人物名。"
+    },
+    {
+      "name": "Project Gutenberg",
+      "url": "https://www.gutenberg.org/",
+      "license": "public domain",
+      "used_for": "母题、封闭空间、书信/记录等公版小说模式",
+      "note": "不收录原文段落。"
+    },
+    {
+      "name": "TV Tropes",
+      "url": "https://tvtropes.org/",
+      "license": "site terms",
+      "used_for": "仅作为类型/桥段分类参考；不抓取页面内容。",
+      "note": "通过 CMU 的 tvtropes.clusters.txt 间接使用 72 类人物类型。"
+    },
+    {
+      "name": "ROCStories",
+      "url": "https://cs.rochester.edu/nlp/rocstories/",
+      "license": "research access",
+      "used_for": "计划中的因果链卡来源；当前版本未纳入（需申请访问）。",
+      "note": "待拿到数据后补 `causal-chains` 卡包。"
+    }
+  ],
+  "license": "数据卡按各自 source/license 字段；引擎与手写卡为 MIT。",
+  "generated_at": "2026-11-14"
+}

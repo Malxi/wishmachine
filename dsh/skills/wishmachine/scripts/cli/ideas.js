@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { discoverSources, loadProject, saveIdeaDraw, saveImportedIdeas, searchSources } from '../project.js';
 import { readJson } from '../util.js';
-import { drawIdeas, ideasTypes } from '../ideas.js';
+import { drawIdeas, ideasTypes, cardStats } from '../ideas.js';
 import { runIdeasValidate } from './ideas-validate.js';
 import { EXIT_ERROR, EXIT_OK, boolFlag, castCountFlag, enumFlag, intFlag, print, stringFlag, usageFail } from './args.js';
 import { IDEAS_TYPES, PROVIDER_VALUES } from './spec.js';
@@ -65,6 +65,9 @@ function runIdeasDraw(flags) {
     castRoles: stringFlag(flags, 'cast-roles', ''),
     promptChars: intFlag(flags, 'prompt-chars', 800),
     characterPromptChars: intFlag(flags, 'character-prompt-chars', 160),
+    strategy: enumFlag(flags, 'strategy', ['balanced', 'focused', 'diverse', 'wild', 'safe'], 'balanced'),
+    candidates: intFlag(flags, 'candidates', 0),
+    avoid: stringFlag(flags, 'avoid', ''),
   });
   if (boolFlag(flags, 'save')) {
     const project = loadProject(stringFlag(flags, 'dir', ''));
@@ -92,6 +95,7 @@ function runIdeasDraw(flags) {
 
 const IDEAS_HANDLERS = new Map([
   ['types', runIdeasTypes],
+  ['cards', () => { print(cardStats()); return EXIT_OK; }],
   ['import', runIdeasImport],
   ['discover', runIdeasDiscover],
   ['search', runIdeasSearch],
@@ -103,7 +107,7 @@ async function runIdeas(args, flags) {
   const sub = args[0] || 'draw';
   const handler = IDEAS_HANDLERS.get(sub);
   if (!handler) {
-    usageFail(`unknown ideas subcommand: ${sub}`, 'subcommands: draw|import|discover|search|validate|types');
+    usageFail(`unknown ideas subcommand: ${sub}`, 'subcommands: draw|cards|import|discover|search|validate|types');
     return EXIT_ERROR;
   }
   return handler(flags);

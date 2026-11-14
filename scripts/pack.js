@@ -64,7 +64,7 @@ function collectFiles() {
     'README.md',
     'LICENSE',
   ].map((name) => ({ absolute: path.join(ROOT, name), relative: name }));
-  for (const dir of ['references', 'scripts']) {
+  for (const dir of ['references', 'scripts', 'data/cards']) {
     for (const file of walk(path.join(ROOT, dir))) {
       files.push({ absolute: file.absolute, relative: `${dir}/${file.relative}` });
     }

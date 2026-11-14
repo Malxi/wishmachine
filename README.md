@@ -59,7 +59,7 @@ my-book/
 | 项目 | `book init`、`book status`、`state` | 初始化、状态快照与下一步 |
 | 阅读/写入 | `book read`、`book write` | 读 artifact；dry-run → `--apply` 写 |
 | 检查 | `check`、`audit`、`doctor` | 确定性检查、全项目审计、风格指标（`--profile style`）、目录/配置修复 |
-| 抽卡 | `ideas draw/import/search/discover/validate/types` | 确定性参考卡 |
+| 抽卡 | `ideas draw/import/search/discover/validate/types`、`ideas cards` | 确定性参考卡；`--type combo` 从 JSON 卡池组合抽取 |
 | 导出 | `export`、`refresh` | 导出 Markdown/自包含 HTML 阅读页、刷新 md 伴生文件 |
 | 指导 | `gen <workflow\|reference\|skill> <list\|read>` | 读 references 与 SKILL.md |
 | 维护 | `book registry …` | registry 状态/清理/日志/备份/undo/redo |

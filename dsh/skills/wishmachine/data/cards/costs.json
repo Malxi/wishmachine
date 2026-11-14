@@ -1,0 +1,107 @@
+{
+  "pack": "costs",
+  "version": 1,
+  "description": "代价卡：让设定可被记账、可被看见的代价类型；参考公版小说与电影常见交易结构，字段为本项目改写。",
+  "cards": [
+    {
+      "id": "cost-memory",
+      "name": "记忆",
+      "summary": "每用一次能力，就永久失去一段具体记忆；失去的往往是最先想起来的那段。",
+      "tags": ["记忆", "失去", "身份", "不可逆"],
+      "genres": ["科幻", "奇幻", "悬疑", "剧情"],
+      "specificity": 3,
+      "source": "curated",
+      "license": "MIT"
+    },
+    {
+      "id": "cost-sleep",
+      "name": "睡眠",
+      "summary": "少睡一夜换一次力量，但欠下的睡眠会在最关键时刻一次性讨回。",
+      "tags": ["睡眠", "身体", "透支", "倒计时"],
+      "genres": ["科幻", "奇幻", "惊悚", "剧情"],
+      "specificity": 2,
+      "source": "curated",
+      "license": "MIT"
+    },
+    {
+      "id": "cost-name",
+      "name": "名字",
+      "summary": "把名字押出去，别人就再也记不住你；你自己也会慢慢忘记自己是谁。",
+      "tags": ["名字", "身份", "社会", "不可逆"],
+      "genres": ["奇幻", "悬疑", "剧情", "恐怖"],
+      "specificity": 3,
+      "source": "curated",
+      "license": "MIT"
+    },
+    {
+      "id": "cost-lifespan",
+      "name": "寿命",
+      "summary": "每次改写规则，寿命就少一截；账面上看得见，身体上却要过很久才反应过来。",
+      "tags": ["寿命", "时间", "身体", "交易"],
+      "genres": ["奇幻", "科幻", "剧情", "恐怖"],
+      "specificity": 2,
+      "source": "gutenberg:the-picture-of-dorian-gray",
+      "license": "public domain (inspired by Project Gutenberg)"
+    },
+    {
+      "id": "cost-family",
+      "name": "亲情",
+      "summary": "每救一个陌生人，家里就有一段关系被悄悄抹掉；你记得他们，他们不记得你。",
+      "tags": ["亲情", "关系", "记忆", "代价"],
+      "genres": ["剧情", "奇幻", "科幻", "家庭"],
+      "specificity": 2,
+      "source": "curated",
+      "license": "MIT"
+    },
+    {
+      "id": "cost-reputation",
+      "name": "信誉",
+      "summary": "每说一次谎，就有一个具体的人不再相信你；信用像额度，用完就借不到。",
+      "tags": ["信誉", "社会", "谎言", "交易"],
+      "genres": ["犯罪", "职场", "剧情", "悬疑"],
+      "specificity": 2,
+      "source": "cmu-movie-summary:con_artist",
+      "license": "CC BY-SA 4.0 (derived from CMU Movie Summary Corpus)"
+    },
+    {
+      "id": "cost-body",
+      "name": "身体",
+      "summary": "每用一次超出常人的力量，身体就永久坏掉一部分；坏掉的部分不会疼，但会少。",
+      "tags": ["身体", "损伤", "力量", "不可逆"],
+      "genres": ["动作", "科幻", "恐怖", "武侠"],
+      "specificity": 2,
+      "source": "cmu-movie-summary:body_horror",
+      "license": "CC BY-SA 4.0 (derived from CMU Movie Summary Corpus)"
+    },
+    {
+      "id": "cost-freedom",
+      "name": "自由",
+      "summary": "每借助一次体制的力量，就要把一项决定权交出去；交出去的东西很难拿回来。",
+      "tags": ["自由", "制度", "控制", "交易"],
+      "genres": ["反乌托邦", "政治", "剧情", "科幻"],
+      "specificity": 2,
+      "source": "cmu-movie-summary:dystopia",
+      "license": "CC BY-SA 4.0 (derived from CMU Movie Summary Corpus)"
+    },
+    {
+      "id": "cost-humanity",
+      "name": "人性",
+      "summary": "每用一次非人的手段，就少一点对人的共情；效率越高，越难理解别人为什么疼。",
+      "tags": ["人性", "异化", "共情", "代价"],
+      "genres": ["科幻", "恐怖", "剧情", "战争"],
+      "specificity": 3,
+      "source": "gutenberg:frankenstein",
+      "license": "public domain (inspired by Project Gutenberg)"
+    },
+    {
+      "id": "cost-time",
+      "name": "时间",
+      "summary": "每改变一次过去，就有一段现在被替换掉；被替换的人不会知道自己曾经存在。",
+      "tags": ["时间", "改写", "悖论", "代价"],
+      "genres": ["科幻", "悬疑", "剧情", "奇幻"],
+      "specificity": 3,
+      "source": "gutenberg:the-time-machine",
+      "license": "public domain (inspired by Project Gutenberg)"
+    }
+  ]
+}

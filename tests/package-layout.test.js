@@ -18,7 +18,7 @@ function copyShipment(dir) {
   for (const name of ['SKILL.md', 'README.md', 'LICENSE']) {
     fs.copyFileSync(path.join(root, name), path.join(dir, name));
   }
-  for (const sub of ['references', 'scripts']) {
+  for (const sub of ['references', 'scripts', 'data']) {
     fs.cpSync(path.join(root, sub), path.join(dir, sub), {
       recursive: true,
       filter: (source) => {
@@ -51,7 +51,11 @@ test('the shipped skill layout runs without the repository root package.json', (
 
   const types = run(dir, ['ideas', 'types']);
   assert.equal(types.status, 0, types.stderr);
-  assert.equal(JSON.parse(types.stdout).count, 21);
+  assert.equal(JSON.parse(types.stdout).count, 22);
+  assert.ok(fs.existsSync(path.join(dir, 'data', 'cards', 'manifest.json')));
+  const combo = run(dir, ['ideas', 'draw', '--type', 'combo', '--genre', '科幻', '--count', '1', '--seed', '1']);
+  assert.equal(combo.status, 0, combo.stderr);
+  assert.equal(JSON.parse(combo.stdout).count, 1);
 });
 
 test('the shipped skill can create a project and run a full setup/outline write', (t) => {

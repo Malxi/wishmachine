@@ -1,0 +1,127 @@
+{
+  "pack": "twists",
+  "version": 1,
+  "description": "转折卡：从电影剧情摘要与公版小说常见反转模式归纳，字段为本项目改写。",
+  "cards": [
+    {
+      "id": "twist-client-did-it",
+      "name": "委托人就是凶手",
+      "summary": "主角查到最后，发现最初请自己调查的人，就是唯一有能力伪造全部证据的人。",
+      "tags": ["反转", "委托人", "证据", "共谋"],
+      "genres": ["悬疑", "犯罪", "惊悚", "黑色电影"],
+      "specificity": 2,
+      "source": "cmu-movie-summary:mystery_twist",
+      "license": "CC BY-SA 4.0 (derived from CMU Movie Summary Corpus)"
+    },
+    {
+      "id": "twist-memory-edited",
+      "name": "记忆被改写",
+      "summary": "主角最确信的一段记忆，是别人为了让他配合而植入的；真正的过去更糟。",
+      "tags": ["记忆", "身份", "反转", "不可靠叙述"],
+      "genres": ["科幻", "悬疑", "惊悚", "剧情"],
+      "specificity": 3,
+      "source": "cmu-movie-summary:amnesia",
+      "license": "CC BY-SA 4.0 (derived from CMU Movie Summary Corpus)"
+    },
+    {
+      "id": "twist-monster-victim",
+      "name": "怪物才是受害者",
+      "summary": "一路被追杀的“怪物”，其实是唯一记得真相的证人；追杀它的人才是凶手。",
+      "tags": ["怪物", "反转", "共情", "追杀"],
+      "genres": ["恐怖", "奇幻", "剧情", "悬疑"],
+      "specificity": 2,
+      "source": "gutenberg:frankenstein",
+      "license": "public domain (inspired by Project Gutenberg)"
+    },
+    {
+      "id": "twist-organization-target",
+      "name": "组织目标就是主角",
+      "summary": "主角以为自己混进了组织，最后发现组织从一开始就是为他建立的。",
+      "tags": ["组织", "身份", "反转", "操控"],
+      "genres": ["科幻", "惊悚", "犯罪", "悬疑"],
+      "specificity": 3,
+      "source": "cmu-movie-summary:conspiracy",
+      "license": "CC BY-SA 4.0 (derived from CMU Movie Summary Corpus)"
+    },
+    {
+      "id": "twist-ally-betrayal",
+      "name": "盟友叛变",
+      "summary": "最可靠的盟友一直在帮主角，因为他需要主角活着走到某个特定位置。",
+      "tags": ["背叛", "盟友", "计划", "反转"],
+      "genres": ["惊悚", "犯罪", "战争", "冒险"],
+      "specificity": 2,
+      "source": "cmu-movie-summary:betrayal",
+      "license": "CC BY-SA 4.0 (derived from CMU Movie Summary Corpus)"
+    },
+    {
+      "id": "twist-time-loop",
+      "name": "时间循环",
+      "summary": "主角以为自己在重复同一天，后来发现只有他一个人被留在了那一天。",
+      "tags": ["时间", "循环", "孤独", "反转"],
+      "genres": ["科幻", "悬疑", "剧情", "惊悚"],
+      "specificity": 3,
+      "source": "curated",
+      "license": "MIT"
+    },
+    {
+      "id": "twist-double-identity",
+      "name": "双重身份",
+      "summary": "主角追查的两个人其实是同一个人，而那个人一直在用两个身份互相作证。",
+      "tags": ["身份", "双胞胎", "证据", "反转"],
+      "genres": ["悬疑", "犯罪", "剧情", "黑色电影"],
+      "specificity": 2,
+      "source": "cmu-movie-summary:double_identity",
+      "license": "CC BY-SA 4.0 (derived from CMU Movie Summary Corpus)"
+    },
+    {
+      "id": "twist-prophecy-fraud",
+      "name": "预言是骗局",
+      "summary": "所有人相信的预言，是既得利益者为了让人按剧本行动而编的。",
+      "tags": ["预言", "骗局", "权力", "反转"],
+      "genres": ["奇幻", "科幻", "政治", "冒险"],
+      "specificity": 2,
+      "source": "cmu-movie-summary:prophecy",
+      "license": "CC BY-SA 4.0 (derived from CMU Movie Summary Corpus)"
+    },
+    {
+      "id": "twist-rescue-refused",
+      "name": "被救的人不想被救",
+      "summary": "主角拼死救出的人，最后选择回到关押自己的地方，因为那里有他真正要保护的东西。",
+      "tags": ["救援", "选择", "反转", "共情"],
+      "genres": ["剧情", "惊悚", "战争", "犯罪"],
+      "specificity": 2,
+      "source": "cmu-movie-summary:rescue",
+      "license": "CC BY-SA 4.0 (derived from CMU Movie Summary Corpus)"
+    },
+    {
+      "id": "twist-victory-cost",
+      "name": "胜利的代价是背叛",
+      "summary": "主角赢了，但赢的方式证明他和反派没有区别；唯一能庆祝的人已经不在场。",
+      "tags": ["胜利", "代价", "背叛", "反转"],
+      "genres": ["剧情", "战争", "犯罪", "科幻"],
+      "specificity": 3,
+      "source": "cmu-movie-summary:tragic_victory",
+      "license": "CC BY-SA 4.0 (derived from CMU Movie Summary Corpus)"
+    },
+    {
+      "id": "twist-rules-lie",
+      "name": "规则本身是谎言",
+      "summary": "主角一直遵守的规则，是反派为了让所有人自愿配合而设计的。",
+      "tags": ["规则", "系统", "反转", "制度"],
+      "genres": ["科幻", "反乌托邦", "悬疑", "剧情"],
+      "specificity": 3,
+      "source": "cmu-movie-summary:dystopia",
+      "license": "CC BY-SA 4.0 (derived from CMU Movie Summary Corpus)"
+    },
+    {
+      "id": "twist-villain-right",
+      "name": "反派有正当理由",
+      "summary": "反派的方案在逻辑上能救更多人，主角阻止他，是因为代价落在自己人身上。",
+      "tags": ["反派", "伦理", "选择", "灰色"],
+      "genres": ["剧情", "科幻", "战争", "政治"],
+      "specificity": 3,
+      "source": "cmu-movie-summary:moral_dilemma",
+      "license": "CC BY-SA 4.0 (derived from CMU Movie Summary Corpus)"
+    }
+  ]
+}

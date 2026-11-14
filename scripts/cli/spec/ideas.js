@@ -1,6 +1,7 @@
 // Flag specification for `ideas` subcommands.
 const IDEAS_COMMAND_FLAGS = {
-  'ideas draw': ['dir', 'type', 'genre', 'count', 'seed', 'source', 'chapters', 'scenes', 'target-chars', 'volumes', 'chapters-per-volume', 'cast-count', 'cast-roles', 'prompt-chars', 'character-prompt-chars', 'save', 'output'],
+  'ideas draw': ['dir', 'type', 'genre', 'count', 'seed', 'source', 'chapters', 'scenes', 'target-chars', 'volumes', 'chapters-per-volume', 'cast-count', 'cast-roles', 'prompt-chars', 'character-prompt-chars', 'strategy', 'candidates', 'avoid', 'save', 'output'],
+  'ideas cards': ['stats'],
   'ideas import': ['dir', 'file', 'type', 'genre', 'source'],
   'ideas discover': ['dir', 'topic', 'limit'],
   'ideas search': ['dir', 'query', 'provider', 'limit', 'ingest'],

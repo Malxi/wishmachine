@@ -1,0 +1,285 @@
+{
+  "pack": "genres",
+  "version": 1,
+  "description": "类型画像卡：从 CMU Movie Summary Corpus 的 movie.metadata.tsv 类型统计归纳；计数为数据集内出现次数。",
+  "cards": [
+    {
+      "id": "genre-drama",
+      "name": "剧情",
+      "aliases": [
+        "Drama",
+        "剧情片"
+      ],
+      "tags": [
+        "人物",
+        "关系",
+        "现实"
+      ],
+      "count": 34007,
+      "source": "cmu-movie-metadata",
+      "license": "CC BY-SA 4.0",
+      "summary": "剧情类型画像：常见标签 人物、关系、现实；用于判断题材匹配与组合兼容性。"
+    },
+    {
+      "id": "genre-comedy",
+      "name": "喜剧",
+      "aliases": [
+        "Comedy",
+        "喜剧片"
+      ],
+      "tags": [
+        "误会",
+        "反差",
+        "日常"
+      ],
+      "count": 16349,
+      "source": "cmu-movie-metadata",
+      "license": "CC BY-SA 4.0",
+      "summary": "喜剧类型画像：常见标签 误会、反差、日常；用于判断题材匹配与组合兼容性。"
+    },
+    {
+      "id": "genre-romance",
+      "name": "爱情",
+      "aliases": [
+        "Romance Film",
+        "Romantic drama",
+        "Romantic comedy"
+      ],
+      "tags": [
+        "关系",
+        "选择",
+        "错过"
+      ],
+      "count": 10234,
+      "source": "cmu-movie-metadata",
+      "license": "CC BY-SA 4.0",
+      "summary": "爱情类型画像：常见标签 关系、选择、错过；用于判断题材匹配与组合兼容性。"
+    },
+    {
+      "id": "genre-action",
+      "name": "动作",
+      "aliases": [
+        "Action",
+        "Action/Adventure"
+      ],
+      "tags": [
+        "追逐",
+        "暴力",
+        "身体"
+      ],
+      "count": 8798,
+      "source": "cmu-movie-metadata",
+      "license": "CC BY-SA 4.0",
+      "summary": "动作类型画像：常见标签 追逐、暴力、身体；用于判断题材匹配与组合兼容性。"
+    },
+    {
+      "id": "genre-thriller",
+      "name": "惊悚",
+      "aliases": [
+        "Thriller",
+        "Crime Thriller",
+        "Psychological thriller"
+      ],
+      "tags": [
+        "倒计时",
+        "危险",
+        "信息差"
+      ],
+      "count": 8744,
+      "source": "cmu-movie-metadata",
+      "license": "CC BY-SA 4.0",
+      "summary": "惊悚类型画像：常见标签 倒计时、危险、信息差；用于判断题材匹配与组合兼容性。"
+    },
+    {
+      "id": "genre-crime",
+      "name": "犯罪",
+      "aliases": [
+        "Crime Fiction",
+        "Crime Drama",
+        "Crime Thriller"
+      ],
+      "tags": [
+        "调查",
+        "交易",
+        "背叛"
+      ],
+      "count": 6948,
+      "source": "cmu-movie-metadata",
+      "license": "CC BY-SA 4.0",
+      "summary": "犯罪类型画像：常见标签 调查、交易、背叛；用于判断题材匹配与组合兼容性。"
+    },
+    {
+      "id": "genre-horror",
+      "name": "恐怖",
+      "aliases": [
+        "Horror",
+        "Supernatural",
+        "Body horror"
+      ],
+      "tags": [
+        "恐惧",
+        "怪物",
+        "封闭"
+      ],
+      "count": 5280,
+      "source": "cmu-movie-metadata",
+      "license": "CC BY-SA 4.0",
+      "summary": "恐怖类型画像：常见标签 恐惧、怪物、封闭；用于判断题材匹配与组合兼容性。"
+    },
+    {
+      "id": "genre-adventure",
+      "name": "冒险",
+      "aliases": [
+        "Adventure",
+        "Action/Adventure"
+      ],
+      "tags": [
+        "旅程",
+        "未知",
+        "伙伴"
+      ],
+      "count": 4963,
+      "source": "cmu-movie-metadata",
+      "license": "CC BY-SA 4.0",
+      "summary": "冒险类型画像：常见标签 旅程、未知、伙伴；用于判断题材匹配与组合兼容性。"
+    },
+    {
+      "id": "genre-mystery",
+      "name": "悬疑",
+      "aliases": [
+        "Mystery",
+        "Mystery film"
+      ],
+      "tags": [
+        "谜题",
+        "线索",
+        "反转"
+      ],
+      "count": 3195,
+      "source": "cmu-movie-metadata",
+      "license": "CC BY-SA 4.0",
+      "summary": "悬疑类型画像：常见标签 谜题、线索、反转；用于判断题材匹配与组合兼容性。"
+    },
+    {
+      "id": "genre-scifi",
+      "name": "科幻",
+      "aliases": [
+        "Science Fiction",
+        "Sci-Fi"
+      ],
+      "tags": [
+        "技术",
+        "未来",
+        "规则"
+      ],
+      "count": 3052,
+      "source": "cmu-movie-metadata",
+      "license": "CC BY-SA 4.0",
+      "summary": "科幻类型画像：常见标签 技术、未来、规则；用于判断题材匹配与组合兼容性。"
+    },
+    {
+      "id": "genre-fantasy",
+      "name": "奇幻",
+      "aliases": [
+        "Fantasy",
+        "Fantasy film"
+      ],
+      "tags": [
+        "魔法",
+        "异世界",
+        "规则"
+      ],
+      "count": 2820,
+      "source": "cmu-movie-metadata",
+      "license": "CC BY-SA 4.0",
+      "summary": "奇幻类型画像：常见标签 魔法、异世界、规则；用于判断题材匹配与组合兼容性。"
+    },
+    {
+      "id": "genre-war",
+      "name": "战争",
+      "aliases": [
+        "War film",
+        "War"
+      ],
+      "tags": [
+        "阵营",
+        "牺牲",
+        "命令"
+      ],
+      "count": 2652,
+      "source": "cmu-movie-metadata",
+      "license": "CC BY-SA 4.0",
+      "summary": "战争类型画像：常见标签 阵营、牺牲、命令；用于判断题材匹配与组合兼容性。"
+    },
+    {
+      "id": "genre-western",
+      "name": "西部",
+      "aliases": [
+        "Western",
+        "Space western"
+      ],
+      "tags": [
+        "边境",
+        "秩序",
+        "枪"
+      ],
+      "count": 2226,
+      "source": "cmu-movie-metadata",
+      "license": "CC BY-SA 4.0",
+      "summary": "西部类型画像：常见标签 边境、秩序、枪；用于判断题材匹配与组合兼容性。"
+    },
+    {
+      "id": "genre-historical",
+      "name": "历史",
+      "aliases": [
+        "Period piece",
+        "Historical film",
+        "History"
+      ],
+      "tags": [
+        "时代",
+        "制度",
+        "命运"
+      ],
+      "count": 1758,
+      "source": "cmu-movie-metadata",
+      "license": "CC BY-SA 4.0",
+      "summary": "历史类型画像：常见标签 时代、制度、命运；用于判断题材匹配与组合兼容性。"
+    },
+    {
+      "id": "genre-animation",
+      "name": "动画",
+      "aliases": [
+        "Animation",
+        "Animated"
+      ],
+      "tags": [
+        "想象",
+        "成长",
+        "家庭"
+      ],
+      "count": 3534,
+      "source": "cmu-movie-metadata",
+      "license": "CC BY-SA 4.0",
+      "summary": "动画类型画像：常见标签 想象、成长、家庭；用于判断题材匹配与组合兼容性。"
+    },
+    {
+      "id": "genre-dystopia",
+      "name": "反乌托邦",
+      "aliases": [
+        "Dystopia",
+        "Post-apocalyptic",
+        "Apocalyptic"
+      ],
+      "tags": [
+        "系统",
+        "控制",
+        "资源"
+      ],
+      "count": 900,
+      "source": "cmu-movie-metadata",
+      "license": "CC BY-SA 4.0",
+      "summary": "反乌托邦类型画像：常见标签 系统、控制、资源；用于判断题材匹配与组合兼容性。"
+    }
+  ]
+}

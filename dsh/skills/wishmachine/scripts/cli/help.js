@@ -19,8 +19,9 @@ const COMMAND_USAGE = {
   'book read': 'Usage: wishmachine book read <setup|outline|craft|chapter|recap|context|logs|ideas|idea|research|graph|style|writing-style> [--id <id>] [--view summary|index|full] [--dir <dir>]\n\nRead one artifact (chapter/recap/craft require --id). style returns the voice card; writing-style returns story/style/writing-style.json.',
   'book write': 'Usage: wishmachine book write <setup|outline|craft|chapter|recap|research|style|writing-style> [--mode replace|patch|append] [--apply] [--id <id>] [--target <kind>] [--from-idea <id>] [--max-issues <n>] [--dir <dir>]\n\nValidate a candidate from stdin and write it unless a blocking finding stops it (--apply required for JSON artifacts). setup/outline writes rebuild the derived thread/mystery registries automatically; style writes story/style/voice.json; writing-style writes story/style/writing-style.json and rejects AI-made reference samples.',
   'book registry': 'Usage: wishmachine book registry [clean|log|undo|redo|backups|check-backups|backup|restore|abandon] [options] [--dir <dir>]\n\nInspect and maintain the setup/outline registry; subcommands manage operations, backups and abandoned mysteries.',
-  ideas: 'Usage: wishmachine ideas <draw|import|discover|search|validate|types> [options] [--dir <dir>]\n\nDraw deterministic idea cards and validate saved draws.',
-  'ideas draw': 'Usage: wishmachine ideas draw --type <type> [--count <n>] [--seed <n>] [--genre <genre>] [--output <file>] [--dir <dir> --save]\n\noutlinepack/worldpack/plotpack accept type-specific options (e.g. --chapters, --volumes, --cast-count).',
+  ideas: 'Usage: wishmachine ideas <draw|cards|import|discover|search|validate|types> [options] [--dir <dir>]\n\nDraw deterministic idea cards and validate saved draws.',
+  'ideas draw': 'Usage: wishmachine ideas draw --type <type> [--count <n>] [--seed <n>] [--genre <genre>] [--strategy balanced|focused|diverse|wild|safe] [--candidates <n>] [--avoid <id,tag>] [--output <file>] [--dir <dir> --save]\n\noutlinepack/worldpack/plotpack accept type-specific options (e.g. --chapters, --volumes, --cast-count). combo draws archetype×engine×setting×twist×cost×motif combinations from data/cards with deterministic scoring.',
+  'ideas cards': 'Usage: wishmachine ideas cards [--stats]\n\nShow the JSON card-pool stats (pack sizes, tags, licenses, missing source/license).',
   'ideas import': 'Usage: wishmachine ideas import --file <cards.json> [--dir <dir>] [--type <type>] [--source <source>]\n\nImport external idea cards into the project.',
   'ideas discover': 'Usage: wishmachine ideas discover [--topic history|myth|novel] [--limit 3] [--dir <dir>]\n\nDiscover source material for the project.',
   'ideas search': 'Usage: wishmachine ideas search --query <text> [--provider wikipedia|gutenberg] [--limit 3] [--ingest] [--dir <dir>]\n\nSearch external sources; --ingest saves the results as idea cards.',
@@ -59,6 +60,8 @@ Commands:
   ideas draw --type <type> [--count <n>] [--seed <n>] [--genre <genre>] [--dir <project> --save] [--output <file>]
   ideas draw --type outlinepack [--chapters 10] [--scenes 3] [--target-chars 3000] [--volumes 3] [--chapters-per-volume 10]
   ideas draw --type worldpack|plotpack [--cast-count 4|auto] [--cast-roles protagonist,antagonist,support] [--prompt-chars 800] [--character-prompt-chars 160]
+  ideas draw --type combo [--genre <genre>] [--strategy balanced|focused|diverse|wild|safe] [--candidates <n>] [--avoid <id,tag>]
+  ideas cards
   ideas import --file <cards.json> [--dir <project>] [--type <type>] [--source <source>]
   ideas discover [--topic history|myth|novel] [--limit 3] [--dir <project>]
   ideas search --query <text> [--provider wikipedia|gutenberg] [--limit 3] [--ingest] [--dir <project>]

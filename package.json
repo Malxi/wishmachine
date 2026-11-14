@@ -30,7 +30,8 @@
     "scripts",
     "references",
     "SKILL.md",
-    "dsh"
+    "dsh",
+    "data"
   ],
   "scripts": {
     "test": "node --test",

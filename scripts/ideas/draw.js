@@ -13,6 +13,7 @@ import { buildMultiVolumeOutlinePack } from './outlinepack.js';
 import { buildPlotpack } from './plotpack.js';
 import { buildWorldpack } from './worldpack.js';
 import { namecards } from './namecards.js';
+import { drawCombos } from './cards.js';
 
 export function ideasTypes() {
   return TYPES.map((name) => ({ name }));
@@ -57,6 +58,9 @@ function buildReplayCommand(type, options, seed, count) {
   }
   numeric('prompt-chars', 'promptChars');
   numeric('character-prompt-chars', 'characterPromptChars');
+  if (options.strategy) add('strategy', options.strategy);
+  numeric('candidates', 'candidates');
+  if (options.avoid) add('avoid', options.avoid);
   return parts.join(' ');
 }
 
@@ -69,8 +73,8 @@ function resolveSeed(options) {
 
 function resolveCount(type, requested) {
   const composite = COMPOSITE_IDEA_TYPES.has(type);
-  const defaultCount = composite ? 1 : 5;
-  const maxCount = composite ? 10 : 50;
+  const defaultCount = type === 'combo' ? 3 : composite ? 1 : 5;
+  const maxCount = type === 'combo' ? 10 : composite ? 10 : 50;
   const raw = requested === undefined || requested === null || requested === ''
     ? defaultCount
     : Number(requested);
@@ -177,6 +181,20 @@ function drawByType(type, context) {
   if (type === 'worldpack') return drawWorldpackResults(context);
   if (type === 'plotpack') return drawPlotpackResults(context);
   if (type === 'outlinepack') return drawOutlinepackResults(context);
+  if (type === 'combo') {
+    const { options, seed, count } = context;
+    return {
+      results: drawCombos({
+        genre: options.genre || '',
+        seed,
+        count,
+        strategy: options.strategy || 'balanced',
+        candidates: options.candidates,
+        avoid: options.avoid,
+      }),
+      castMeta: null,
+    };
+  }
   if (type === 'namecard' || type === 'name' || type === 'cast') {
     const { rng, seed, count, deck, warningSink } = context;
     return {

@@ -1,0 +1,97 @@
+{
+  "pack": "motifs",
+  "version": 1,
+  "description": "母题卡：从公版小说与电影常见母题归纳，字段为本项目改写；不收录原文段落。",
+  "cards": [
+    {
+      "id": "motif-creation-responsibility",
+      "name": "造物与责任",
+      "summary": "创造者只想证明自己能造，却拒绝回答造物“为什么活着”。",
+      "tags": ["造物", "责任", "遗弃", "伦理"],
+      "genres": ["科幻", "恐怖", "剧情", "奇幻"],
+      "source": "gutenberg:frankenstein",
+      "license": "public domain (inspired by Project Gutenberg)"
+    },
+    {
+      "id": "motif-double",
+      "name": "替身/双重",
+      "summary": "一个人用另一个自己承担代价，最后分不清哪一个才是原版。",
+      "tags": ["替身", "身份", "分裂", "秘密"],
+      "genres": ["悬疑", "惊悚", "科幻", "剧情"],
+      "source": "gutenberg:jekyll-and-hyde",
+      "license": "public domain (inspired by Project Gutenberg)"
+    },
+    {
+      "id": "motif-voyage-escape",
+      "name": "航行与逃离",
+      "summary": "出发不是为了到达，而是为了离开一个再也回不去的地方。",
+      "tags": ["航行", "逃离", "孤独", "边界"],
+      "genres": ["冒险", "剧情", "科幻", "历史"],
+      "source": "gutenberg:moby-dick",
+      "license": "public domain (inspired by Project Gutenberg)"
+    },
+    {
+      "id": "motif-old-house",
+      "name": "旧宅",
+      "summary": "房子记得住所有事，住在里面的人却总说“过去就过去了”。",
+      "tags": ["旧宅", "记忆", "家族", "秘密"],
+      "genres": ["悬疑", "恐怖", "剧情", "家族"],
+      "source": "gutenberg:the-fall-of-the-house-of-usher",
+      "license": "public domain (inspired by Project Gutenberg)"
+    },
+    {
+      "id": "motif-letter",
+      "name": "书信/记录",
+      "summary": "一份被反复转抄的记录，每一版都少一行，最后没人知道原句是什么。",
+      "tags": ["书信", "记录", "缺页", "真相"],
+      "genres": ["悬疑", "历史", "剧情", "科幻"],
+      "source": "gutenberg:dracula",
+      "license": "public domain (inspired by Project Gutenberg)"
+    },
+    {
+      "id": "motif-trial",
+      "name": "审判",
+      "summary": "所有人都知道判决是错的，但没有人愿意第一个说出“不”。",
+      "tags": ["审判", "制度", "共谋", "沉默"],
+      "genres": ["剧情", "犯罪", "历史", "政治"],
+      "source": "cmu-movie-summary:courtroom",
+      "license": "CC BY-SA 4.0 (derived from CMU Movie Summary Corpus)"
+    },
+    {
+      "id": "motif-plague",
+      "name": "瘟疫/传播",
+      "summary": "灾难不是从外面来的，是沿着人们每天走的路线一点点扩散的。",
+      "tags": ["瘟疫", "传播", "社区", "恐惧"],
+      "genres": ["科幻", "恐怖", "剧情", "灾难"],
+      "source": "cmu-movie-summary:epidemic",
+      "license": "CC BY-SA 4.0 (derived from CMU Movie Summary Corpus)"
+    },
+    {
+      "id": "motif-machine",
+      "name": "机械/系统",
+      "summary": "系统运转得很好，只是它的正常运转以某些人的消失为条件。",
+      "tags": ["机械", "系统", "效率", "代价"],
+      "genres": ["科幻", "反乌托邦", "剧情", "惊悚"],
+      "source": "gutenberg:the-time-machine",
+      "license": "public domain (inspired by Project Gutenberg)"
+    },
+    {
+      "id": "motif-wilderness",
+      "name": "荒野",
+      "summary": "离开人群之后，人才发现自己一直遵守的规矩是谁定的。",
+      "tags": ["荒野", "孤独", "规矩", "生存"],
+      "genres": ["西部", "冒险", "剧情", "末日"],
+      "source": "cmu-movie-summary:western",
+      "license": "CC BY-SA 4.0 (derived from CMU Movie Summary Corpus)"
+    },
+    {
+      "id": "motif-name",
+      "name": "名字",
+      "summary": "名字被记错一次，人生就拐向另一个方向；被彻底忘掉的人，连墓碑都没有。",
+      "tags": ["名字", "身份", "记忆", "社会"],
+      "genres": ["奇幻", "悬疑", "剧情", "历史"],
+      "source": "curated",
+      "license": "MIT"
+    }
+  ]
+}

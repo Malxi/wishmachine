@@ -1,0 +1,127 @@
+{
+  "pack": "settings",
+  "version": 1,
+  "description": "场景/世界卡：从电影类型与公版小说常见空间归纳，字段为本项目改写。",
+  "cards": [
+    {
+      "id": "set-border-town",
+      "name": "灰雾边城",
+      "summary": "一座靠边贸和检查站活着的城，所有人都知道有些货不能问来路。",
+      "tags": ["边境", "检查站", "灰雾", "贸易"],
+      "genres": ["科幻", "末日", "犯罪", "西部"],
+      "specificity": 3,
+      "source": "curated",
+      "license": "MIT"
+    },
+    {
+      "id": "set-isolated-ship",
+      "name": "封闭孤船",
+      "summary": "一艘回不去的船，资源按岗位分配，底舱的人开始怀疑航行本身是个谎言。",
+      "tags": ["封闭空间", "航海", "资源", "等级"],
+      "genres": ["科幻", "惊悚", "冒险", "灾难"],
+      "specificity": 3,
+      "source": "gutenberg:moby-dick",
+      "license": "public domain (inspired by Project Gutenberg)"
+    },
+    {
+      "id": "set-vertical-city",
+      "name": "垂直城市",
+      "summary": "城市按海拔分层，越往上空气越好，电梯是唯一合法的跨层通道。",
+      "tags": ["阶层", "城市", "垂直", "通道"],
+      "genres": ["科幻", "反乌托邦", "犯罪", "剧情"],
+      "specificity": 3,
+      "source": "curated",
+      "license": "MIT"
+    },
+    {
+      "id": "set-abandoned-plant",
+      "name": "废弃工厂",
+      "summary": "停产多年的工厂还在半夜开工，附近的人都说听见自己失踪亲人的声音。",
+      "tags": ["废墟", "工业", "失踪", "声音"],
+      "genres": ["恐怖", "悬疑", "惊悚", "剧情"],
+      "specificity": 2,
+      "source": "curated",
+      "license": "MIT"
+    },
+    {
+      "id": "set-frontier-station",
+      "name": "边境驿站",
+      "summary": "一条铁路的尽头，只有一间驿站、一口井和一本登记簿；每个住客都在等下一班车。",
+      "tags": ["边境", "驿站", "等待", "登记"],
+      "genres": ["西部", "剧情", "悬疑", "战争"],
+      "specificity": 2,
+      "source": "cmu-movie-summary:western",
+      "license": "CC BY-SA 4.0 (derived from CMU Movie Summary Corpus)"
+    },
+    {
+      "id": "set-colony-ship",
+      "name": "殖民星舰",
+      "summary": "飞了三十年的殖民船，乘客不知道船长已经换了四次，也不知道目的地是否还在。",
+      "tags": ["星舰", "殖民", "代际", "谎言"],
+      "genres": ["科幻", "冒险", "剧情", "惊悚"],
+      "specificity": 3,
+      "source": "cmu-movie-summary:science_fiction",
+      "license": "CC BY-SA 4.0 (derived from CMU Movie Summary Corpus)"
+    },
+    {
+      "id": "set-dynasty-archive",
+      "name": "旧王朝档案馆",
+      "summary": "王朝已经亡了，档案馆还在按旧规矩编目；新政权每年派人来烧一批，又悄悄抄走一批。",
+      "tags": ["档案", "王朝", "记忆", "官僚"],
+      "genres": ["历史", "奇幻", "悬疑", "剧情"],
+      "specificity": 3,
+      "source": "curated",
+      "license": "MIT"
+    },
+    {
+      "id": "set-capital-city",
+      "name": "资本都市",
+      "summary": "一座所有服务都能明码标价的城市，连道歉和葬礼都有套餐。",
+      "tags": ["资本", "城市", "交易", "体面"],
+      "genres": ["犯罪", "剧情", "职场", "科幻"],
+      "specificity": 2,
+      "source": "cmu-movie-summary:crime",
+      "license": "CC BY-SA 4.0 (derived from CMU Movie Summary Corpus)"
+    },
+    {
+      "id": "set-shelter",
+      "name": "末日避难所",
+      "summary": "地下避难所按贡献分配氧气，墙上的倒计时已经停了三年，没有人敢问为什么。",
+      "tags": ["末日", "避难所", "资源", "倒计时"],
+      "genres": ["科幻", "末日", "惊悚", "剧情"],
+      "specificity": 3,
+      "source": "cmu-movie-summary:post_apocalyptic",
+      "license": "CC BY-SA 4.0 (derived from CMU Movie Summary Corpus)"
+    },
+    {
+      "id": "set-border-court",
+      "name": "边境法庭",
+      "summary": "管辖模糊的边境法庭，法官、翻译和被告都可能是同一个人换的衣服。",
+      "tags": ["法庭", "边境", "翻译", "身份"],
+      "genres": ["剧情", "犯罪", "政治", "历史"],
+      "specificity": 2,
+      "source": "curated",
+      "license": "MIT"
+    },
+    {
+      "id": "set-island-sanatorium",
+      "name": "孤岛疗养院",
+      "summary": "只接收“记不清自己是谁”的病人，岛上的工作人员从不交换姓名。",
+      "tags": ["孤岛", "疗养院", "记忆", "封闭"],
+      "genres": ["悬疑", "恐怖", "剧情", "惊悚"],
+      "specificity": 3,
+      "source": "gutenberg:the-island-of-doctor-moreau",
+      "license": "public domain (inspired by Project Gutenberg)"
+    },
+    {
+      "id": "set-underground-market",
+      "name": "地下市场",
+      "summary": "只收记忆和名字的市场，摊位按“你愿意忘掉什么”排序。",
+      "tags": ["市场", "交易", "记忆", "地下"],
+      "genres": ["奇幻", "科幻", "悬疑", "犯罪"],
+      "specificity": 3,
+      "source": "curated",
+      "license": "MIT"
+    }
+  ]
+}
