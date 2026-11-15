@@ -146,8 +146,11 @@ $WM doctor --dir my-book                             # 目录/配置/JSON/regist
 3. 设定 loop：`check --profile style --target setup` → 按 `style.setup.*`（含 `name_*`）
    具体化/代价化/换名，最多 2 轮；setup 里出现旧 `writing_style` 会报
    `style.setup.writing_style_deprecated`，把它移到 style 目录。
-4. 章节 loop：初稿 → `check --profile style --target chapter --id` → 只改命中句/段 →
-   复检，最多 2 轮；指标回到健康带即可，不追 0。每场戏先过“目标/阻碍/转折/结果”，
+4. 章节 loop：初稿 → **通读清单**（`references/pass-review.md`：搭配 / 前后一致 / 空间 / 时间 /
+   在场与知情 / 可数，六类逐类过一遍，报可疑句，人挑，模型定点改）→ `check --profile style --target chapter --id`
+   → 只改命中句/段 → 复检，最多 2 轮；指标回到健康带即可，不追 0。
+   **顺序不能反**：检查器测句法指纹，测不出"这句话站不站得住"（实测放过了 `名字不死` 和
+   前一秒停掉的排风扇又在响）；通读清单是唯一能覆盖搭配与自洽的一步。每场戏先过“目标/阻碍/转折/结果”，
    连续两段没有新信息就合并或删；母题预算见 `references/scene-guide.md`。
    除 `fragments` / `enumeration` / `counting_tic` / `recount_tic` 外，重点看中文句法：
    `translationese`（翻译腔）、`nominalization`（名词化/弱动词）、`jargon`（黑话）、
