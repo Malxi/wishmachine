@@ -19,7 +19,9 @@ function buildPlotBeats(pack, refs) {
       act: 'Act I',
       chapter: 1,
       function: 'setup',
-      beat: premise ? `${premise.title}：先让读者看见${premise.surface_rule}` : '先展示世界规则与主角的日常。',
+      beat: premise
+        ? `${premise.title}：${premise.surface_rule}第一次落到主角头上。`
+        : '主角的日常与这个世界的规则第一次撞上。',
       source: 'premise',
       source_id: pack.id,
     },

@@ -230,3 +230,32 @@ test('idea validation checks thread status consistency', () => {
   invalid.thread_registry[0].status = 'paused';
   assert.ok(validateIdeaDraw({ results: [invalid] }).findings.some((finding) => finding.rule_id === 'idea.thread.invalid_status'));
 });
+
+// Regression: product fields must carry plot content only. Writing instructions
+// ("先让读者…"), recursive quote wrappers, meta labels, doubled punctuation and
+// English deck placeholders all leaked into chapters/scenes before.
+test('outlinepack product fields stay free of meta-instructions and placeholders', () => {
+  const pack = outlinepack({ chapters: 6, scenes: 3 });
+  const text = JSON.stringify(pack);
+  const banned = [
+    '先让读者', '主角选择进入：', '处理上一场后果', '承接“', '因为“',
+    '。；', '本章冲突：', '复杂化：', '反转：',
+    'the loophole', 'the premise', 'the rule', 'the win',
+  ];
+  for (const marker of banned) {
+    assert.equal(text.includes(marker), false, `product field leaked: ${marker}`);
+  }
+});
+
+test('outlinepack never repeats an obstacle across chapters of a volume', () => {
+  const pack = outlinepack({ chapters: 6, scenes: 3 });
+  const obstacles = pack.chapters.map((chapter) => chapter.obstacle);
+  for (let index = 0; index < obstacles.length; index += 1) {
+    const obstacle = obstacles[index];
+    assert.ok(obstacle.length > 0);
+    assert.equal(obstacle.includes('。；'), false);
+    if (index > 0) {
+      assert.notEqual(obstacle, obstacles[index - 1], `chapter ${index + 1} repeats the previous obstacle verbatim`);
+    }
+  }
+});

@@ -95,7 +95,6 @@ function buildScenes({
   const scenarioB = plot.scenarios?.[1] || null;
   const blocking = (plot.cast_relations || []).find((relation) => relation.semantic === 'blocks' || relation.type === 'blocks') || null;
   const scenes = [];
-  let previousConsequence = '';
   for (let sceneIndex = 0; sceneIndex < scenesPerChapter; sceneIndex += 1) {
     const lastScene = sceneIndex === scenesPerChapter - 1;
     const sceneObstacle = sceneIndex === 0
@@ -105,18 +104,18 @@ function buildScenes({
         : (scenarioB?.twist || blocking?.stake || plot.premise?.hidden_truth || chapterObstacle);
     const sceneTurn = sceneIndex === 0 ? 'choice' : lastScene ? 'reversal' : 'complication';
     const turnEvent = sceneIndex === 0
-      ? `主角选择进入：${beat.beat}`
+      ? beat.beat
       : lastScene
-        ? `反转：${plot.storyline?.midpoint || scenarioB?.twist || '原本的理解被推翻'}`
-        : `复杂化：${scenarioB?.twist || blocking?.stake || '新的阻力出现'}`;
+        ? (plot.storyline?.midpoint || scenarioB?.twist || '原本的理解被推翻')
+        : (scenarioB?.twist || blocking?.stake || '新的阻力出现');
     const sceneGoal = sceneIndex === 0
-      ? (entrySummary ? `承接上一章“${entrySummary}”，进入：${beat.beat}` : beat.beat)
+      ? (entrySummary ? `承接上一章，${beat.beat}` : beat.beat)
       : lastScene
-        ? `处理上一场后果，并承受：${chapterObstacle}`
-        : `承接“${previousConsequence}”，验证：${scenarioB?.twist || blocking?.stake || chapterObstacle}`;
+        ? (plot.storyline?.cost || chapterObstacle)
+        : `承接上一场，${scenarioB?.twist || blocking?.stake || chapterObstacle}`;
     const consequence = lastScene
       ? (plot.storyline?.cost || '本章代价落地，主角带着不可撤回的结果进入下一章。')
-      : `因为“${turnEvent}”，${scenarioA?.pressure || '局面被推进，但新的问题被留下。'}`;
+      : (scenarioA?.pressure || '局面被推进，但新的问题被留下。');
     scenes.push({
       order: sceneIndex + 1,
       pov: castInfo.leadName,
@@ -135,7 +134,6 @@ function buildScenes({
       }),
       beats: [beat.function, lastScene ? 'turn' : 'pressure'],
     });
-    previousConsequence = consequence;
   }
   return scenes;
 }

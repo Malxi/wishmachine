@@ -32,10 +32,18 @@ function planChapterObstacle({ plot, beat, config, entryFromPrevious, entrySumma
     midpoint: config.scenarioB?.twist,
     crisis: config.blocking?.stake,
     climax: plot.storyline?.cost,
-    resolution: plot.storyline?.cost,
+    resolution: plot.scenarioB?.twist || plot.blocking?.stake || plot.premise?.hidden_truth || plot.storyline?.cost,
   };
   const baseObstacle = obstacleByFunction[beat.function] || plot.premise?.central_conflict || '规则阻止主角推进';
-  return entryFromPrevious ? `上一章后果未解：${entrySummary}；${baseObstacle}` : baseObstacle;
+  if (!entryFromPrevious) return baseObstacle;
+  const strip = (value) => String(value || '').replace(/[。；;，,\s]+$/u, '').trim();
+  const previous = strip(entrySummary);
+  const base = strip(baseObstacle);
+  if (!previous) return base;
+  if (!base) return previous;
+  if (previous === base || previous.includes(base)) return previous;
+  if (base.includes(previous)) return base;
+  return `上一章后果未解：${previous}；${base}`;
 }
 
 function createChapterMysteries(pendingMysteries) {
@@ -136,7 +144,7 @@ function buildChapterRecord(plot, config, context) {
     mysteries,
     events,
     conflict: entryFromPrevious
-      ? `承接上一章后果：${entrySummary}；本章冲突：${plot.premise?.central_conflict || plot.premise?.conflict || '主角必须做出选择。'}`
+      ? `承接上一章后果，${String(entrySummary || '').replace(/[。；;\s]+$/u, '')}；${plot.premise?.central_conflict || plot.premise?.conflict || '主角必须做出选择。'}`
       : (plot.premise?.central_conflict || plot.premise?.conflict || '主角必须做出选择。'),
     pacing: PACE_BY_FUNCTION[beat.function] || 'rising',
     beat_function: beat.function,

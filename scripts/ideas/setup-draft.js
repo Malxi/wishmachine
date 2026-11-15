@@ -67,10 +67,10 @@ function buildSetupPremises(plot, storyline) {
       { level: 4, name: '改写规则', description: storyline.payoff || '主角找到例外', requirements: '主角承担改写后的后果' },
     ],
     appeal_engine: {
-      appeal: plot.premise?.statement || 'the premise',
-      surface_limit: plot.premise?.surface_rule || 'the rule',
-      exploit: plot.premise?.leverage || 'the loophole',
-      signature_win: storyline.payoff || 'the win',
+      appeal: plot.premise?.statement || '主角与规则的正面对撞',
+      surface_limit: plot.premise?.surface_rule || '规则划出的边界',
+      exploit: plot.premise?.leverage || '规则本身的例外',
+      signature_win: storyline.payoff || '主角在规则缝隙里的一次胜利',
     },
   }];
 }
