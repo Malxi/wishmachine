@@ -73,12 +73,22 @@ test('outlinepack expands into multiple volumes', () => {
   assert.ok(new Set(outline.chapters[0].scenes.map((scene) => scene.goal)).size > 1);
   assert.ok(outline.chapters[0].scenes.every((scene) => scene.consequence));
   assert.ok(outline.chapters[0].scenes.every((scene) => !('result' in scene)));
-  assert.ok(outline.chapters[0].scenes[1].goal.includes('承接'));
+  // 场景目标现在是抽牌给的：必须具体、互不重复，不能是"承接上一场"这类元连接。
+  // 场景目标现在是抽牌给的：同一章的三场必须互不相同（牌池按章去重），
+  // 整卷的重复率不能塌陷（牌池大于 12 张时，36 场里至少一半目标唯一）。
+  for (const chapter of outline.chapters) {
+    const goals = (chapter.scenes || []).map((scene) => scene.goal);
+    assert.equal(new Set(goals).size, goals.length, `${chapter.id}: scene goals repeat inside one chapter`);
+    assert.ok(goals.every((goal) => !String(goal).includes('承接')), `${chapter.id}: goal carries a meta connector`);
+    assert.ok(goals.every((goal) => goal !== chapter.obstacle), `${chapter.id}: goal equals the chapter obstacle`);
+  }
+  const allGoals = outline.chapters.flatMap((c) => (c.scenes || []).map((s) => s.goal));
+  assert.ok(new Set(allGoals).size >= allGoals.length / 2, 'scene goals degenerate across the volume');
   assert.ok(outline.chapters[0].scenes[1].mysteries.planted.length > 0);
   assert.equal(outline.chapters[0].scene_chain.length, 3);
   assert.equal(outline.chapters[0].scene_chain[1].turn, outline.chapters[0].scenes[1].turn_event);
   assert.equal(outline.chapters[1].entry_from_previous, outline.chapters[0].exit_consequence);
-  assert.ok(outline.chapters[1].scenes[0].goal.includes('承接上一章'));
+
   // conflict/obstacle are story content the writer reads as plot: no note-to-self prefixes.
   assert.ok(!outline.chapters[1].conflict.includes('承接上一章后果'), 'conflict must not carry the meta connector');
   assert.ok(outline.chapters[1].conflict.length > 0);

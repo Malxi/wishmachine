@@ -235,6 +235,7 @@ function buildOutlinePack(plot, seed, options = {}) {
   const droppedMysteries = [];
   let previousChapterConsequence = options.previousConsequence || '';
   let pendingMysteries = Array.isArray(options.carriedMysteries) ? options.carriedMysteries.slice() : [];
+  const avoidSceneCards = { goals: new Set(), obstacles: new Set(), costs: new Set() };
   for (let index = 0; index < chapters; index += 1) {
     const globalIndex = config.chapterOffset + index;
     const entryFromPrevious = previousChapterConsequence;
@@ -245,7 +246,7 @@ function buildOutlinePack(plot, seed, options = {}) {
     const mysteries = createChapterMysteries(pendingMysteries);
     pendingMysteries = plantChapterMysteries({ plot, config, beat, chapterId, mysteries, pendingMysteries });
     const scenes = buildScenes({
-      plot, chapterId, beat, castInfo, chapterObstacle, entrySummary, targetChars, scenesPerChapter, threadId,
+      plot, chapterId, beat, castInfo, chapterObstacle, entrySummary, targetChars, scenesPerChapter, threadId, avoidSceneCards,
     });
     promoteSceneMysteries(scenes, mysteries, pendingMysteries, chapterId);
     const events = buildChapterEvents({ chapterId, scenes, castInfo, globalIndex, totalChapters: config.totalChapters });

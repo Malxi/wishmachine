@@ -1,4 +1,6 @@
 // Per-chapter scene, mystery and event construction for outlinepacks.
+import { hashSeed, mulberry32 } from '../util.js';
+import { scenecards } from './scenecards.js';
 import { EVENT_TYPE_PALETTE } from './shared.js';
 
 // ---------------------------------------------------------------------------
@@ -89,13 +91,23 @@ function buildSceneMysteries({
 }
 
 function buildScenes({
-  plot, chapterId, beat, castInfo, chapterObstacle, entrySummary, targetChars, scenesPerChapter, threadId,
+  plot, chapterId, beat, castInfo, chapterObstacle, entrySummary, targetChars, scenesPerChapter, threadId, avoidSceneCards,
 }) {
   const scenarioA = plot.scenarios?.[0] || null;
   const scenarioB = plot.scenarios?.[1] || null;
   const blocking = (plot.cast_relations || []).find((relation) => relation.semantic === 'blocks' || relation.type === 'blocks') || null;
+  const sceneRng = mulberry32(hashSeed(`scene:${chapterId}:${beat.beat}`));
+  const cards = scenecards({
+    rng: sceneRng,
+    count: scenesPerChapter,
+    cast: (castInfo.names || []).filter((name) => name && name !== castInfo.leadName),
+    location: plot.location?.name || '',
+    caseName: plot.case_title || plot.premise?.title || '',
+    avoid: avoidSceneCards || null,
+  });
   const scenes = [];
   for (let sceneIndex = 0; sceneIndex < scenesPerChapter; sceneIndex += 1) {
+    const card = cards[sceneIndex] || null;
     const lastScene = sceneIndex === scenesPerChapter - 1;
     const sceneObstacle = sceneIndex === 0
       ? chapterObstacle
@@ -108,19 +120,17 @@ function buildScenes({
       : lastScene
         ? (plot.storyline?.midpoint || scenarioB?.twist || '原本的理解被推翻')
         : (scenarioB?.twist || blocking?.stake || '新的阻力出现');
-    const sceneGoal = sceneIndex === 0
-      ? (entrySummary ? `承接上一章，${beat.beat}` : beat.beat)
-      : lastScene
-        ? (plot.storyline?.cost || chapterObstacle)
-        : `承接上一场，${scenarioB?.twist || blocking?.stake || chapterObstacle}`;
-    const consequence = lastScene
+    // 抽牌给的是可写的东西：这一场想要什么、什么挡着、输了付什么。
+    const sceneGoal = card?.goal || beat.beat;
+    const cardObstacle = card?.obstacle || sceneObstacle;
+    const consequence = card?.cost || (lastScene
       ? (plot.storyline?.cost || '本章代价落地，主角带着不可撤回的结果进入下一章。')
-      : (scenarioA?.pressure || '局面被推进，但新的问题被留下。');
+      : (scenarioA?.pressure || '局面被推进，但新的问题被留下。'));
     scenes.push({
       order: sceneIndex + 1,
       pov: castInfo.leadName,
       goal: sceneGoal,
-      obstacle: sceneObstacle,
+      obstacle: cardObstacle,
       turn: sceneTurn,
       turn_event: turnEvent,
       consequence,
