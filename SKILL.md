@@ -156,12 +156,16 @@ $WM doctor --dir my-book                             # 目录/配置/JSON/regist
    换个新会话立刻看见）。同章实测：人工通读找到 2 条，按包冷审出 4 确认 + 8 可疑。
    - 出包并打印投喂文本：`wishmachine book review --dir <p> --id <chapter> --prompt`
      （包写入 `<p>/.review/<chapter>.packet.json`，文本里已含报告路径与六类问句）
-   - 把这段文本交给**新会话/子 agent** 执行（`codex exec "<文本>"`，或用你自己的 subagent 工具），
+   - 把这段文本交给**新会话/独立子 agent** 执行（用你自己平台提供的 subagent，`fork_context=false`；
+     嵌套 `codex exec` 在受限沙箱里会被拦网络，别依赖它），
      它只读不改，把报告写到 `<p>/.review/<chapter>.report.json`
    - 回收：`wishmachine book review --dir <p> --id <chapter> --check <p>/.review/<chapter>.report.json`
      `quote` 必须逐字出现在正文里（挡住编造）、六类没覆盖会列出来、有 `confirmed` 退出码 2、
      只有 `suspicious` 退出 0；报告被判有问题就重审，不要改正文蒙过去
-   - `confirmed` 全部改掉；`suspicious` 逐条判断，涉及设定的标注待作者定每场戏先过“目标/阻碍/转折/结果”，
+   - `confirmed` 全部改掉；`suspicious` 逐条判断，涉及设定的标注待作者定
+   - **能力边界**（实测）：冷审稳定抓前后矛盾，抓不全空间/知情/时间线（每次报的都不同），
+     **抓不到搭配错**——`名字不死` 连跑三次全漏，把原句递到眼前也漏。搭配错看包里的
+     `leads.collocation_flags`（规则扫出来的，一击命中），"读起来不对劲"必须人读。每场戏先过“目标/阻碍/转折/结果”，
    连续两段没有新信息就合并或删；母题预算见 `references/scene-guide.md`。
    除 `fragments` / `enumeration` / `counting_tic` / `recount_tic` 外，重点看中文句法：
    `translationese`（翻译腔）、`nominalization`（名词化/弱动词）、`jargon`（黑话）、

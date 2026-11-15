@@ -9,7 +9,7 @@ import { readJson, readText, safeSegment } from './util.js';
 import { checkProject } from './schema.js';
 
 const CATEGORIES = [
-  { id: 'collocation', label: '搭配', question: '这个动词能配这个名词吗？把句子改说成一个事实（谁做了什么、谁会怎样）还成立吗？' },
+  { id: 'collocation', label: '搭配', question: 'leads.abstract_noun_sentences 逐句拆成 (名词, 动作) 对（主语+谓语或动词+宾语），逐对问：这个名词真的能做这个动作吗？把句子改说成一个事实（谁做了什么、谁会怎样）还成立吗？抽象名词被当成能干活的实体，就是搭配错。' },
   { id: 'consistency', label: '前后一致', question: '前文立下的状态后文还记得吗？停下的东西又动了吗？拿走的又出现了吗？' },
   { id: 'space', label: '空间', question: '这个房间有窗吗？人在哪一层？够得着吗？走得过去吗？' },
   { id: 'time', label: '时间', question: '把全章钟点排一遍：能接上吗？时距合理吗？报时是不是太密？' },
@@ -26,6 +26,57 @@ function countCjk(text) {
 function splitParagraphs(text) {
   const body = String(text).split('\n').filter((line) => !line.trim().startsWith('#')).join('\n');
   return body.split(/\n\s*\n/).map((para) => para.trim()).filter((para) => /[\u4e00-\u9fff]/.test(para));
+}
+
+// 抽象名词候选句：搭配错误几乎都长在这类句子上（名字/规矩/证据/记录被当成能干活的实体）。
+// 真人读时会漏，所以不要指望审稿人自己发现 —— 直接把候选句递过去。
+const ABSTRACT_NOUNS = ['名字', '规矩', '制度', '记忆', '记录', '证据', '程序', '系统', '时间',
+  '真相', '身份', '卷宗', '条款', '手续', '流程', '顺序', '名额', '额度', '编号', '户籍', '名单'];
+
+function abstractNounSentences(paragraphs) {
+  const out = [];
+  paragraphs.forEach((para, index) => {
+    for (const sentence of para.split(/(?<=[。！？])/)) {
+      const text = sentence.trim();
+      if (!text) continue;
+      for (const noun of ABSTRACT_NOUNS) {
+        if (!text.includes(noun)) continue;
+        // 句子里要有动作（谓语），纯名词罗列没意义
+        if (!/[死活着来去给拿出来放走站坐压推拨拉掀翻划落流断开合收紧]/.test(text)) continue;
+        out.push({ paragraph: index + 1, noun, sentence: text });
+        break;
+      }
+    }
+  });
+  return out.slice(0, 25);
+}
+
+// 抽象名词配生命动词：cold review 实测三次都判不出来（把原句递到眼前也漏），
+// 但规则扫一次就中。所以不指望模型，工具直接报。
+const LIFE_VERBS = ['死', '活', '流血', '呼吸', '喘', '饿', '醒', '睡', '哭', '笑', '咽', '吐'];
+const SAFE_COMPOUNDS = ['死者', '死人', '活人', '活口', '死因', '活路', '死活'];
+
+function collocationFlags(paragraphs) {
+  const out = [];
+  paragraphs.forEach((para, index) => {
+    for (const sentence of para.split(/(?<=[。！？])/)) {
+      const text = sentence.trim();
+      if (!text) continue;
+      for (const noun of ABSTRACT_NOUNS) {
+        for (const verb of LIFE_VERBS) {
+          const at = text.indexOf(noun);
+          if (at < 0) continue;
+          const tail = text.slice(at, at + noun.length + 3);
+          if (!tail.includes(verb)) continue;
+          const pair = tail.slice(0, tail.indexOf(verb) + verb.length);
+          if (SAFE_COMPOUNDS.some((compound) => pair.includes(compound))) continue;
+          out.push({ paragraph: index + 1, pair, sentence: text });
+          break;
+        }
+      }
+    }
+  });
+  return out.slice(0, 15);
 }
 
 function countablesOf(paragraphs) {
@@ -75,6 +126,8 @@ function buildReviewPacket(project, options = {}) {
         last_sentence: (para.split(/(?<=[。！？])/).filter(Boolean).pop() || '').trim(),
       })).slice(0, 40),
       countables: countablesOf(paragraphs),
+      abstract_noun_sentences: abstractNounSentences(paragraphs),
+      collocation_flags: collocationFlags(paragraphs),
     },
     contract: {
       file: 'JSON',
@@ -154,7 +207,8 @@ function reviewPrompt({ packetFile, reportFile, chapterId }) {
     `3) 按包内 contract 的 JSON 形状写报告到 ${reportFile}，chapter 填 "${chapterId}"。`,
     '4) quote 必须与正文逐字一致（校验会拒掉编造的引文）；不确定的用 suspicious；',
     '   没有问题的类别写进 empty_categories；每一类都要真过一遍，不许为凑数编问题。',
-    '5) 不要修改 chapters/ 下任何文件，不要重写正文。',
+    '5) **只读审稿包和它指向的正文**；不要读项目里别的文件（旧的审稿报告会让你抄，抄了这次就白审了）。',
+    '6) 不要修改 chapters/ 下任何文件，不要重写正文。',
   ].join('\n');
 }
 

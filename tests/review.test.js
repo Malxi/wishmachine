@@ -119,3 +119,18 @@ test('投喂文本带包路径、报告路径与逐字引文规则', () => {
   assert.match(text, /不许为凑数编问题/);
   assert.match(text, /不要修改/);
 });
+
+test('collocation_flags 由规则直接报出抽象名词配生命动词', () => {
+  const project = makeProject();
+  const packet = buildReviewPacket(project, { chapterId: 'P1-V1-C1' });
+  const flags = packet.leads.collocation_flags;
+  assert.ok(flags.some((item) => item.pair === '名字不死'), JSON.stringify(flags));
+  assert.ok(flags.every((item) => item.paragraph >= 1));
+});
+
+test('collocation_flags 不误伤正常搭配', () => {
+  const project = makeProject();
+  const packet = buildReviewPacket(project, { chapterId: 'P1-V1-C1' });
+  // 正文里的「活人」「死者」这类名词复合不应被当成搭配错误
+  assert.equal(packet.leads.collocation_flags.length, 1, JSON.stringify(packet.leads.collocation_flags));
+});
