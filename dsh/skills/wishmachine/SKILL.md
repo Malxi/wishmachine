@@ -165,7 +165,10 @@ $WM doctor --dir my-book                             # 目录/配置/JSON/regist
    - `confirmed` 全部改掉；`suspicious` 逐条判断，涉及设定的标注待作者定
    - **能力边界**（实测）：冷审稳定抓前后矛盾，抓不全空间/知情/时间线（每次报的都不同），
      **抓不到搭配错**——`名字不死` 连跑三次全漏，把原句递到眼前也漏。搭配错看包里的
-     `leads.collocation_flags`（规则扫出来的，一击命中），"读起来不对劲"必须人读。每场戏先过“目标/阻碍/转折/结果”，
+     `leads.collocation_flags`（规则扫出来的，一击命中），"读起来不对劲"必须人读。
+   - 动宾搭配（`拉开`+`尸体` 这类）用语料共现查：
+     `python3 tools/collocation_corpus.py check --table data/collocation/verb-object.json <章节文件>`
+     —— 它会把该动词在真实语料里常带的词一并列出来，精度约 1/3，只做提示，别当自动判定。每场戏先过“目标/阻碍/转折/结果”，
    连续两段没有新信息就合并或删；母题预算见 `references/scene-guide.md`。
    除 `fragments` / `enumeration` / `counting_tic` / `recount_tic` 外，重点看中文句法：
    `translationese`（翻译腔）、`nominalization`（名词化/弱动词）、`jargon`（黑话）、

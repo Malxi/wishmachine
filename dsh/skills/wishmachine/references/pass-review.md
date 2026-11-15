@@ -85,10 +85,15 @@ wishmachine book review --dir my-book --id P1-V1-C1 --check report.json # 回收
 | 抽象名词配生命动词（`名字不死`） | **确定性规则**：包里的 `leads.collocation_flags` | 规则一击命中；冷审三次全漏 —— **把原句递到眼前也漏** |
 | 前后矛盾（开头排风扇停了、结尾它又在响） | 冷读审稿 | 三次都稳定抓到 |
 | 空间 / 知情顺序 / 时间线（复印件来源、腕牌、立案） | 冷读审稿 | 抓到，但每次报的集合都不一样，复现性低 |
+| 动宾搭配（`拉开` + `尸体`） | **语料共现**：`tools/collocation_corpus.py check` | 一击命中；冷审从未抓到。但精度约 1/3（干净章也报 2 条），只做提示 |
 | "读起来不对劲" | **人** | 作者一眼抓住 `名字不死`，模型和规则都没有 |
 
 结论：**工具报能枚举的，模型审要理解的，人判读起来对不对。三者不能互相替代。**
 尤其不要把"搭配对不对"交给模型 —— 它心里没有搭配词典，句子读着漂亮就放过。
+
+语料表示例随仓库带：`data/collocation/verb-object.json`（5,022 万字小说语料建的，13 KB）。
+检查：`python3 tools/collocation_corpus.py check --table data/collocation/verb-object.json <章节文件>`。
+该动词常带什么词会一并打出来——所以即使误报，读一眼就能否掉。
 
 另一个坑：嵌套 `codex exec` 在受限沙箱里会被拦（DNS/套接字 `Operation not permitted`），
 冷审要用**平台自己的独立子 agent**（全新上下文），不要靠嵌套进程。
