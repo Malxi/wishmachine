@@ -259,3 +259,15 @@ test('outlinepack never repeats an obstacle across chapters of a volume', () => 
     }
   }
 });
+
+// Regression: chapter titles must not print internal beat codes (setup/midpoint/...).
+test('outlinepack chapter titles are titles, not beat codes', () => {
+  const pack = outlinepack({ chapters: 6, scenes: 3 });
+  const codes = ['setup', 'inciting', 'midpoint', 'crisis', 'climax', 'resolution'];
+  for (const chapter of pack.chapters) {
+    assert.ok(chapter.title && chapter.title.trim().length > 0);
+    for (const code of codes) {
+      assert.equal(chapter.title.includes(code), false, `title leaked beat code ${code}: ${chapter.title}`);
+    }
+  }
+});

@@ -46,6 +46,14 @@ function planChapterObstacle({ plot, beat, config, entryFromPrevious, entrySumma
   return `上一章后果未解：${previous}；${base}`;
 }
 
+// 章节标题要读起来像标题，不能把内部 beat 代号（setup/midpoint/climax）印成成品。
+function chapterTitle(index, beat) {
+  const raw = String(beat?.beat || '').trim();
+  const head = raw.split(/[：:，,。；;]/u)[0].trim().replace(/^主角(的)?/u, '').trim();
+  const usable = head.length >= 2 && head.length <= 14;
+  return usable ? `第${index + 1}章 ${head}` : `第${index + 1}章`;
+}
+
 function createChapterMysteries(pendingMysteries) {
   return {
     ...Object.fromEntries(MYSTERY_LIST_KEYS.map((key) => [key, []])),
@@ -134,7 +142,7 @@ function buildChapterRecord(plot, config, context) {
   return {
     id: chapterId,
     thread_id: config.threadId,
-    title: `第${index + 1}章 · ${beat.function}`,
+    title: chapterTitle(index, beat),
     summary: beat.beat,
     characters: config.castInfo.names,
     location: plot.location?.name || '关键地点',
