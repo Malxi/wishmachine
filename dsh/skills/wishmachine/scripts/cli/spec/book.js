@@ -13,6 +13,7 @@ const BOOK_COMMAND_FLAGS = {
   'book registry restore': ['dir', 'backup', 'dry-run'],
   'book registry abandon': ['dir', 'mystery', 'reason', 'dry-run'],
   'book read': ['dir', 'id', 'view'],
+  'book review': ['dir', 'id', 'check'],
   'book write': ['dir', 'mode', 'apply', 'id', 'target', 'from-idea', 'max-issues'],
 };
 

@@ -1,6 +1,7 @@
 // `book` command handlers: init / status / read / write (registry lives in ./book-registry.js).
 import { initProject, loadProject, projectStatus, readSection, saveResearchReport, writeArtifact } from '../project.js';
 import { runBookRegistry } from './book-registry.js';
+import { buildReviewPacket, readReviewReport, validateReviewReport } from '../review.js';
 import { EXIT_BLOCKING, EXIT_ERROR, EXIT_OK, boolFlag, enumFlag, fail, intFlag, print, stdinText, stringFlag, usageFail } from './args.js';
 import { MODE_VALUES, READ_SECTIONS, VIEW_VALUES, WRITE_SECTIONS } from './spec.js';
 
@@ -117,12 +118,31 @@ async function runBookWrite(args, flags) {
   return result.ok ? EXIT_OK : EXIT_BLOCKING;
 }
 
+// review: 出审稿包（工具不调模型），或校验回来的报告。
+// 校验靠 quote 必须逐字出现在正文里 —— 这一条挡住"编造问题"。
+function runBookReview(args, flags) {
+  const project = loadProject(stringFlag(flags, 'dir', ''));
+  const id = stringFlag(flags, 'id', '');
+  if (!id) usageFail('book review requires --id', 'list ids with "wishmachine state --dir <project> --view brief"');
+  const packet = buildReviewPacket(project, { chapterId: id });
+  const checkFile = stringFlag(flags, 'check', '');
+  if (!checkFile) {
+    print(packet);
+    return EXIT_OK;
+  }
+  const result = validateReviewReport(packet, readReviewReport(checkFile));
+  print(result);
+  if (result.problems.length > 0 || result.uncovered_categories.length > 0) return EXIT_ERROR;
+  return result.counts.confirmed > 0 ? EXIT_BLOCKING : EXIT_OK;
+}
+
 const BOOK_HANDLERS = new Map([
   ['init', runBookInit],
   ['status', (args, flags) => runBookStatus(flags)],
   ['registry', runBookRegistry],
   ['read', runBookRead],
   ['write', runBookWrite],
+  ['review', runBookReview],
 ]);
 
 async function runBook(args, flags) {

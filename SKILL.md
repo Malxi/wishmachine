@@ -150,7 +150,12 @@ $WM doctor --dir my-book                             # 目录/配置/JSON/regist
    在场与知情 / 可数，六类逐类过一遍，报可疑句，人挑，模型定点改）→ `check --profile style --target chapter --id`
    → 只改命中句/段 → 复检，最多 2 轮；指标回到健康带即可，不追 0。
    **顺序不能反**：检查器测句法指纹，测不出"这句话站不站得住"（实测放过了 `名字不死` 和
-   前一秒停掉的排风扇又在响）；通读清单是唯一能覆盖搭配与自洽的一步。每场戏先过“目标/阻碍/转折/结果”，
+   前一秒停掉的排风扇又在响）；通读清单是唯一能覆盖搭配与自洽的一步。
+   用 `book review` 落地：`book review --dir <p> --id <chapter>` 出审稿包（六类问题 + style 线索 +
+   可数候选 + 输出契约），**另起一个新会话**去审（冷眼来自上下文隔离，不来自换模型），报告存 JSON 后
+   `book review --dir <p> --id <chapter> --check report.json` 回收：
+   `quote` 必须逐字出现在正文里（挡住编造）、六类没覆盖会报、有 `confirmed` 退出码 2、只有 `suspicious` 退出 0。
+   实测同一章：人工通读找到 2 条，按包审出 4 确认 + 8 可疑。每场戏先过“目标/阻碍/转折/结果”，
    连续两段没有新信息就合并或删；母题预算见 `references/scene-guide.md`。
    除 `fragments` / `enumeration` / `counting_tic` / `recount_tic` 外，重点看中文句法：
    `translationese`（翻译腔）、`nominalization`（名词化/弱动词）、`jargon`（黑话）、
