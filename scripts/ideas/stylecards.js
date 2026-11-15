@@ -54,6 +54,8 @@ function stylecards({
       advance: card.advance,
       fits_genres: card.fits || [],
       sample_ids: card.samples || [],
+      rhythm_target: card.rhythm_target || null,
+      imagery_lexicon: card.imagery_lexicon || null,
     });
   }
   if (results.length < count) {

@@ -313,7 +313,31 @@ wishmachine audit --dir <project> --profile style --view summary
   ❌ `罗观衡把袋口解开……罗观衡把回执推过去……罗观衡把纸带翻过来……罗观衡把登记板往前翻。`
   ✅ `袋口的塑料绳松开又扣回去。回执推到鉴定机前。纸带翻过来，背面有一列涂黑的字。`
 
-## 6. 不要做的事
+## 6. 腔调抽卡（stylepack）与改写 pass
+
+`ideas draw --type stylepack --genre <题材> --seed N` 抽一张叙述腔调卡：voice / register / rhythm /
+imagery / advance + 公版 sample_ids，外加两样**可校验**的东西。验收脚本：
+`python3 tools/check_stylepack.py <章节.md> <stylepack.json>`。
+
+**一稿就该达标的（实测可行）：**
+
+- `rhythm_target.paragraph_sentences`、`sentence_mean_chars`：段均句数与句长均值的区间。
+  实测能把段均句数从 2.35 抬到 3.96、句长均值从 13 抬到 16，落在给定区间内。
+- `imagery_lexicon.allow` / `.ban`：意象白名单与黑名单。`ban` 必须出现 **0 次**——
+  实测把「门/走廊/灯」从每章十几次压到零是可行的，这是治「每本书都是同一间停尸房」最有效的一条。
+
+**不要写成一稿验收线（实测做不到，硬追会把文章写成台账）：**
+
+句长 cv、短句占比、段末落点配比。十轮实测：段末动作占比目标 35%，一稿只做到 8%，
+而为了凑数文字变成了流程清单（style 分反降到 74）。这三项属于改写 pass。
+
+### 改写 pass（第二稿才做）
+
+- 逐段只看段末一句：把它从抽象判断改成动作、对白或物件。
+- 短句占比按卡面调：需要碎就把长句拆成两三个短句；每拆一次确认信息没丢。
+- 判改好没有，用 `tools/check_stylepack.py` 那行“参考”前后对比，不追求归零。
+
+## 7. 不要做的事
 
 - 不要先写得很 AI 再整段 humanize：信息结构已经被模板化了，humanize 只能洗表面。
 - 不要为了指标归零反复润色；最多 2 轮。

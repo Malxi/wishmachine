@@ -1,6 +1,7 @@
 // Narrative voice deck ("stylepack"): book-level prose voices drawn like name cards.
 // Each card carries a whole register — voice distance, wording, rhythm, imagery and how a
-// scene advances — plus public-domain samples to learn the breath from instead of a rule list.
+// scene advances — plus a *measurable* rhythm target and an imagery lexicon, so a drawn card
+// can be verified against the finished chapter instead of merely asked for in a prompt.
 // `family` keeps two neighbouring voices out of the same book; `fits` keeps a voice out of a
 // genre it would wreck (an oral-record narrator in a forensic procedural).
 const VOICES = [
@@ -10,11 +11,19 @@ const VOICES = [
     family: 'procedural',
     voice: '极近第三人称，只贴主角的眼和手，判断让位给手续和数字',
     register: '实务口径：术语用，但第一次出现必须落到动作上',
-    rhythm: '长句走手续，短句砸动作；一段一般三到四句',
+    rhythm: '长句走手续，短句砸动作；段落偏长',
     imagery: '器物、纸、编号、冷气与水汽',
     advance: '物证流：每一场推进一件可核验的东西',
     fits: ['悬疑', '犯罪', '科幻'],
     samples: ['zh-luxun-yao-01', 'zh-zhu-ziqing-beiying-01'],
+    rhythm_target: {
+      paragraph_sentences: [2.8, 4.2],
+      sentence_mean_chars: [14, 19],
+    },
+    imagery_lexicon: {
+      allow: ['器械', '证件', '纸页', '编号', '冷气', '水汽', '手套', '印章'],
+      ban: ['门', '走廊', '灯'],
+    },
   },
   {
     id: 'oral-record',
@@ -27,6 +36,14 @@ const VOICES = [
     advance: '问讯流：全章靠问答推进，答非所问也算推进',
     fits: ['悬疑', '乡土', '年代'],
     samples: ['zh-luxun-guxiang-01', 'zh-luxun-guxiang-02'],
+    rhythm_target: {
+      paragraph_sentences: [1.5, 2.3],
+      sentence_mean_chars: [18, 26],
+    },
+    imagery_lexicon: {
+      allow: ['灶', '柴', '竹篮', '雨鞋', '秤', '腌菜', '烟', '田地'],
+      ban: ['鉴定', '编号', '冷柜', '封条'],
+    },
   },
   {
     id: 'side-observer',
@@ -39,6 +56,14 @@ const VOICES = [
     advance: '旁观流：只写看得见的行为差异，让读者自己推断',
     fits: ['悬疑', '群像', '现实'],
     samples: ['zh-luxun-kongyiji-01', 'zh-luxun-kongyiji-02'],
+    rhythm_target: {
+      paragraph_sentences: [2.2, 3.0],
+      sentence_mean_chars: [12, 16],
+    },
+    imagery_lexicon: {
+      allow: ['柜台', '杯子', '门槛', '影子', '袖子', '板凳', '窗棂', '街面'],
+      ban: ['封条', '鉴定', '尸'],
+    },
   },
   {
     id: 'gusty-long-sentence',
@@ -51,6 +76,14 @@ const VOICES = [
     advance: '情绪流：每场改变一次人物对处境的态度',
     fits: ['年代', '乡土', '爱情'],
     samples: ['zh-yu-dafu-chunfeng-01', 'zh-luxun-yao-01'],
+    rhythm_target: {
+      paragraph_sentences: [2.6, 3.6],
+      sentence_mean_chars: [20, 28],
+    },
+    imagery_lexicon: {
+      allow: ['风', '雨', '檐水', '炭火', '旧被', '井台', '潮气', '暮色'],
+      ban: ['编号', '报告', '电极'],
+    },
   },
   {
     id: 'dry-comic',
@@ -63,6 +96,14 @@ const VOICES = [
     advance: '讽刺流：每场让一个人自陈其是，读者自己看见反讽',
     fits: ['现实', '群像', '悬疑'],
     samples: ['zh-lao-she-laozhang-01', 'zh-luxun-kongyiji-01'],
+    rhythm_target: {
+      paragraph_sentences: [1.6, 2.4],
+      sentence_mean_chars: [8, 12],
+    },
+    imagery_lexicon: {
+      allow: ['账本', '名片', '茶碗', '轿子', '酒席', '铺面', '酬金', '匾'],
+      ban: ['封条', '解剖', '冷柜'],
+    },
   },
   {
     id: 'spare-lyric',
@@ -75,6 +116,14 @@ const VOICES = [
     advance: '素描流：一场写完一个完整动作链，不解释意义',
     fits: ['年代', '乡土', '生活'],
     samples: ['zh-fei-ming-changri-01', 'zh-zhu-ziqing-beiying-01'],
+    rhythm_target: {
+      paragraph_sentences: [1.2, 1.9],
+      sentence_mean_chars: [6, 10],
+    },
+    imagery_lexicon: {
+      allow: ['碗', '针线', '门槛', '炭', '井', '窗纸', '布鞋', '菜畦'],
+      ban: ['鉴定', '电极', '编号', '封条'],
+    },
   },
   {
     id: 'user-climb',
@@ -87,6 +136,14 @@ const VOICES = [
     advance: '进步流：每场付出一次代价，换来一次可核验的进展',
     fits: ['悬疑', '科幻', '升级'],
     samples: ['zh-user-upward-eight-01', 'zh-luxun-yao-01'],
+    rhythm_target: {
+      paragraph_sentences: [2.0, 2.8],
+      sentence_mean_chars: [10, 14],
+    },
+    imagery_lexicon: {
+      allow: ['闸门', '台阶', '符纹', '骨节', '血痂', '铜牌', '石槽', '绳索'],
+      ban: ['报告', '走廊', '解剖'],
+    },
   },
   {
     id: 'dossier-flat',
@@ -99,6 +156,14 @@ const VOICES = [
     advance: '档案流：每场多出一份材料，材料的缺口就是下一场的问题',
     fits: ['悬疑', '犯罪', '科幻'],
     samples: ['zh-luxun-kongyiji-02', 'zh-zhu-ziqing-beiying-01'],
+    rhythm_target: {
+      paragraph_sentences: [1.4, 2.1],
+      sentence_mean_chars: [7, 11],
+    },
+    imagery_lexicon: {
+      allow: ['回执', '表格', '印章', '日期', '签名', '编号', '附页', '存根'],
+      ban: ['门', '走廊', '冷气'],
+    },
   },
 ];
 
