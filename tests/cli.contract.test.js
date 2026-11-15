@@ -243,3 +243,38 @@ test('book write auto-repairs derived registries after applying setup/outline', 
   assert.deepEqual(setup.thread_registry, outline.thread_registry);
   assert.deepEqual(setup.mystery_registry, outline.mystery_registry);
 });
+
+// Regression: usage errors must carry machine-consumable guidance (hint + fix_command).
+// An agent that trips `check --profile style` bare must be able to recover without guessing,
+// and fix_command must never smuggle a placeholder path (`[object Object]`) or a
+// `node scripts/...` prefix that does not work outside the repo checkout.
+test('check usage errors carry hint and a runnable fix_command', (t) => {
+  const dir = project(t);
+
+  const bareStyle = run(['check', '--dir', dir, '--profile', 'style']);
+  assert.equal(bareStyle.status, 1);
+  assert.equal(bareStyle.json.ok, false);
+  assert.equal(bareStyle.json.error.code, 'usage.error');
+  assert.match(bareStyle.json.error.hint, /--target setup/);
+  assert.match(bareStyle.json.error.fix_command, /^wishmachine check --dir \//);
+  assert.ok(bareStyle.json.error.fix_command.includes(dir), 'fix_command points at the real project dir');
+  assert.doesNotMatch(bareStyle.json.error.fix_command, /\[object Object\]|<project>/);
+
+  const noId = run(['check', '--dir', dir, '--target', 'chapter']);
+  assert.equal(noId.status, 1);
+  assert.match(noId.json.error.fix_command, /^wishmachine check --dir /);
+  assert.ok(noId.json.error.fix_command.includes(dir));
+  assert.doesNotMatch(noId.json.error.fix_command, /node scripts\/wishmachine\.js|P1-V1-C1/);
+
+  const schemaChapter = run(['check', '--dir', dir, '--profile', 'schema', '--target', 'chapter', '--id', 'P1-V1-C1']);
+  assert.equal(schemaChapter.status, 1);
+  assert.equal(schemaChapter.json.error.code, 'usage.error');
+  assert.ok(schemaChapter.json.error.fix_command.includes(dir));
+
+  // A missing chapter id is a blocking finding (exit 2), not a usage error: the artifact
+  // layer wins before the style pass runs, so this must stay a finding with its own suggestion.
+  const missingChapter = run(['check', '--dir', dir, '--profile', 'style', '--target', 'chapter', '--id', 'P9-V9-C9']);
+  assert.equal(missingChapter.status, 2);
+  assert.equal(missingChapter.json.blocking, true);
+  assert.equal(missingChapter.json.findings[0].rule_id, 'artifact.chapter.missing');
+});

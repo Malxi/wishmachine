@@ -45,8 +45,18 @@ function summarize(findings) {
   return summary;
 }
 
+// Usage errors raised from the rules layer: attach the machine-consumable repair info
+// (hint + fix_command) without importing the cli layer, which the boundary test forbids.
+function usageFail(message, hint, fixCommand) {
+  const error = new Error(message);
+  error.code = 'usage.error';
+  error.hint = hint;
+  error.fixCommand = fixCommand;
+  throw error;
+}
+
 function scoreFor(summary) {
   return Math.max(0, 100 - summary.critical * 20 - summary.high * 10 - summary.medium * 4 - summary.low);
 }
 
-export { CHECK_TARGETS, PROFILE_VALUES, SEVERITIES, SEVERITY_RANK, finalizeFindings, scoreFor, summarize };
+export { CHECK_TARGETS, PROFILE_VALUES, SEVERITIES, SEVERITY_RANK, finalizeFindings, scoreFor, summarize, usageFail };

@@ -10,6 +10,7 @@ import {
   CHECK_TARGETS,
   PROFILE_VALUES,
   SEVERITIES,
+  usageFail,
   SEVERITY_RANK,
   finalizeFindings,
   finding,
@@ -200,13 +201,19 @@ function checkProject(project, options = {}) {
     throw new Error(`unknown min-severity: ${min}; allowed: ${SEVERITIES.join('|')}`);
   }
   if (['chapter', 'recap'].includes(target) && !id) {
-    throw new Error(`${target} check requires --id`);
+    usageFail(`${target} check requires --id`,
+      `${target} checks run per artifact; list ids with "wishmachine state --dir ${project.dir} --view brief"`,
+      `wishmachine check --dir ${project.dir} --profile ${profile} --target ${target} --id <${target}-id>`);
   }
   if (profile === 'schema' && target === 'chapter') {
-    throw new Error('schema profile supports setup or outline (not chapter)');
+    usageFail('schema profile supports setup or outline (not chapter)',
+      'chapters are validated by the quality profile; the schema profile only covers setup and outline',
+      `wishmachine check --dir ${project.dir} --target chapter --id <chapter-id>`);
   }
   if (profile === 'style' && !['setup', 'chapter'].includes(target)) {
-    throw new Error('style profile supports setup or chapter targets');
+    usageFail('style profile supports setup or chapter targets',
+      'style is a per-artifact fingerprint profile: run --target setup first, then --target chapter --id <id> per chapter (never bare)',
+      `wishmachine check --dir ${project.dir} --profile style --target setup`);
   }
   const collected = [];
   const artifact = readTargetArtifact(project, target, id);

@@ -7,7 +7,7 @@ import { chapterFile, setupFile } from '../../paths.js';
 import { styleArtifactFindings } from './artifacts.js';
 import { crossChapterMotifs } from './motifs.js';
 import { bookShapeFindings, chapterShape } from './shape.js';
-import { finding, SEVERITY_RANK } from '../finding.js';
+import { finding, SEVERITY_RANK, usageFail } from '../finding.js';
 import { chapterMetrics, setupMetrics } from './metrics.js';
 
 const DEFAULT_THRESHOLDS = {
@@ -222,11 +222,19 @@ function styleFindings(project, target, id, override = {}) {
     ];
   }
   if (target === 'chapter') {
-    if (!id) throw new Error('chapter style check requires --id');
+    if (!id) {
+      usageFail('chapter style check requires --id',
+        'chapter style checks run one chapter at a time; list ids with "wishmachine state --dir <project> --view brief"',
+        `wishmachine check --dir ${project.dir} --profile style --target chapter --id <chapter-id>`);
+    }
     let text = override.chapterText;
     if (text === undefined) {
       const file = chapterFile(project.dir, id);
-      if (!fs.existsSync(file)) throw new Error(`chapter not found: ${id}`);
+      if (!fs.existsSync(file)) {
+        usageFail(`chapter not found: ${id}`,
+          'the chapter id must exist in the outline; list ids with "wishmachine state --dir <project> --view brief"',
+          `wishmachine state --dir ${project.dir} --view brief`);
+      }
       text = readText(file);
     }
     const setup = override.setup !== undefined ? override.setup : readOptionalJson(setupFile(project.dir));
@@ -237,7 +245,9 @@ function styleFindings(project, target, id, override = {}) {
     });
     return findingsFor(metrics, CHAPTER_RULES, thresholds.chapter, id);
   }
-  throw new Error(`style profile supports setup or chapter targets, got ${target}`);
+  usageFail(`style profile supports setup or chapter targets, got ${target}`,
+    'style is a per-artifact fingerprint profile: run --target setup first, then --target chapter --id <id> per chapter (never bare)',
+    `wishmachine check --dir ${project.dir} --profile style --target setup`);
 }
 
 function chapterFiles(project) {

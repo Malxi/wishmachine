@@ -57,10 +57,11 @@ function runCheck(flags) {
   const maxFindings = maxFindingsFlag(flags);
   const ignoreRules = ignoreRulesFlag(flags);
   if (['chapter', 'recap'].includes(target) && !id) {
+    const dir = stringFlag(flags, 'dir', '') || '<project>';
     fail(`check --target ${target} requires --id`, {
       code: 'check.needs_id',
-      hint: `add --id <${target}-id>, e.g. --id P1-V1-C1`,
-      fixCommand: `node scripts/wishmachine.js check --dir <project> --target ${target} --id P1-V1-C1`,
+      hint: `add --id <${target}-id>; list ids with "wishmachine state --dir ${dir} --view brief"`,
+      fixCommand: `wishmachine check --dir ${dir} --target ${target} --id <${target}-id>`,
     });
   }
   const project = loadProject(stringFlag(flags, 'dir', ''));
