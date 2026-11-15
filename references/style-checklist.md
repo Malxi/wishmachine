@@ -163,3 +163,6 @@ wishmachine check ... --ignore style.chapter.simile_density
 
 注意：这四条的命中**不代表那句话坏**（"机器只认字""封条是贴给人看的"都会被扣），它们测的是密度和指纹；
 别为了指标把全章最硬的句子删光。
+
+**反向警戒**：压缩/单字谓语不要清零——全章保留 2–4 处（`predicate_variety` healthy ≥ 0.85），
+短句比例落在 0.2 附近即可。实测出现过四类病全清、但压缩谓语归零，被 `predicate_variety` 反咬一口。
