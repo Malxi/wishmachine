@@ -6,10 +6,10 @@ const TYPES = [
   'provocation', 'axiom', 'event', 'law', 'scenario', 'engine',
   'worldpack', 'plotpack', 'outlinepack', 'premise', 'storyline', 'cast', 'namecard',
   'resource', 'equipment', 'itemcard', 'location', 'faction', 'motif', 'reference', 'name',
-  'combo',
+  'combo', 'stylepack',
 ];
 
-const COMPOSITE_IDEA_TYPES = new Set(['worldpack', 'plotpack', 'outlinepack']);
+const COMPOSITE_IDEA_TYPES = new Set(['worldpack', 'plotpack', 'outlinepack', 'stylepack']);
 const ALLOWED_CAST_ROLES = new Set(ROLE_NAMES);
 
 // Narrative event-type palette: varied enough that a volume never repeats one

@@ -1,4 +1,5 @@
 // Default deck: near-future science fiction. Cards are reference material, not verified facts.
+import { VOICES } from './voices.js';
 
 const ARCHETYPES = [
   { name: '过度理性的救援者', personality: ['冷静', '责任心过重', '不擅长接受感谢'], contradiction: '能精确计算所有人的生存概率，却会为救一个人破坏自己的最优方案。', want: '把伤亡数字压到最低', fear: '发现自己已经把某个人当成可接受损失', mask: '永远准备了三套撤离方案', speech: '边操作边解释，避免直视情绪问题', body: '焦虑时会反复检查已经锁好的卡扣', backstory: '第一次救援失败后，把所有遇难者姓名写进了私人航行日志。' },
@@ -236,6 +237,7 @@ export const defaultDeck = {
     生存资源: '消耗品', 债务凭证: '货币', 媒体资产: '货币',
   },
   archetypes: ARCHETYPES,
+  voices: VOICES,
   roleArchetypes: ROLE_ARCHETYPES,
   premises: PREMISES,
   resources: RESOURCES,

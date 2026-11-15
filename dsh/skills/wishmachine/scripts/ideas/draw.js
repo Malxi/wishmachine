@@ -13,6 +13,7 @@ import { buildMultiVolumeOutlinePack } from './outlinepack.js';
 import { buildPlotpack } from './plotpack.js';
 import { buildWorldpack } from './worldpack.js';
 import { namecards } from './namecards.js';
+import { stylecards } from './stylecards.js';
 import { drawCombos } from './cards.js';
 
 export function ideasTypes() {
@@ -191,6 +192,15 @@ function drawByType(type, context) {
         strategy: options.strategy || 'balanced',
         candidates: options.candidates,
         avoid: options.avoid,
+      }),
+      castMeta: null,
+    };
+  }
+  if (type === 'stylepack') {
+    const { rng, seed, count, deck, options, warningSink } = context;
+    return {
+      results: stylecards({
+        rng, seed, count, genre: options.genre || '', deckName: deck.name, warnings: warningSink,
       }),
       castMeta: null,
     };

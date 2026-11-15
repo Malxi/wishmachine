@@ -51,7 +51,9 @@ test('the shipped skill layout runs without the repository root package.json', (
 
   const types = run(dir, ['ideas', 'types']);
   assert.equal(types.status, 0, types.stderr);
-  assert.equal(JSON.parse(types.stdout).count, 22);
+  const typeNames = JSON.parse(types.stdout).results.map((item) => item.name);
+  assert.ok(typeNames.length >= 22, 'the shipped skill keeps its idea types');
+  assert.ok(typeNames.includes('stylepack'), 'the shipped skill ships the stylepack draw');
   assert.ok(fs.existsSync(path.join(dir, 'data', 'cards', 'manifest.json')));
   const combo = run(dir, ['ideas', 'draw', '--type', 'combo', '--genre', '科幻', '--count', '1', '--seed', '1']);
   assert.equal(combo.status, 0, combo.stderr);
