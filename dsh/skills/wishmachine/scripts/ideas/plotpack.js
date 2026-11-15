@@ -20,7 +20,7 @@ function buildPlotBeats(pack, refs) {
       chapter: 1,
       function: 'setup',
       beat: premise
-        ? `${premise.title}：${premise.surface_rule}第一次落到主角头上。`
+        ? `${String(premise.title || '').split(/[：:]/u)[0].trim()}：${premise.surface_rule}第一次落到主角头上。`
         : '主角的日常与这个世界的规则第一次撞上。',
       source: 'premise',
       source_id: pack.id,

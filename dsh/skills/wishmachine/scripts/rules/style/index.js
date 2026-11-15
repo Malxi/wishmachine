@@ -300,7 +300,11 @@ function styleAudit(project, options = {}) {
   const pooled = chapters.length
     ? chapterMetrics(chapters.map((chapter) => chapter.text).join('\n\n'), { names, targetChars, motifs: motifsConfig })
     : null;
-  const bookFindings = pooled ? findingsFor(pooled, BOOK_RULES, thresholds.chapter, 'book') : [];
+  // Book-level pooled metrics re-report rules chapters already flagged: keep only book-wide ones.
+  const chapterRuleIds = new Set(chapterResults.flatMap((result) => result.findings.map((item) => item.rule_id)));
+  const bookFindings = pooled
+    ? findingsFor(pooled, BOOK_RULES, thresholds.chapter, 'book').filter((item) => !chapterRuleIds.has(item.rule_id))
+    : [];
   const motifs = crossChapterMotifs(chapters, names);
   if (motifs.length) {
     const item = finding(

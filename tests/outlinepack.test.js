@@ -79,8 +79,15 @@ test('outlinepack expands into multiple volumes', () => {
   assert.equal(outline.chapters[0].scene_chain[1].turn, outline.chapters[0].scenes[1].turn_event);
   assert.equal(outline.chapters[1].entry_from_previous, outline.chapters[0].exit_consequence);
   assert.ok(outline.chapters[1].scenes[0].goal.includes('承接上一章'));
-  assert.ok(outline.chapters[1].conflict.includes('承接上一章后果'));
-  assert.ok(outline.chapters[1].obstacle.includes('上一章后果未解'));
+  // conflict/obstacle are story content the writer reads as plot: no note-to-self prefixes.
+  assert.ok(!outline.chapters[1].conflict.includes('承接上一章后果'), 'conflict must not carry the meta connector');
+  assert.ok(outline.chapters[1].conflict.length > 0);
+  for (const chapter of outline.chapters) {
+    assert.ok(!String(chapter.obstacle).includes('上一章后果未解'), 'obstacle must not carry the meta prefix');
+    assert.ok(!String(chapter.summary).includes('：只有') || String(chapter.summary).split('：').length <= 2,
+      `summary must not stack colons: ${chapter.summary}`);
+  }
+  assert.ok(!outline.chapters[1].obstacle.includes('上一章后果未解'), 'obstacle must not carry the meta prefix');
   assert.ok(outline.chapters[1].mysteries.carried.length > 0);
   assert.ok(outline.chapters[1].mysteries.carried[0].id);
   assert.ok(outline.chapters[1].mysteries.carried[0].question);
@@ -95,7 +102,7 @@ test('outlinepack expands into multiple volumes', () => {
   assert.ok(outline.chapters[11].mysteries.resolved[0].answer);
   assert.ok(outline.volumes[1].chapters[0].mysteries.carried.length > 0);
   assert.ok(outline.pending_mysteries.length <= 5);
-  assert.ok(outline.chapters[1].scenes[0].obstacle.includes('上一章后果未解'));
+  assert.ok(!outline.chapters[1].scenes[0].obstacle.includes('上一章后果未解'), 'scene obstacle must not carry the meta prefix');
   assert.ok(outline.chapters[1].chapter_payoff.pressure.includes('上一章留下的后果'));
   assert.ok(outline.chapters[0].chapter_payoff.hook.includes('下一章要处理'));
   assert.equal(outline.volumes[1].chapters[0].entry_from_previous, outline.volumes[0].chapters[3].exit_consequence);

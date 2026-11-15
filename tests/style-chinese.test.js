@@ -149,3 +149,18 @@ test('new thresholds are configurable per project', (t) => {
   const result = checkProject(project, { profile: 'style', target: 'chapter', id: 'P1-V1-C1' });
   assert.ok(result.findings.some((item) => item.rule_id === 'style.chapter.translationese'));
 });
+
+// Regression: the book-level pooled pass used to re-report every chapter rule under target "book",
+// so a project with 6 real problems produced 10 findings and agents edited the same issue twice.
+test('book-level style pass does not duplicate chapter rule ids', (t) => {
+  const { dir, project } = tempProject(t, { init: { volumes: 1, chapter: 2, genre: '悬疑' } });
+  writeChapter(dir, 'P1-V1-C1', AI_CHAPTER);
+  writeChapter(dir, 'P1-V1-C2', AI_CHAPTER.replace('罗一', '罗二'));
+  const result = auditProject(project, { profile: 'style', view: 'full' });
+  const findings = result.findings || [];
+  // The same rule firing on two different chapters is legitimate. What must not happen is a
+  // target_id "book" finding repeating a rule some chapter already reported (that is the double edit).
+  const chapterRuleIds = new Set(findings.filter((item) => item.target_id !== 'book').map((item) => item.rule_id));
+  const bookDupes = findings.filter((item) => item.target_id === 'book' && chapterRuleIds.has(item.rule_id)).map((item) => item.rule_id);
+  assert.deepEqual([...new Set(bookDupes)], [], `book pass duplicated chapter rules: ${bookDupes.join(',')}`);
+});

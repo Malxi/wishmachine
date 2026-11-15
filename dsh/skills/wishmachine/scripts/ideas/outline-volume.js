@@ -43,7 +43,7 @@ function planChapterObstacle({ plot, beat, config, entryFromPrevious, entrySumma
   if (!base) return previous;
   if (previous === base || previous.includes(base)) return previous;
   if (base.includes(previous)) return base;
-  return `上一章后果未解：${previous}；${base}`;
+  return `${previous}；${base}`;
 }
 
 // 章节标题要读起来像标题，不能把内部 beat 代号（setup/midpoint/climax）印成成品。
@@ -152,7 +152,7 @@ function buildChapterRecord(plot, config, context) {
     mysteries,
     events,
     conflict: entryFromPrevious
-      ? `承接上一章后果，${String(entrySummary || '').replace(/[。；;\s]+$/u, '')}；${plot.premise?.central_conflict || plot.premise?.conflict || '主角必须做出选择。'}`
+      ? `${String(entrySummary || '').replace(/[。；;\s]+$/u, '')}；${plot.premise?.central_conflict || plot.premise?.conflict || '主角必须做出选择。'}`
       : (plot.premise?.central_conflict || plot.premise?.conflict || '主角必须做出选择。'),
     pacing: PACE_BY_FUNCTION[beat.function] || 'rising',
     beat_function: beat.function,

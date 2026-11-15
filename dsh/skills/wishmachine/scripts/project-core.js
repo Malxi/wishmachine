@@ -151,11 +151,47 @@ function statusChapters(project) {
   }
 }
 
+function missingArtifactTarget(target, id, message, options = {}) {
+  const { suggestion = '', severity = 'medium', ruleId = '' } = options;
+  const item = finding(ruleId || `artifact.${target}.missing`, severity, message, id || target, suggestion);
+  const critical = severity === 'critical';
+  const high = severity === 'high';
+  return {
+    target,
+    id: id || undefined,
+    ok: false,
+    blocking: critical || high,
+    score: 0,
+    summary: { total: 1, critical: critical ? 1 : 0, high: high ? 1 : 0, medium: severity === 'medium' ? 1 : 0, low: severity === 'low' ? 1 : 0, ignored_findings: 0, ignored_rules: {} },
+    findings: [item],
+  };
+}
+
+function recapIdsOnDisk(project) {
+  const dir = projectPath(project.dir, 'recaps');
+  if (!fs.existsSync(dir)) return new Set();
+  return new Set(fs.readdirSync(dir).filter((name) => name.endsWith('.json')).map((name) => name.slice(0, -5)));
+}
+
 function collectAuditTargets(project, options) {
   const targets = [];
   const add = (target, id = '') => targets.push(auditTarget(project, target, id, options));
+  // audit is the last gate before a project is called done: a missing artifact must fail it,
+  // not silently skip a target (otherwise a project with no chapter file can report blocking:false).
   if (fs.existsSync(setupFile(project.dir))) add('setup');
+  else {
+    targets.push(missingArtifactTarget('setup', '', 'story/setup/story_setup.json is missing (project is still empty)', {
+      suggestion: 'planned-but-absent is reported, not blocking: write it with "wishmachine book write setup --from-idea <saved-id> --apply"',
+      ruleId: 'quality.setup.unwritten',
+    }));
+  }
   if (fs.existsSync(outlineFile(project.dir))) add('outline');
+  else {
+    targets.push(missingArtifactTarget('outline', '', 'story/compose/outline.json is missing (project is still empty)', {
+      suggestion: 'planned-but-absent is reported, not blocking: write it with "wishmachine book write outline --from-idea <saved-id> --apply"',
+      ruleId: 'quality.outline.unwritten',
+    }));
+  }
   for (const name of fs.existsSync(projectPath(project.dir, 'craft')) ? fs.readdirSync(projectPath(project.dir, 'craft')).filter((item) => item.endsWith('.json')).sort() : []) {
     add('craft', name.slice(0, -5));
   }
@@ -168,6 +204,23 @@ function collectAuditTargets(project, options) {
     if (!known.has(id)) add('chapter', id);
   }
   for (const chapter of chapters.filter((item) => item.written)) add('chapter', chapter.id);
+  const recaps = recapIdsOnDisk(project);
+  for (const chapter of chapters.filter((item) => !item.written)) {
+    // A recap without its chapter file is data loss (critical); a chapter the outline merely
+    // plans is normal work in progress (medium, non-blocking). Conflating them either hides a
+    // deleted file or fails every half-written project.
+    const lost = recaps.has(chapter.id);
+    targets.push(missingArtifactTarget('chapter', chapter.id,
+      lost
+        ? `chapter ${chapter.id} has a recap but its chapter file is gone`
+        : `chapter ${chapter.id} is planned in the outline but not written yet`, {
+        suggestion: lost
+          ? 'restore the chapter file (see checkpoints/) or delete the orphan recap'
+          : `write chapters/${chapter.id}.md when the draft is ready, then import it with "wishmachine book write chapter --dir ${project.dir} --id ${chapter.id} --apply"`,
+        severity: lost ? 'critical' : 'medium',
+        ruleId: lost ? 'artifact.chapter.missing' : 'quality.chapter.unwritten',
+      }));
+  }
   return targets;
 }
 

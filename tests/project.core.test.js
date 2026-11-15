@@ -178,3 +178,30 @@ test('chapter read returns file content and rejects unknown ids', (t) => {
   assert.ok(chapter.content.includes('第一章'));
   assert.throws(() => readSection(loadProject(dir), 'chapter', { id: 'missing' }), /chapter not found/);
 });
+
+// Regression: audit is the last gate, so it must not stay silent about artifacts that are gone.
+// Planned-but-unwritten stays non-blocking (a half-written book is normal); a chapter that has a
+// recap but no file is data loss and must block.
+test('audit reports missing artifacts: unwritten is advisory, orphan recap blocks', (t) => {
+  const { dir, project } = tempProject(t, { init: { volumes: 1, chapter: 2, genre: '科幻' } });
+  writeArtifact(project, { section: 'setup', mode: 'replace', apply: true, content: JSON.stringify(sampleSetup()) });
+  writeArtifact(project, { section: 'outline', mode: 'replace', apply: true, content: JSON.stringify(sampleOutline()) });
+
+  const before = auditProject(project, { view: 'full' });
+  assert.equal(before.blocking, false, 'nothing written yet is not a defect');
+  assert.ok(before.summary.medium >= 2, 'unwritten chapters are still reported');
+  const pendingIds = before.targets.flatMap((target) => target.findings || []).map((item) => item.rule_id);
+  assert.ok(pendingIds.includes('quality.chapter.unwritten'));
+
+  const chapterId = projectStatus(project).chapters[0]?.id || 'P1-V1-C1';
+  fs.mkdirSync(path.join(dir, 'chapters'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'chapters', `${chapterId}.md`), longChapter());
+  fs.mkdirSync(path.join(dir, 'story', 'recaps'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'story', 'recaps', `${chapterId}.json`), JSON.stringify(sampleRecap(chapterId)));
+  fs.rmSync(path.join(dir, 'chapters', `${chapterId}.md`));
+
+  const after = auditProject(project, { view: 'full' });
+  assert.equal(after.blocking, true, 'a recap without its chapter file must block');
+  const ids = after.targets.flatMap((target) => target.findings || []).map((item) => item.rule_id);
+  assert.ok(ids.includes('artifact.chapter.missing'));
+});

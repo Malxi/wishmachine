@@ -126,7 +126,10 @@ test('audit reports corrupt artifacts as findings and honors ignore filters', (t
   assert.equal(ignored.json.ok, true);
   assert.equal(ignored.json.summary.ignored_findings, 1);
   assert.equal(ignored.json.summary.ignored_rules['artifact.outline.invalid_json'], 1);
-  assert.equal(ignored.json.top_findings.length, 0);
+  // audit now also reports planned-but-unwritten artifacts (medium), so "nothing left" is no longer
+  // the invariant: the invariant is that the ignored rule is gone and nothing blocking remains.
+  assert.ok(!ignored.json.top_findings.some((item) => item.rule_id === 'artifact.outline.invalid_json'));
+  assert.ok(ignored.json.top_findings.every((item) => ['medium', 'low'].includes(item.severity)));
 });
 
 test('check --ignore/--ignore-file suppress findings, blocking and expose counts', (t) => {
