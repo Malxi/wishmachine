@@ -143,4 +143,19 @@ function readReviewReport(file) {
   }
 }
 
-export { CATEGORIES, VERDICTS, buildReviewPacket, validateReviewReport, readReviewReport };
+// 冷读审稿的投喂文本：写完一章的 agent 应当自己起一个新上下文（子 agent / 新进程）跑这段，
+// 冷眼来自上下文隔离，不来自换模型。
+function reviewPrompt({ packetFile, reportFile, chapterId }) {
+  return [
+    `你在做冷读审稿，只读不改。审稿包：${packetFile}`,
+    '',
+    '1) 读包里 categories（六类问题的可执行问句）、chapter_file 指向的正文、leads（style 命中句与段末句、可数候选）。',
+    '2) 逐类过一遍：搭配 / 前后一致 / 空间 / 时间 / 在场与知情 / 可数。',
+    `3) 按包内 contract 的 JSON 形状写报告到 ${reportFile}，chapter 填 "${chapterId}"。`,
+    '4) quote 必须与正文逐字一致（校验会拒掉编造的引文）；不确定的用 suspicious；',
+    '   没有问题的类别写进 empty_categories；每一类都要真过一遍，不许为凑数编问题。',
+    '5) 不要修改 chapters/ 下任何文件，不要重写正文。',
+  ].join('\n');
+}
+
+export { CATEGORIES, VERDICTS, buildReviewPacket, reviewPrompt, validateReviewReport, readReviewReport };

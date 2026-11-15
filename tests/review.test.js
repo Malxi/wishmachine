@@ -5,7 +5,7 @@ import path from 'node:path';
 import test from 'node:test';
 import { initProject, loadProject } from '../scripts/project.js';
 import { chapterFile } from '../scripts/paths.js';
-import { CATEGORIES, buildReviewPacket, validateReviewReport } from '../scripts/review.js';
+import { CATEGORIES, buildReviewPacket, reviewPrompt, validateReviewReport } from '../scripts/review.js';
 
 const CHAPTER = [
   '# 第1章 · 封存柜',
@@ -104,4 +104,18 @@ test('不存在的章节 → usage.error 带可执行提示', () => {
     assert.match(error.message, /state --dir/);
     return true;
   });
+});
+
+test('投喂文本带包路径、报告路径与逐字引文规则', () => {
+  const text = reviewPrompt({
+    packetFile: '/tmp/p.json',
+    reportFile: '/tmp/r.json',
+    chapterId: 'P1-V1-C1',
+  });
+  assert.match(text, /\/tmp\/p\.json/);
+  assert.match(text, /\/tmp\/r\.json/);
+  assert.match(text, /P1-V1-C1/);
+  assert.match(text, /逐字一致/);
+  assert.match(text, /不许为凑数编问题/);
+  assert.match(text, /不要修改/);
 });

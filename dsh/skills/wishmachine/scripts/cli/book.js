@@ -1,7 +1,9 @@
-// `book` command handlers: init / status / read / write (registry lives in ./book-registry.js).
+// `book` command handlers: init / status / read / write / review (registry lives in ./book-registry.js).
+import fs from 'node:fs';
+import path from 'node:path';
 import { initProject, loadProject, projectStatus, readSection, saveResearchReport, writeArtifact } from '../project.js';
 import { runBookRegistry } from './book-registry.js';
-import { buildReviewPacket, readReviewReport, validateReviewReport } from '../review.js';
+import { buildReviewPacket, readReviewReport, reviewPrompt, validateReviewReport } from '../review.js';
 import { EXIT_BLOCKING, EXIT_ERROR, EXIT_OK, boolFlag, enumFlag, fail, intFlag, print, stdinText, stringFlag, usageFail } from './args.js';
 import { MODE_VALUES, READ_SECTIONS, VIEW_VALUES, WRITE_SECTIONS } from './spec.js';
 
@@ -125,6 +127,20 @@ function runBookReview(args, flags) {
   const id = stringFlag(flags, 'id', '');
   if (!id) usageFail('book review requires --id', 'list ids with "wishmachine state --dir <project> --view brief"');
   const packet = buildReviewPacket(project, { chapterId: id });
+  const outFile = stringFlag(flags, 'out', '');
+  const wantPrompt = boolFlag(flags, 'prompt', false);
+  if (outFile || wantPrompt) {
+    const packetFile = outFile || path.join(project.dir, '.review', `${id}.packet.json`);
+    fs.mkdirSync(path.dirname(packetFile), { recursive: true });
+    fs.writeFileSync(packetFile, JSON.stringify(packet, null, 2), 'utf8');
+    const reportFile = path.join(project.dir, '.review', `${id}.report.json`);
+    if (wantPrompt) {
+      console.log(reviewPrompt({ packetFile, reportFile, chapterId: id }));
+      return EXIT_OK;
+    }
+    print({ ok: true, action: 'review', chapter: id, packet_file: packetFile, report_file: reportFile });
+    return EXIT_OK;
+  }
   const checkFile = stringFlag(flags, 'check', '');
   if (!checkFile) {
     print(packet);
