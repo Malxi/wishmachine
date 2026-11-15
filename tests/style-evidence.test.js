@@ -53,3 +53,17 @@ test('style findings carry the matched sentences as evidence', (t) => {
   assert.ok(template.evidence.some((sentence) => sentence.includes('先看封条')),
     'template evidence must point at the 先…最后 sentence');
 });
+
+test('三段式序列脚手架一章出现一次也报，并带命中句', (t) => {
+  const { dir } = tempProject(t, { init: { volumes: 1, chapter: 1, genre: '悬疑' } });
+  const text = [
+    '闻既白闭上眼。闻既白先报天气，再报路灯，最后说穿雨衣的人走进北槐路地下室。',
+    '陆停云低头看纸。她把纸推回来。纸边发黄。',
+  ].join('\n\n');
+  fs.mkdirSync(path.join(dir, 'chapters'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'chapters', 'P1-V1-C1.md'), `# 第1章 试\n\n${text}\n`);
+  const result = checkProject(loadProject(dir), { profile: 'style', target: 'chapter', id: 'P1-V1-C1' });
+  const hit = (result.findings || []).find((item) => item.rule_id === 'style.chapter.sequence_scaffold');
+  assert.ok(hit, 'a 先…再…最后 sentence must be reported even once');
+  assert.ok(hit.evidence.some((sentence) => sentence.includes('先报天气')), 'evidence must point at the scaffold sentence');
+});

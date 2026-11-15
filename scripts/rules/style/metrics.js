@@ -96,6 +96,17 @@ function compressedPredicates(sentences) {
   return items;
 }
 
+function repeatedSentences(sentences) {
+  const seen = new Set();
+  const repeated = new Set();
+  for (const sentence of sentences) {
+    const normalized = sentence.replace(/[^\u3400-\u9fff]/g, '');
+    if (normalized.length >= 6 && seen.has(normalized)) repeated.add(normalized);
+    seen.add(normalized);
+  }
+  return repeated;
+}
+
 function sampleSentences(text, patterns) {
   const list = Array.isArray(patterns) ? patterns : [patterns];
   return String(text)
@@ -174,13 +185,8 @@ function chapterMetrics(text, options = {}) {
   const semicolons = (String(text).match(/；/g) || []).length;
   const colons = (String(text).match(/：/g) || []).length;
   const shortClauses = clauseLengths.filter((length) => length <= 4).length;
-  const duplicateSentences = new Set();
-  const seen = new Set();
-  for (const sentence of sentences) {
-    const normalized = sentence.replace(/[^\u3400-\u9fff]/g, '');
-    if (normalized.length >= 6 && seen.has(normalized)) duplicateSentences.add(normalized);
-    seen.add(normalized);
-  }
+  const sequenceHits = sentences.filter((sentence) => /(?:先|首先)/.test(sentence) && /(?:再|其次|接着|然后)/.test(sentence) && /最后/.test(sentence));
+  const duplicateSentences = repeatedSentences(sentences);
   return {
     cjk,
     sentences: sentences.length,
@@ -216,6 +222,8 @@ function chapterMetrics(text, options = {}) {
     negatedExamples: compressed.filter((item) => /[不没未别]/.test(item.modal)).slice(0, 5).map((item) => item.sentence),
     predicateVarietyExamples: [...modalCounts.entries()].sort((left, right) => right[1] - left[1]).slice(0, 5).map(([modal, count]) => ({ modal, count })),
     subjectOpeningExamples: sentences.filter((sentence) => names.some((name) => sentence.startsWith(name))).slice(0, 5),
+    sequenceScaffoldCount: sequenceHits.length,
+    sequenceExamples: sequenceHits.slice(0, 5),
     templateExamples: sampleSentences(text, TEMPLATE),
     simileExamples: sampleSentences(text, SIMILE),
     openingExamples: [...openings.entries()].filter(([, count]) => count >= 3).sort((left, right) => right[1] - left[1]).slice(0, 5).map(([prefix, count]) => ({ prefix, count })),
