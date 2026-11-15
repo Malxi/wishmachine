@@ -61,12 +61,12 @@ const DEFAULT_THRESHOLDS = {
 
 const CHAPTER_RULES = [
   ['compressedPredicatePer1k', 'style.chapter.compressed_predicate', '单字谓语收尾', '压缩成“会躁/没争/不响”式单字谓语', '把其中一部分展开成具体动作、表情或口语；保留少量作为节奏即可。', 'compressedExamples'],
-  ['negatedCompressedShare', 'style.chapter.negated_predicate', '否定式单字谓语', '单字谓语里“不/没/未/别”占比过高', '把否定句改成正面动作或直接写结果，例如“没答”改成“他把碗放下，没接话”。'],
-  ['compressedDistinctRatio', 'style.chapter.predicate_variety', '单字谓语重复', '单字谓语类型过于集中', '换动词或改句式，避免“不响/没答/不动”反复出现。'],
+  ['negatedCompressedShare', 'style.chapter.negated_predicate', '否定式单字谓语', '单字谓语里“不/没/未/别”占比过高', '把否定句改成正面动作或直接写结果，例如“没答”改成“他把碗放下，没接话”。', 'negatedExamples'],
+  ['compressedDistinctRatio', 'style.chapter.predicate_variety', '单字谓语重复', '单字谓语类型过于集中', '换动词或改句式，避免“不响/没答/不动”反复出现。', 'predicateVarietyExamples'],
   ['sentenceOpeningReuse', 'style.chapter.opening_reuse', '句首复用', '过多句子用同一个两字开头', '合并、倒装或从句中切入，减少“沈穗把/她把”式开头。', 'openingExamples'],
-  ['subjectOpeningShare', 'style.chapter.subject_openers', '主语开头过多', '大量句子以人物名开头', '用动作、环境、对话或他人视角开头，让句子入口有变化。'],
-  ['templateConnectorsPer1k', 'style.chapter.template_connectors', '模板连接句', '“不是/并非…而是/不仅…还/一方面…另一方面/首先其次最后”等模板句偏多', '直接说结论，删掉对比铺垫；一次对比只保留真正纠正读者预期的那次。'],
-  ['similePer1k', 'style.chapter.simile_density', '比喻密度', '比喻标记（像/仿佛/似乎/宛如）偏多', '删掉一半比喻，把意象换成人物职业/环境里独有的具体物。'],
+  ['subjectOpeningShare', 'style.chapter.subject_openers', '主语开头过多', '大量句子以人物名开头', '用动作、环境、对话或他人视角开头，让句子入口有变化。', 'subjectOpeningExamples'],
+  ['templateConnectorsPer1k', 'style.chapter.template_connectors', '模板连接句', '“不是/并非…而是/不仅…还/一方面…另一方面/首先其次最后”等模板句偏多', '直接说结论，删掉对比铺垫；一次对比只保留真正纠正读者预期的那次。', 'templateExamples'],
+  ['similePer1k', 'style.chapter.simile_density', '比喻密度', '比喻标记（像/仿佛/似乎/宛如）偏多', '删掉一半比喻，把意象换成人物职业/环境里独有的具体物。', 'simileExamples'],
   ['upliftPer1k', 'style.chapter.paragraph_uplift', '段尾升华', '段落结尾频繁用抽象词总结、拔高', '让段落停在动作、对话或未解释的细节上；主题让读者自己得出。', 'upliftExamples'],
   ['dialogueRatio', 'style.chapter.dialogue_balance', '对话比例', '对话占比过低或过高', '低则把部分叙述改成对话/动作；高则补动作与场景。'],
   ['sentenceCv', 'style.chapter.sentence_rhythm', '句长节奏', '句子长度过于均匀，缺少长短变化', '插入短句、长句或口语停顿，朗读一遍再改。'],

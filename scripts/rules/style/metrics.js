@@ -23,7 +23,10 @@ const TEMPLATE = [
   /不仅[^。！？]{0,24}(?:还|更|而且)/g,
   /一方面[^。！？]{0,40}另一方面/g,
   /与其说[^。！？]{0,20}不如说/g,
-  /首先|其次|最后|值得注意的是|总而言之|某种意义上|由此可见|不难看出/g,
+  /首先|其次|值得注意的是|总而言之|某种意义上|由此可见|不难看出/g,
+  // 最后 counts only as a discourse connector: clause-initial followed by punctuation, or part of a
+  // 先…再…最后 / 首先…其次…最后 series. 最后一页 / 最后一个数字 are ordinary quantifier uses.
+  /(?:(?:^|[，。；：、\n])最后(?=[，。；：、]))|(?:(?:先|首先|其次|再)[^。！？]{0,40}最后)/g,
 ];
 const APHORISM = /不是[^。！？]{0,30}是|从来|唯一|真正|说到底|归根结底|某种意义上/;
 const CONCRETE_RULE = /[0-9一二三四五六七八九十百千万]|只能|必须|否则|代价|上限|不得|不能|会|每|尺|寸|息|垄|户|粒/;
@@ -93,6 +96,15 @@ function compressedPredicates(sentences) {
   return items;
 }
 
+function sampleSentences(text, patterns) {
+  const list = Array.isArray(patterns) ? patterns : [patterns];
+  return String(text)
+    .split(SENTENCE_SPLIT)
+    .map((sentence) => sentence.trim())
+    .filter((sentence) => sentence && list.some((pattern) => new RegExp(pattern.source, pattern.flags.replace('g', '')).test(sentence)))
+    .slice(0, 5);
+}
+
 function countPatterns(text, patterns) {
   return patterns.reduce((total, pattern) => total + (String(text).match(pattern) || []).length, 0);
 }
@@ -142,6 +154,8 @@ function chapterMetrics(text, options = {}) {
   const paragraphsLengths = paragraphs.map((paragraph) => cjkCount(paragraph));
   const compressed = compressedPredicates(sentences);
   const negated = compressed.filter((item) => /[不没未别]/.test(item.modal)).length;
+  const modalCounts = new Map();
+  for (const item of compressed) modalCounts.set(item.modal, (modalCounts.get(item.modal) || 0) + 1);
   const openings = new Map();
   for (const sentence of sentences) {
     const opening = openingOf(sentence);
@@ -199,6 +213,11 @@ function chapterMetrics(text, options = {}) {
     ...tics,
     duplicateSentenceCount: duplicateSentences.size,
     compressedExamples: compressed.slice(0, 8).map((item) => item.sentence),
+    negatedExamples: compressed.filter((item) => /[不没未别]/.test(item.modal)).slice(0, 5).map((item) => item.sentence),
+    predicateVarietyExamples: [...modalCounts.entries()].sort((left, right) => right[1] - left[1]).slice(0, 5).map(([modal, count]) => ({ modal, count })),
+    subjectOpeningExamples: sentences.filter((sentence) => names.some((name) => sentence.startsWith(name))).slice(0, 5),
+    templateExamples: sampleSentences(text, TEMPLATE),
+    simileExamples: sampleSentences(text, SIMILE),
     openingExamples: [...openings.entries()].filter(([, count]) => count >= 3).sort((left, right) => right[1] - left[1]).slice(0, 5).map(([prefix, count]) => ({ prefix, count })),
     upliftExamples: uplift.slice(0, 5),
   };
